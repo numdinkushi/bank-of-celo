@@ -1,35 +1,78 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { Input } from "../components/ui/input";
-import { signIn, signOut, getCsrfToken } from "next-auth/react";
-import sdk, {
-  SignIn as SignInCore,
-} from "@farcaster/frame-sdk";
+import { useCallback, useEffect, useState } from "react";
+import { Input } from "~/components/ui/input";
+import { Button } from "~/components/ui/Button";
+import { Label } from "~/components/ui/label";
 import {
   useAccount,
   useSendTransaction,
-  useSignMessage,
-  useSignTypedData,
   useWaitForTransactionReceipt,
   useDisconnect,
   useConnect,
-  useSwitchChain,
-  useChainId,
   useWalletClient,
   usePublicClient,
 } from "wagmi";
-import { createCoin } from "@zoralabs/coins-sdk";
-
-import { config } from "~/components/providers/WagmiProvider";
-import { Button } from "~/components/ui/Button";
-import { truncateAddress } from "~/lib/truncateAddress";
-import { base, degen, mainnet, optimism, unichain } from "wagmi/chains";
-import { BaseError, UserRejectedRequestError } from "viem";
 import { useSession } from "next-auth/react";
-import { Label } from "~/components/ui/label";
+import { signIn, signOut, getCsrfToken } from "next-auth/react";
+import sdk, { SignIn as SignInCore } from "@farcaster/frame-sdk";
+import { parseEther, formatEther } from "viem";
+import { celo } from "wagmi/chains";
+import { BaseError, UserRejectedRequestError } from "viem";
+import { truncateAddress } from "~/lib/truncateAddress";
 import { useFrame } from "~/components/providers/FrameProvider";
-import { PinataSDK } from "pinata";
+
+// Bank of Celo ABI (generated after Hardhat compilation)
+const bankOfCeloAbi = [
+  // Simplified ABI for key functions
+  {
+    inputs: [],
+    name: "donate",
+    outputs: [],
+    stateMutability: "payable",
+    type: "function",
+  },
+  {
+    inputs: [{ name: "_fid", type: "uint256" }],
+    name: "requestCelo",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "getVaultBalance",
+    outputs: [{ name: "", type: "uint256" }],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    anonymous: false,
+    inputs: [
+      { indexed: true, name: "donor", type: "address" },
+      { indexed: false, name: "amount", type: "uint256" },
+    ],
+    name: "Donated",
+    type: "event",
+  },
+  {
+    anonymous: false,
+    inputs: [
+      { indexed: true, name: "requester", type: "address" },
+      { indexed: false, name: "fid", type: "uint256" },
+      { indexed: false, name: "amount", type: "uint256" },
+    ],
+    name: "Requested",
+    type: "event",
+  },
+];
+
+// Replace with your deployed contract address
+const CONTRACT_ADDRESS = "YOUR_DEPLOYED_CONTRACT_ADDRESS";
+
+// Neynar API key
+const NEYNAR_API_KEY = "FF6C17E2-C5C4-4B55-9848-769D80022F83";
 
 const renderError = (error: Error | null) => {
   if (!error) return null;
@@ -37,156 +80,185 @@ const renderError = (error: Error | null) => {
     const isUserRejection = error.walk(
       (e) => e instanceof UserRejectedRequestError
     );
-
     if (isUserRejection) {
       return <div className="text-red-500 text-xs mt-1">Rejected by user.</div>;
     }
   }
-
   return <div className="text-red-500 text-xs mt-1">{error.message}</div>;
 };
 
-export default function Demo(
-  { title }: { title?: string } = { title: "Frames v2 Demo" }
-) {
-  const { isSDKLoaded, context, added, notificationDetails, lastEvent, addFrame, addFrameResult, openUrl, close } = useFrame();
-  const [isContextOpen, setIsContextOpen] = useState(false);
-  const [txHash, setTxHash] = useState<string | null>(null);
-
-  const [sendNotificationResult, setSendNotificationResult] = useState("");
-
+export default function BankOfCelo({ title = "Bank of Celo" }: { title?: string }) {
   const { address, isConnected } = useAccount();
-  const chainId = useChainId();
-
-  useEffect(() => {
-    console.log("isSDKLoaded", isSDKLoaded);
-    console.log("context", context);
-    console.log("address", address);
-    console.log("isConnected", isConnected);
-    console.log("chainId", chainId);
-  }, [context, address, isConnected, chainId, isSDKLoaded]);
-
-  const {
-    sendTransaction,
-    error: sendTxError,
-    isError: isSendTxError,
-    isPending: isSendTxPending,
-  } = useSendTransaction();
-
-  const { isLoading: isConfirming, isSuccess: isConfirmed } =
-    useWaitForTransactionReceipt({
-      hash: txHash as `0x${string}`,
-    });
-
-  const {
-    signTypedData,
-    error: signTypedError,
-    isError: isSignTypedError,
-    isPending: isSignTypedPending,
-  } = useSignTypedData();
-
+  const { data: session, status } = useSession();
   const { disconnect } = useDisconnect();
   const { connect, connectors } = useConnect();
+  const { data: walletClient } = useWalletClient();
+  const publicClient = usePublicClient();
+  const { isSDKLoaded, context } = useFrame();
 
-  const {
-    switchChain,
-    error: switchChainError,
-    isError: isSwitchChainError,
-    isPending: isSwitchChainPending,
-  } = useSwitchChain();
+  // State for donation
+  const [donationAmount, setDonationAmount] = useState("");
+  const [donateTxHash, setDonateTxHash] = useState<string | null>(null);
+  const [isDonating, setIsDonating] = useState(false);
+  const [donateError, setDonateError] = useState<Error | null>(null);
 
-  const nextChain = useMemo(() => {
-    if (chainId === base.id) {
-      return optimism;
-    } else if (chainId === optimism.id) {
-      return degen;
-    } else if (chainId === degen.id) {
-      return mainnet;
-    } else if (chainId === mainnet.id) {
-      return unichain;
-    } else {
-      return base;
+  // State for request
+  const [fid, setFid] = useState("");
+  const [requestTxHash, setRequestTxHash] = useState<string | null>(null);
+  const [isRequesting, setIsRequesting] = useState(false);
+  const [requestError, setRequestError] = useState<Error | null>(null);
+  const [neynarScore, setNeynarScore] = useState<number | null>(null);
+  const [isVerifyingFid, setIsVerifyingFid] = useState(false);
+
+  // State for vault balance
+  const [vaultBalance, setVaultBalance] = useState<string>("0");
+
+  // Transaction status
+  const { isLoading: isDonateConfirming, isSuccess: isDonateConfirmed } =
+    useWaitForTransactionReceipt({
+      hash: donateTxHash as `0x${string}`,
+    });
+  const { isLoading: isRequestConfirming, isSuccess: isRequestConfirmed } =
+    useWaitForTransactionReceipt({
+      hash: requestTxHash as `0x${string}`,
+    });
+
+  // Fetch vault balance
+  useEffect(() => {
+    const fetchVaultBalance = async () => {
+      try {
+        if (!publicClient) {
+          console.error("Public client is not available.");
+          return;
+        }
+        const balance = await publicClient.readContract({
+          address: CONTRACT_ADDRESS as `0x${string}`,
+          abi: bankOfCeloAbi,
+          functionName: "getVaultBalance",
+        });
+        setVaultBalance(formatEther(balance as bigint));
+      } catch (error) {
+        console.error("Failed to fetch vault balance:", error);
+      }
+    };
+    fetchVaultBalance();
+    const interval = setInterval(fetchVaultBalance, 30000); // Update every 30s
+    return () => clearInterval(interval);
+  }, [publicClient]);
+
+  // Verify FID with Neynar API
+  const verifyFid = useCallback(async () => {
+    if (!fid) {
+      setRequestError(new Error("Please enter a valid FID"));
+      return false;
     }
-  }, [chainId]);
+    setIsVerifyingFid(true);
+    try {
+      const response = await fetch(
+        `https://api.neynar.com/v2/farcaster/user/bulk?fids=${fid}`,
+        {
+          method: "GET",
+          headers: {
+            "x-api-key": NEYNAR_API_KEY,
+            "x-neynar-experimental": "false",
+          },
+        }
+      );
+      const data = await response.json();
+      const user = data.users[0];
+      if (!user) {
+        setRequestError(new Error("Invalid FID"));
+        return false;
+      }
+      const score = user.neynar_score || 0; // Replace with actual field name if different
+      setNeynarScore(score);
+      if (score < 0.41) {
+        setRequestError(new Error("Neynar score too low (< 0.41)"));
+        return false;
+      }
+      // TODO: Call backend or admin script to approve FID on-chain
+      // For demo, assume FID is approved (in production, check approvedFIDs)
+      return true;
+    } catch (error) {
+      setRequestError(error instanceof Error ? error : new Error("Failed to verify FID"));
+      return false;
+    } finally {
+      setIsVerifyingFid(false);
+    }
+  }, [fid]);
 
-  const handleSwitchChain = useCallback(() => {
-    switchChain({ chainId: nextChain.id });
-  }, [switchChain, nextChain.id]);
-
-  const sendNotification = useCallback(async () => {
-    setSendNotificationResult("");
-    if (!notificationDetails || !context) {
+  // Donate CELO
+  const handleDonate = useCallback(async () => {
+    if (!donationAmount || parseFloat(donationAmount) <= 0) {
+      setDonateError(new Error("Enter a valid donation amount"));
       return;
     }
-
+    setIsDonating(true);
+    setDonateError(null);
     try {
-      const response = await fetch("/api/send-notification", {
-        method: "POST",
-        mode: "same-origin",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          fid: context.user.fid,
-          notificationDetails,
-        }),
+      const tx = await walletClient!.writeContract({
+        address: CONTRACT_ADDRESS as `0x${string}`,
+        abi: bankOfCeloAbi,
+        functionName: "donate",
+        value: parseEther(donationAmount),
       });
-
-      if (response.status === 200) {
-        setSendNotificationResult("Success");
-        return;
-      } else if (response.status === 429) {
-        setSendNotificationResult("Rate limited");
-        return;
-      }
-
-      const data = await response.text();
-      setSendNotificationResult(`Error: ${data}`);
+      setDonateTxHash(tx);
     } catch (error) {
-      setSendNotificationResult(`Error: ${error}`);
+      setDonateError(error instanceof Error ? error : new Error("Donation failed"));
+    } finally {
+      setIsDonating(false);
     }
-  }, [context, notificationDetails]);
+  }, [donationAmount, walletClient]);
 
-  const sendTx = useCallback(() => {
-    sendTransaction(
-      {
-        // call yoink() on Yoink contract
-        to: "0x4bBFD120d9f352A0BEd7a014bd67913a2007a878",
-        data: "0x9846cd9efc000023c0",
-      },
-      {
-        onSuccess: (hash) => {
-          setTxHash(hash);
-        },
-      }
-    );
-  }, [sendTransaction]);
+  // Request CELO
+  const handleRequest = useCallback(async () => {
+    const isValidFid = await verifyFid();
+    if (!isValidFid) return;
+    setIsRequesting(true);
+    setRequestError(null);
+    try {
+      const tx = await walletClient!.writeContract({
+        address: CONTRACT_ADDRESS as `0x${string}`,
+        abi: bankOfCeloAbi,
+        functionName: "requestCelo",
+        args: [parseInt(fid)],
+      });
+      setRequestTxHash(tx);
+    } catch (error) {
+      setRequestError(error instanceof Error ? error : new Error("Request failed"));
+    } finally {
+      setIsRequesting(false);
+    }
+  }, [fid, verifyFid, walletClient]);
 
-  const signTyped = useCallback(() => {
-    signTypedData({
-      domain: {
-        name: "Frames v2 Demo",
-        version: "1",
-        chainId,
-      },
-      types: {
-        Message: [{ name: "content", type: "string" }],
-      },
-      message: {
-        content: "Hello from Frames v2!",
-      },
-      primaryType: "Message",
-    });
-  }, [chainId, signTypedData]);
+  // Sign in with Farcaster
+  const handleSignIn = useCallback(async () => {
+    try {
+      const nonce = await getCsrfToken();
+      if (!nonce) throw new Error("Unable to generate nonce");
+      const result = await sdk.actions.signIn({ nonce });
+      await signIn("credentials", {
+        message: result.message,
+        signature: result.signature,
+        redirect: false,
+      });
+    } catch (error) {
+      console.error("Sign-in failed:", error);
+    }
+  }, []);
 
-  const toggleContext = useCallback(() => {
-    setIsContextOpen((prev) => !prev);
+  // Sign out
+  const handleSignOut = useCallback(async () => {
+    await signOut({ redirect: false });
   }, []);
 
   if (!isSDKLoaded) {
-    return <div>Loading...</div>;
+    return <div className="text-center py-8">Loading...</div>;
   }
 
   return (
     <div
+      className="min-h-screen bg-gradient-to-b from-green-100 to-white dark:from-green-900 dark:to-gray-900 flex flex-col items-center justify-center p-4"
       style={{
         paddingTop: context?.client.safeAreaInsets?.top ?? 0,
         paddingBottom: context?.client.safeAreaInsets?.bottom ?? 0,
@@ -194,627 +266,141 @@ export default function Demo(
         paddingRight: context?.client.safeAreaInsets?.right ?? 0,
       }}
     >
-      <div className="w-[300px] mx-auto py-2 px-2">
-        <h1 className="text-2xl font-bold text-center mb-4">{title}</h1>
-
-        <div className="mb-4">
-          <h2 className="font-2xl font-bold">Context</h2>
-          <button
-            onClick={toggleContext}
-            className="flex items-center gap-2 transition-colors"
-          >
-            <span
-              className={`transform transition-transform ${
-                isContextOpen ? "rotate-90" : ""
-              }`}
-            >
-              ➤
-            </span>
-            Tap to expand
-          </button>
-
-          {isContextOpen && (
-            <div className="p-4 mt-2 bg-gray-100 dark:bg-gray-800 rounded-lg">
-              <pre className="font-mono text-xs whitespace-pre-wrap break-words max-w-[260px] overflow-x-">
-                {JSON.stringify(context, null, 2)}
-              </pre>
-            </div>
-          )}
-        </div>
-
-        <div>
-          <h2 className="font-2xl font-bold">Actions</h2>
-
-          <div className="mb-4">
-            <div className="p-2 bg-gray-100 dark:bg-gray-800 rounded-lg my-2">
-              <pre className="font-mono text-xs whitespace-pre-wrap break-words max-w-[260px] overflow-x-">
-                sdk.actions.signIn
-              </pre>
-            </div>
-            <SignIn />
-          </div>
-
-          <div className="mb-4">
-            <div className="p-2 bg-gray-100 dark:bg-gray-800 rounded-lg my-2">
-              <pre className="font-mono text-xs whitespace-pre-wrap break-words max-w-[260px] overflow-x-">
-                sdk.actions.openUrl
-              </pre>
-            </div>
-            <Button onClick={() => openUrl("https://www.youtube.com/watch?v=dQw4w9WgXcQ")}>Open Link</Button>
-          </div>
-
-          <div className="mb-4">
-            <div className="p-2 bg-gray-100 dark:bg-gray-800 rounded-lg my-2">
-              <pre className="font-mono text-xs whitespace-pre-wrap break-words max-w-[260px] overflow-x-">
-                sdk.actions.viewProfile
-              </pre>
-            </div>
-            <ViewProfile />
-          </div>
-
-          <div className="mb-4">
-            <div className="p-2 bg-gray-100 dark:bg-gray-800 rounded-lg my-2">
-              <pre className="font-mono text-xs whitespace-pre-wrap break-words max-w-[260px] overflow-x-">
-                sdk.actions.close
-              </pre>
-            </div>
-            <Button onClick={close}>Close Frame</Button>
-          </div>
-        </div>
-
-        <div className="mb-4">
-          <h2 className="font-2xl font-bold">Last event</h2>
-
-          <div className="p-4 mt-2 bg-gray-100 dark:bg-gray-800 rounded-lg">
-            <pre className="font-mono text-xs whitespace-pre-wrap break-words max-w-[260px] overflow-x-">
-              {lastEvent || "none"}
-            </pre>
-          </div>
-        </div>
-
-        <div>
-          <h2 className="font-2xl font-bold">Add to client & notifications</h2>
-
-          <div className="mt-2 mb-4 text-sm">
-            Client fid {context?.client.clientFid},
-            {added ? " frame added to client," : " frame not added to client,"}
-            {notificationDetails
-              ? " notifications enabled"
-              : " notifications disabled"}
-          </div>
-
-          <div className="mb-4">
-            <div className="p-2 bg-gray-100 dark:bg-gray-800 rounded-lg my-2">
-              <pre className="font-mono text-xs whitespace-pre-wrap break-words max-w-[260px] overflow-x-">
-                sdk.actions.addFrame
-              </pre>
-            </div>
-            {addFrameResult && (
-              <div className="mb-2 text-sm">
-                Add frame result: {addFrameResult}
-              </div>
-            )}
-            <Button onClick={addFrame} disabled={added}>
-              Add frame to client
-            </Button>
-          </div>
-
-          {sendNotificationResult && (
-            <div className="mb-2 text-sm">
-              Send notification result: {sendNotificationResult}
-            </div>
-          )}
-          <div className="mb-4">
-            <Button onClick={sendNotification} disabled={!notificationDetails}>
-              Send notification
-            </Button>
-          </div>
-        </div>
-
-        <div>
-          <h2 className="font-2xl font-bold">Wallet</h2>
-
-          {address && (
-            <div className="my-2 text-xs">
-              Address: <pre className="inline">{truncateAddress(address)}</pre>
-            </div>
-          )}
-
-          {chainId && (
-            <div className="my-2 text-xs">
-              Chain ID: <pre className="inline">{chainId}</pre>
-            </div>
-          )}
-
-          <div className="mb-4">
-            {isConnected ? (
+      <div className="w-full max-w-md bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 space-y-6">
+        {/* Header */}
+        <h1 className="text-2xl font-bold text-center text-green-600 dark:text-green-400">{title}</h1>
+        <div className="text-center text-sm">
+          {isConnected ? (
+            <div>
+              Connected: <span className="font-mono">{truncateAddress(address!)}</span>
               <Button
+                className="ml-2"
                 onClick={() => disconnect()}
-                className="w-full"
               >
                 Disconnect
               </Button>
-            ) : context ? (
-              /* if context is not null, mini app is running in frame client */
+            </div>
+          ) : (
+            <Button
+              onClick={() => connect({ connector: connectors[0] })}
+              className="w-full"
+            >
+              Connect Wallet
+            </Button>
+          )}
+        </div>
+
+        {/* Farcaster Sign-In */}
+        <div className="space-y-2">
+          <h2 className="text-lg font-semibold">Farcaster</h2>
+          {status !== "authenticated" ? (
+            <Button
+              onClick={handleSignIn}
+              className="w-full"
+              disabled={status === "loading"}
+            >
+              Sign In with Farcaster
+            </Button>
+          ) : (
+            <div>
+              <div className="text-sm">Signed in as FID: {session?.user?.fid}</div>
               <Button
-                onClick={() => connect({ connector: connectors[0] })}
-                className="w-full"
+                
+                className="w-full mt-2"
+                onClick={handleSignOut}
               >
-                Connect
+                Sign Out
               </Button>
-            ) : (
-              /* if context is null, mini app is running in browser */
-              <div className="space-y-2">
-                <Button
-                  onClick={() => connect({ connector: connectors[1] })}
-                  className="w-full"
-                >
-                  Connect Coinbase Wallet
-                </Button>
-                <Button
-                  onClick={() => connect({ connector: connectors[2] })}
-                  className="w-full"
-                >
-                  Connect MetaMask
-                </Button>
+            </div>
+          )}
+        </div>
+
+        {/* Vault Balance */}
+        <div className="space-y-2">
+          <h2 className="text-lg font-semibold">Vault Balance</h2>
+          <div className="p-4 bg-green-50 dark:bg-green-900 rounded-lg text-center">
+            <span className="text-2xl font-bold">{parseFloat(vaultBalance).toFixed(2)}</span> CELO
+          </div>
+        </div>
+
+        {/* Donate CELO */}
+        <div className="space-y-2">
+          <h2 className="text-lg font-semibold">Donate CELO</h2>
+          <div className="space-y-2">
+            <Label htmlFor="donation-amount">Amount (CELO)</Label>
+            <Input
+              id="donation-amount"
+              type="number"
+              step="0.01"
+              min="0"
+              value={donationAmount}
+              onChange={(e) => setDonationAmount(e.target.value)}
+              placeholder="Enter amount"
+              className="text-black dark:text-white"
+            />
+            <Button
+              onClick={handleDonate}
+              disabled={!isConnected || isDonating || !donationAmount}
+              isLoading={isDonating}
+              className="w-full"
+            >
+              Donate
+            </Button>
+            {donateError && renderError(donateError)}
+            {donateTxHash && (
+              <div className="text-xs mt-2">
+                <div>Tx Hash: {truncateAddress(donateTxHash)}</div>
+                <div>
+                  Status: {isDonateConfirming ? "Confirming..." : isDonateConfirmed ? "Confirmed!" : "Pending"}
+                </div>
               </div>
             )}
           </div>
-
-          <div className="mb-4">
-            <SignMessage />
-          </div>
-
-          {isConnected && (
-            <>
-              <div className="mt-2 mb-4 text-sm">
-                Create a coin on Base from any image
-              </div>
-              <div className="mb-4">
-                <CoinIt />
-              </div>
-              <div className="mb-4">
-                <SendEth />
-              </div>
-              <div className="mb-4">
-                <Button
-                  onClick={sendTx}
-                  disabled={!isConnected || isSendTxPending}
-                  isLoading={isSendTxPending}
-                >
-                  Send Transaction (contract)
-                </Button>
-                {isSendTxError && renderError(sendTxError)}
-                {txHash && (
-                  <div className="mt-2 text-xs">
-                    <div>Hash: {truncateAddress(txHash)}</div>
-                    <div>
-                      Status:{" "}
-                      {isConfirming
-                        ? "Confirming..."
-                        : isConfirmed
-                        ? "Confirmed!"
-                        : "Pending"}
-                    </div>
-                  </div>
-                )}
-              </div>
-              <div className="mb-4">
-                <Button
-                  onClick={signTyped}
-                  disabled={!isConnected || isSignTypedPending}
-                  isLoading={isSignTypedPending}
-                >
-                  Sign Typed Data
-                </Button>
-                {isSignTypedError && renderError(signTypedError)}
-              </div>
-              <div className="mb-4">
-                <Button
-                  onClick={handleSwitchChain}
-                  disabled={isSwitchChainPending}
-                  isLoading={isSwitchChainPending}
-                >
-                  Switch to {nextChain.name}
-                </Button>
-                {isSwitchChainError && renderError(switchChainError)}
-              </div>
-            </>
-          )}
         </div>
-      </div>
-    </div>
-  );
-}
 
-function SignMessage() {
-  const { isConnected } = useAccount();
-  const { connectAsync } = useConnect();
-  const {
-    signMessage,
-    data: signature,
-    error: signError,
-    isError: isSignError,
-    isPending: isSignPending,
-  } = useSignMessage();
-
-  const handleSignMessage = useCallback(async () => {
-    if (!isConnected) {
-      await connectAsync({
-        chainId: base.id,
-        connector: config.connectors[0],
-      });
-    }
-
-    signMessage({ message: "Hello from Frames v2!" });
-  }, [connectAsync, isConnected, signMessage]);
-
-  return (
-    <>
-      <Button
-        onClick={handleSignMessage}
-        disabled={isSignPending}
-        isLoading={isSignPending}
-      >
-        Sign Message
-      </Button>
-      {isSignError && renderError(signError)}
-      {signature && (
-        <div className="mt-2 text-xs">
-          <div>Signature: {signature}</div>
-        </div>
-      )}
-    </>
-  );
-}
-
-function SendEth() {
-  const { isConnected, chainId } = useAccount();
-  const {
-    sendTransaction,
-    data,
-    error: sendTxError,
-    isError: isSendTxError,
-    isPending: isSendTxPending,
-  } = useSendTransaction();
-
-  const { isLoading: isConfirming, isSuccess: isConfirmed } =
-    useWaitForTransactionReceipt({
-      hash: data,
-    });
-
-  const toAddr = useMemo(() => {
-    // Protocol guild address
-    return chainId === base.id
-      ? "0x32e3C7fD24e175701A35c224f2238d18439C7dBC"
-      : "0xB3d8d7887693a9852734b4D25e9C0Bb35Ba8a830";
-  }, [chainId]);
-
-  const handleSend = useCallback(() => {
-    sendTransaction({
-      to: toAddr,
-      value: 1n,
-    });
-  }, [toAddr, sendTransaction]);
-
-  return (
-    <>
-      <Button
-        onClick={handleSend}
-        disabled={!isConnected || isSendTxPending}
-        isLoading={isSendTxPending}
-      >
-        Send Transaction (eth)
-      </Button>
-      {isSendTxError && renderError(sendTxError)}
-      {data && (
-        <div className="mt-2 text-xs">
-          <div>Hash: {truncateAddress(data)}</div>
-          <div>
-            Status:{" "}
-            {isConfirming
-              ? "Confirming..."
-              : isConfirmed
-              ? "Confirmed!"
-              : "Pending"}
-          </div>
-        </div>
-      )}
-    </>
-  );
-}
-
-function CoinIt() {
-  const { address, chainId } = useAccount();
-  const { openUrl } = useFrame();
-  const { switchChain } = useSwitchChain();
-  const [name, setName] = useState('');
-  const [symbol, setSymbol] = useState('');
-  const [description, setDescription] = useState('');
-  const [imageFile, setImageFile] = useState<File | null>(null);
-  const [isCreating, setIsCreating] = useState(false);
-  const [isUploading, setIsUploading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [showForm, setShowForm] = useState(false);
-  const [txHash, setTxHash] = useState<string | null>(null);
-  const [coinAddress, setCoinAddress] = useState<string | null>(null);
-
-  const pinata = new PinataSDK({
-    pinataJwt: process.env.NEXT_PUBLIC_PINATA_JWT,
-    pinataGateway: process.env.NEXT_PUBLIC_PINATA_GATEWAY,
-  });
-  const { data: walletClient } = useWalletClient();
-  const publicClient = usePublicClient();
-
-  useEffect(() => {
-    if (txHash) {
-      console.log("Transaction hash:", txHash);
-    }
-  }, [txHash]);
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file && file.type.startsWith('image/')) {
-      setImageFile(file);
-    }
-  };
-
-  const handleCreateCoin = useCallback(async () => {
-    if (!name || !symbol) {
-      setError('Name and symbol are required');
-      return;
-    }
-
-    if (!imageFile) {
-      setError('Please select an image for your coin');
-      return;
-    }
-
-    if (chainId !== base.id) {
-      try {
-        await switchChain({ chainId: base.id });
-      } catch (e) {
-        setError('Please switch your wallet to the Base network before creating a coin.');
-        return;
-      }
-    }
-
-    try {
-      setIsUploading(true);
-      setError(null);
-
-      const upload = await pinata.upload.public.file(imageFile);
-      if (!upload || !upload.cid) throw new Error("Image upload failed");
-
-      const metadata = {
-        name,
-        description,
-        image: `ipfs://${upload.cid}`,
-        properties: {
-          category: "social"
-        }
-      };
-
-      const metadataUpload = await pinata.upload.public.json(metadata);
-      if (!metadataUpload || !metadataUpload.cid) throw new Error("Metadata upload failed");
-
-      const metadataUri = `https://ipfs.io/ipfs/${metadataUpload.cid}`;
-      setIsUploading(false);
-      setIsCreating(true);
-
-      const coinParams = {
-        name,
-        symbol,
-        uri: metadataUri,
-        payoutRecipient: address as `0x${string}`,
-        initialPurchaseWei: 0n,
-      };
-
-      console.log('calling createCoin with params:', coinParams);
-      const coinReceipt = await createCoin(coinParams, walletClient!, publicClient);
-      console.log('coinReceipt:', coinReceipt);
-      setTxHash(coinReceipt.hash as string);
-      setCoinAddress(coinReceipt.address as string);
-      setIsCreating(false);
-      setShowForm(false);
-      setName('');
-      setSymbol('');
-      setDescription('');
-      setImageFile(null);
-    } catch (err) {
-      console.error("Pinata upload error:", err);
-      setError(err instanceof Error ? err.message : "Failed to upload to Pinata");
-      setIsUploading(false);
-      setIsCreating(false);
-    }
-  }, [name, symbol, description, imageFile, address, chainId, switchChain, walletClient, publicClient]);
-
-  const handleButtonClick = () => {
-    if (!showForm) {
-      setShowForm(true);
-    } else {
-      handleCreateCoin();
-    }
-  };
-
-  return (
-    <div className="space-y-4">
-      {coinAddress && (
-        <div className="p-4 bg-green-100 text-green-800 rounded">
-          <div>Coin created successfully!</div>
-          <div>
-            <div>Coin Address: {coinAddress}</div>
-            <Button className="mt-2" onClick={() => openUrl(`https://zora.co/coin/base:${coinAddress}`)}>Open on Zora</Button>
-          </div>
-        </div>
-      )}
-      {!coinAddress && showForm && (
+        {/* Request CELO */}
         <div className="space-y-2">
-          <input
-            type="text"
-            placeholder="Coin Name"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            className="w-full p-2 border rounded text-black dark:text-white"
-          />
-          <input
-            type="text"
-            placeholder="Symbol (e.g., BTC)"
-            value={symbol}
-            onChange={(e) => setSymbol(e.target.value)}
-            className="w-full p-2 border rounded text-black dark:text-white"
-          />
-          <textarea
-            placeholder="Description (optional)"
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            className="w-full p-2 border rounded text-black dark:text-white"
-          />
-          <input
-            type="file"
-            accept="image/*"
-            onChange={handleFileChange}
-            required
-            className="w-full p-2 border rounded text-black dark:text-white"
-          />
+          <h2 className="text-lg font-semibold">Request CELO</h2>
+          <div className="space-y-2">
+            <Label htmlFor="fid">Farcaster FID</Label>
+            <Input
+              id="fid"
+              type="number"
+              value={fid}
+              onChange={(e) => setFid(e.target.value)}
+              placeholder="Enter your FID"
+              className="text-black dark:text-white"
+            />
+            {neynarScore !== null && (
+              <div className="text-sm">
+                Neynar Score: {neynarScore.toFixed(2)} {neynarScore >= 0.41 ? "✅" : "❌"}
+              </div>
+            )}
+            <Button
+              onClick={handleRequest}
+              disabled={!isConnected || isRequesting || isVerifyingFid || !fid}
+              isLoading={isRequesting || isVerifyingFid}
+              className="w-full"
+            >
+              Request 0.5 CELO
+            </Button>
+            {requestError && renderError(requestError)}
+            {requestTxHash && (
+              <div className="text-xs mt-2">
+                <div>Tx Hash: {truncateAddress(requestTxHash)}</div>
+                <div>
+                  Status: {isRequestConfirming ? "Confirming..." : isRequestConfirmed ? "Confirmed!" : "Pending"}
+                </div>
+              </div>
+            )}
+          </div>
         </div>
-      )}
-      <Button
-        onClick={handleButtonClick}
-        disabled={isCreating || isUploading}
-        className="w-full"
-      >
-        {showForm
-          ? isUploading
-            ? 'Uploading...'
-            : isCreating
-            ? 'Creating...'
-            : 'Create Coin'
-          : 'Coin it!'}
-      </Button>
-      {error && <p className="text-red-500 text-sm">{error}</p>}
+
+        {/* Footer */}
+        <div className="text-center text-xs text-gray-500 dark:text-gray-400">
+          Powered by Celo & Farcaster
+        </div>
+      </div>
     </div>
   );
 }
-
-function SignIn() {
-  const [signingIn, setSigningIn] = useState(false);
-  const [signingOut, setSigningOut] = useState(false);
-  const [signInResult, setSignInResult] = useState<SignInCore.SignInResult>();
-  const [signInFailure, setSignInFailure] = useState<string>();
-  const { data: session, status } = useSession();
-
-  const getNonce = useCallback(async () => {
-    const nonce = await getCsrfToken();
-    if (!nonce) throw new Error("Unable to generate nonce");
-    return nonce;
-  }, []);
-
-  const handleSignIn = useCallback(async () => {
-    try {
-      setSigningIn(true);
-      setSignInFailure(undefined);
-      const nonce = await getNonce();
-      const result = await sdk.actions.signIn({ nonce });
-      setSignInResult(result);
-
-      await signIn("credentials", {
-        message: result.message,
-        signature: result.signature,
-        redirect: false,
-      });
-    } catch (e) {
-      if (e instanceof SignInCore.RejectedByUser) {
-        setSignInFailure("Rejected by user");
-        return;
-      }
-
-      setSignInFailure("Unknown error");
-    } finally {
-      setSigningIn(false);
-    }
-  }, [getNonce]);
-
-  const handleSignOut = useCallback(async () => {
-    try {
-      setSigningOut(true);
-      await signOut({ redirect: false });
-      setSignInResult(undefined);
-    } finally {
-      setSigningOut(false);
-    }
-  }, []);
-
-  return (
-    <>
-      {status !== "authenticated" && (
-        <Button onClick={handleSignIn} disabled={signingIn}>
-          Sign In with Farcaster
-        </Button>
-      )}
-      {status === "authenticated" && (
-        <Button onClick={handleSignOut} disabled={signingOut}>
-          Sign out
-        </Button>
-      )}
-      {session && (
-        <div className="my-2 p-2 text-xs overflow-x-scroll bg-gray-100 rounded-lg font-mono">
-          <div className="font-semibold text-gray-500 mb-1">Session</div>
-          <div className="whitespace-pre">
-            {JSON.stringify(session, null, 2)}
-          </div>
-        </div>
-      )}
-      {signInFailure && !signingIn && (
-        <div className="my-2 p-2 text-xs overflow-x-scroll bg-gray-100 rounded-lg font-mono">
-          <div className="font-semibold text-gray-500 mb-1">SIWF Result</div>
-          <div className="whitespace-pre">{signInFailure}</div>
-        </div>
-      )}
-      {signInResult && !signingIn && (
-        <div className="my-2 p-2 text-xs overflow-x-scroll bg-gray-100 rounded-lg font-mono">
-          <div className="font-semibold text-gray-500 mb-1">SIWF Result</div>
-          <div className="whitespace-pre">
-            {JSON.stringify(signInResult, null, 2)}
-          </div>
-        </div>
-      )}
-    </>
-  );
-}
-
-function ViewProfile() {
-  const [fid, setFid] = useState("3");
-
-  return (
-    <>
-      <div>
-        <Label
-          className="text-xs font-semibold text-gray-500 mb-1"
-          htmlFor="view-profile-fid"
-        >
-          Fid
-        </Label>
-        <Input
-          id="view-profile-fid"
-          type="number"
-          value={fid}
-          className="mb-2"
-          onChange={(e) => {
-            setFid(e.target.value);
-          }}
-          step="1"
-          min="1"
-        />
-      </div>
-      <Button
-        onClick={() => {
-          sdk.actions.viewProfile({ fid: parseInt(fid) });
-        }}
-      >
-        View Profile
-      </Button>
-    </>
-  );
-}
-
