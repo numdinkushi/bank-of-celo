@@ -1,305 +1,191 @@
-import { useState, useCallback } from "react";
-import { Input } from "~/components/ui/input";
-import { Label } from "~/components/ui/label";
-import { Button } from "~/components/ui/Button";
-import { useWalletClient, useWaitForTransactionReceipt, useAccount } from "wagmi";
+import { useState } from "react";
+import { useAccount, useWriteContract } from "wagmi";
 import { parseEther } from "viem";
-import { toast } from "react-hot-toast";
-import { Send, Loader2, CheckCircle, XCircle } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
-import { truncateAddress } from "~/lib/truncateAddress";
-
-const bankOfCeloAbi = [
-  {
-    inputs: [],
-    name: "donate",
-    outputs: [],
-    stateMutability: "payable",
-    type: "function",
-  },
-  {
-    inputs: [{ name: "_fid", type: "uint256" }],
-    name: "requestCelo",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
-];
+import { motion } from "framer-motion";
+import { Loader2, Send, Gift, HandCoins } from "lucide-react";
+import { Button } from "~/components/ui/Button";
+import { toast } from "sonner";
+import { Input } from "../ui/input";
 
 const CONTRACT_ADDRESS = "YOUR_DEPLOYED_CONTRACT_ADDRESS";
-const NEYNAR_API_KEY = "FF6C17E2-C5C4-4B55-9848-769D80022F83";
 
 export default function TransactTab() {
   const { isConnected } = useAccount();
-  const { data: walletClient } = useWalletClient();
-  // Donate state
-  const [donationAmount, setDonationAmount] = useState("");
-  const [donateTxHash, setDonateTxHash] = useState<string | null>(null);
-  const [isDonating, setIsDonating] = useState(false);
-  const [donateError, setDonateError] = useState<Error | null>(null);
-  // Request state
-  const [fid, setFid] = useState("");
-  const [requestTxHash, setRequestTxHash] = useState<string | null>(null);
-  const [isRequesting, setIsRequesting] = useState(false);
-  const [requestError, setRequestError] = useState<Error | null>(null);
-  const [neynarScore, setNeynarScore] = useState<number | null>(null);
-  const [isVerifyingFid, setIsVerifyingFid] = useState(false);
+  const { writeContract, isPending } = useWriteContract();
+  const [amount, setAmount] = useState("");
+  const [activeTab, setActiveTab] = useState<"donate" | "request">("donate");
 
-  const { isLoading: isDonateConfirming, isSuccess: isDonateConfirmed } =
-    useWaitForTransactionReceipt({
-      hash: donateTxHash as `0x${string}`,
-    });
-  const { isLoading: isRequestConfirming, isSuccess: isRequestConfirmed } =
-    useWaitForTransactionReceipt({
-      hash: requestTxHash as `0x${string}`,
-    });
-
-  // Donate CELO
-  const handleDonate = useCallback(async () => {
-    if (!donationAmount || parseFloat(donationAmount) <= 0) {
-      setDonateError(new Error("Enter a valid donation amount"));
+  const handleDonate = () => {
+    if (!amount || isNaN(Number(amount)) || Number(amount) <= 0) {
+      toast.error("Please enter a valid amount");
       return;
     }
-    setIsDonating(true);
-    setDonateError(null);
-    try {
-      const tx = await walletClient!.writeContract({
-        address: CONTRACT_ADDRESS as `0x${string}`,
-        abi: bankOfCeloAbi,
-        functionName: "donate",
-        value: parseEther(donationAmount),
-      });
-      setDonateTxHash(tx);
-      toast.success(`Donated ${donationAmount} CELO!`);
-    } catch (error) {
-      setDonateError(error instanceof Error ? error : new Error("Donation failed"));
-      toast.error("Donation failed. Please try again.");
-    } finally {
-      setIsDonating(false);
-    }
-  }, [donationAmount, walletClient]);
 
-  // Verify FID
-  const verifyFid = useCallback(async () => {
-    if (!fid || isNaN(parseInt(fid))) {
-      setRequestError(new Error("Please enter a valid FID"));
-      return false;
-    }
-    setIsVerifyingFid(true);
-    try {
-      const response = await fetch(
-        `https://api.neynar.com/v2/farcaster/user/bulk?fids=${fid}`,
-        {
-          method: "GET",
-          headers: {
-            "x-api-key": NEYNAR_API_KEY,
-            "x-neynar-experimental": "false",
+    writeContract(
+      {
+        address: CONTRACT_ADDRESS as `0x${string}`,
+        abi: [
+          {
+            inputs: [],
+            name: "donate",
+            outputs: [],
+            stateMutability: "payable",
+            type: "function",
           },
-        }
-      );
-      const data = await response.json();
-      const user = data.users[0];
-      if (!user) {
-        setRequestError(new Error("Invalid FID"));
-        return false;
+        ],
+        functionName: "donate",
+        value: parseEther(amount),
+      },
+      {
+        onSuccess: () => {
+          toast.success("Donation successful!");
+          setAmount("");
+        },
+        onError: (error) => {
+          toast.error("Donation failed");
+          console.error("Donation error:", error);
+        },
       }
-      const score = user.neynar_score || 0;
-      setNeynarScore(score);
-      if (score < 0.41) {
-        setRequestError(new Error("Neynar score too low (< 0.41)"));
-        return false;
-      }
-      toast.success("FID verified successfully!");
-      return true;
-    } catch (error) {
-      setRequestError(error instanceof Error ? error : new Error("Failed to verify FID"));
-      return false;
-    } finally {
-      setIsVerifyingFid(false);
-    }
-  }, [fid]);
+    );
+  };
 
-  // Request CELO
-  const handleRequest = useCallback(async () => {
-    const isValidFid = await verifyFid();
-    if (!isValidFid) return;
-    setIsRequesting(true);
-    setRequestError(null);
-    try {
-      const tx = await walletClient!.writeContract({
+  const handleRequest = () => {
+    writeContract(
+      {
         address: CONTRACT_ADDRESS as `0x${string}`,
-        abi: bankOfCeloAbi,
+        abi: [
+          {
+            inputs: [{ name: "_fid", type: "uint256" }],
+            name: "requestCelo",
+            outputs: [],
+            stateMutability: "nonpayable",
+            type: "function",
+          },
+        ],
         functionName: "requestCelo",
-        args: [parseInt(fid)],
-      });
-      setRequestTxHash(tx);
-      toast.success("Requested 0.5 CELO!");
-    } catch (error) {
-      setRequestError(error instanceof Error ? error : new Error("Request failed"));
-      toast.error("Request failed. Please try again.");
-    } finally {
-      setIsRequesting(false);
-    }
-  }, [fid, verifyFid, walletClient]);
+        args: [1234], // Replace with actual FID
+      },
+      {
+        onSuccess: () => {
+          toast.success("Request submitted!");
+        },
+        onError: (error) => {
+          toast.error("Request failed");
+          console.error("Request error:", error);
+        },
+      }
+    );
+  };
 
   return (
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.5 }}
-      className="space-y-4"
+      className="space-y-6"
     >
-      {!isConnected && (
-        <div className="p-4 bg-yellow-100 dark:bg-yellow-900 rounded-lg text-center">
-          <p className="text-sm text-gray-600 dark:text-gray-300">
-            Please connect your wallet to donate or request CELO.
+      {/* Tab Selector */}
+      <div className="flex bg-gray-100 dark:bg-gray-700 rounded-xl p-1">
+        <button
+          onClick={() => setActiveTab("donate")}
+          className={`flex-1 py-2 rounded-lg text-sm font-medium transition-colors ${
+            activeTab === "donate"
+              ? "bg-white dark:bg-gray-800 shadow-sm text-emerald-600 dark:text-emerald-400"
+              : "text-gray-500 dark:text-gray-400"
+          }`}
+        >
+          Donate
+        </button>
+        <button
+          onClick={() => setActiveTab("request")}
+          className={`flex-1 py-2 rounded-lg text-sm font-medium transition-colors ${
+            activeTab === "request"
+              ? "bg-white dark:bg-gray-800 shadow-sm text-amber-600 dark:text-amber-400"
+              : "text-gray-500 dark:text-gray-400"
+          }`}
+        >
+          Request
+        </button>
+      </div>
+
+      {!isConnected ? (
+        <div className="p-6 bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 text-center">
+          <p className="text-gray-600 dark:text-gray-300">
+            Please connect your wallet to {activeTab === "donate" ? "donate" : "request"} CELO
           </p>
         </div>
+      ) : activeTab === "donate" ? (
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+          className="p-5 bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700"
+        >
+          <div className="flex items-center gap-3 mb-4">
+            <div className="bg-emerald-100 dark:bg-emerald-900 p-2 rounded-lg">
+              <Gift className="w-5 h-5 text-emerald-600 dark:text-emerald-300" />
+            </div>
+            <h3 className="font-medium text-gray-900 dark:text-white">Donate to the Vault</h3>
+          </div>
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                Amount (CELO)
+              </label>
+              <Input
+                type="number"
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
+                placeholder="0.0"
+                className="w-full"
+              />
+            </div>
+            <Button
+              onClick={handleDonate}
+              disabled={isPending || !amount}
+              className="w-full bg-emerald-600 hover:bg-emerald-700"
+            >
+              {isPending ? (
+                <Loader2 className="w-4 h-4 animate-spin mr-2" />
+              ) : (
+                <Send className="w-4 h-4 mr-2" />
+              )}
+              Donate
+            </Button>
+          </div>
+        </motion.div>
+      ) : (
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+          className="p-5 bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700"
+        >
+          <div className="flex items-center gap-3 mb-4">
+            <div className="bg-amber-100 dark:bg-amber-900 p-2 rounded-lg">
+              <HandCoins className="w-5 h-5 text-amber-600 dark:text-amber-300" />
+            </div>
+            <h3 className="font-medium text-gray-900 dark:text-white">Request CELO</h3>
+          </div>
+          <div className="space-y-4">
+            <p className="text-sm text-gray-600 dark:text-gray-300">
+              You can request 0.5 CELO once per day to explore the Celo ecosystem.
+            </p>
+            <Button
+              onClick={handleRequest}
+              disabled={isPending}
+              className="w-full bg-amber-600 hover:bg-amber-700"
+            >
+              {isPending ? (
+                <Loader2 className="w-4 h-4 animate-spin mr-2" />
+              ) : (
+                <HandCoins className="w-4 h-4 mr-2" />
+              )}
+              Request 0.5 CELO
+            </Button>
+          </div>
+        </motion.div>
       )}
-      <div className="p-4 bg-white dark:bg-gray-700 rounded-lg shadow space-y-6">
-        {/* Donate Section */}
-        <div className="space-y-2">
-          <h2 className="text-lg font-semibold flex items-center gap-2">
-            <Send className="w-4 h-4" /> Donate CELO
-          </h2>
-          <Label htmlFor="donation-amount">Amount (CELO)</Label>
-          <Input
-            id="donation-amount"
-            type="number"
-            step="0.01"
-            min="0"
-            value={donationAmount}
-            onChange={(e) => setDonationAmount(e.target.value)}
-            placeholder="e.g., 1.0"
-            className="text-black dark:text-white"
-            aria-invalid={donateError ? "true" : "false"}
-            disabled={!isConnected}
-          />
-          <Button
-            onClick={handleDonate}
-            disabled={!isConnected || isDonating || !donationAmount}
-            className="w-full bg-green-500 hover:bg-green-600"
-          >
-            {isDonating ? (
-              <Loader2 className="w-4 h-4 animate-spin mr-2" />
-            ) : (
-              <Send className="w-4 h-4 mr-2" />
-            )}
-            Donate
-          </Button>
-          <AnimatePresence>
-            {donateError && (
-              <motion.div
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                className="text-red-500 text-xs mt-1"
-              >
-                {donateError.message}
-              </motion.div>
-            )}
-            {donateTxHash && (
-              <motion.div
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="text-xs mt-2 p-2 bg-green-100 dark:bg-green-900 rounded-lg"
-              >
-                <div>Tx Hash: {truncateAddress(donateTxHash)}</div>
-                <div className="flex items-center gap-1">
-                  Status:{" "}
-                  {isDonateConfirming ? (
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                  ) : isDonateConfirmed ? (
-                    <CheckCircle className="w-4 h-4 text-green-500" />
-                  ) : (
-                    "Pending"
-                  )}
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
-
-        {/* Divider */}
-        <div className="border-t border-gray-200 dark:border-gray-600" />
-
-        {/* Request Section */}
-        <div className="space-y-2">
-          <h2 className="text-lg font-semibold flex items-center gap-2">
-            <Send className="w-4 h-4" /> Request CELO
-          </h2>
-          <Label htmlFor="fid">Farcaster FID</Label>
-          <Input
-            id="fid"
-            type="number"
-            value={fid}
-            onChange={(e) => setFid(e.target.value)}
-            placeholder="e.g., 420564"
-            className="text-black dark:text-white"
-            aria-invalid={requestError ? "true" : "false"}
-            disabled={!isConnected}
-          />
-          <AnimatePresence>
-            {neynarScore !== null && (
-              <motion.div
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="text-sm flex items-center gap-2"
-              >
-                Neynar Score: {neynarScore.toFixed(2)}{" "}
-                {neynarScore >= 0.41 ? (
-                  <CheckCircle className="w-4 h-4 text-green-500" />
-                ) : (
-                  <XCircle className="w-4 h-4 text-red-500" />
-                )}
-              </motion.div>
-            )}
-          </AnimatePresence>
-          <Button
-            onClick={handleRequest}
-            disabled={!isConnected || isRequesting || isVerifyingFid || !fid}
-            className="w-full bg-green-500 hover:bg-green-600"
-          >
-            {isRequesting || isVerifyingFid ? (
-              <Loader2 className="w-4 h-4 animate-spin mr-2" />
-            ) : (
-              <Send className="w-4 h-4 mr-2" />
-            )}
-            Request 0.5 CELO
-          </Button>
-          <AnimatePresence>
-            {requestError && (
-              <motion.div
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                className="text-red-500 text-xs mt-1"
-              >
-                {requestError.message}
-              </motion.div>
-            )}
-            {requestTxHash && (
-              <motion.div
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="text-xs mt-2 p-2 bg-green-100 dark:bg-green-900 rounded-lg"
-              >
-                <div>Tx Hash: {truncateAddress(requestTxHash)}</div>
-                <div className="flex items-center gap-1">
-                  Status:{" "}
-                  {isRequestConfirming ? (
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                  ) : isRequestConfirmed ? (
-                    <CheckCircle className="w-4 h-4 text-green-500" />
-                  ) : (
-                    "Pending"
-                  )}
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
-      </div>
     </motion.div>
   );
 }
