@@ -10,14 +10,14 @@ import { formatEther } from "viem";
 import { useFrame } from "~/components/providers/FrameProvider";
 import { motion } from "framer-motion";
 import { toast } from "react-hot-toast";
-import { Wallet, Home, Send, ArrowLeftRight, LogOut } from "lucide-react";
+import { Wallet, Home, Send, ArrowLeftRight, Trophy, LogOut } from "lucide-react";
 import { Button } from "~/components/ui/Button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "~/components/ui/dialog";
 import HomeTab from "~/components/tabs/HomeTab";
-import DonateTab from "~/components/tabs/DonateTab";
-import RequestTab from "~/components/tabs/RequestTab";
+import TransactTab from "~/components/tabs/TransactTab";
 import SwapBridgeTab from "~/components/tabs/SwapBridgeTab";
 import { truncateAddress } from "~/lib/truncateAddress";
+import LeaderboardTab from "./tabs/LeaderboardTab";
 
 // Bank of Celo ABI
 const bankOfCeloAbi = [
@@ -41,6 +41,15 @@ const bankOfCeloAbi = [
     outputs: [{ name: "", type: "uint256" }],
     stateMutability: "view",
     type: "function",
+  },
+  {
+    anonymous: false,
+    inputs: [
+      { indexed: true, name: "donor", type: "address" },
+      { indexed: false, name: "amount", type: "uint256" },
+    ],
+    name: "Donated",
+    type: "event",
   },
 ];
 
@@ -106,7 +115,7 @@ export default function BankOfCelo({ title = "Bank of Celo" }: { title?: string 
 
   if (!isSDKLoaded) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gradient-to-b from-green-100 to-white">
+      <div className="flex items-center justify-center min-h-screen bg-gradient-to-b from-green-200 to-yellow-100">
         <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1 }}>
           <Home className="w-8 h-8 text-green-600" />
         </motion.div>
@@ -119,7 +128,7 @@ export default function BankOfCelo({ title = "Bank of Celo" }: { title?: string 
       className="min-h-screen bg-gradient-to-b from-green-200 to-yellow-100 dark:from-green-900 dark:to-yellow-900 flex flex-col"
       style={{
         paddingTop: context?.client.safeAreaInsets?.top ?? 0,
-        paddingBottom: context?.client.safeAreaInsets?.bottom ?? 60, // Space for bottom nav
+        paddingBottom: context?.client.safeAreaInsets?.bottom ?? 60,
         paddingLeft: context?.client.safeAreaInsets?.left ?? 0,
         paddingRight: context?.client.safeAreaInsets?.right ?? 0,
       }}
@@ -132,7 +141,7 @@ export default function BankOfCelo({ title = "Bank of Celo" }: { title?: string 
               Welcome to Bank of Celo!
             </DialogTitle>
             <DialogDescription className="text-gray-600 dark:text-gray-300">
-              Donate CELO to support the ecosystem, request 0.5 CELO to get started, or swap/bridge tokens to Celo. Connect your wallet and sign in with Farcaster!
+              Donate or request CELO to support the ecosystem, swap/bridge tokens, or check the leaderboard to see top contributors!
             </DialogDescription>
           </DialogHeader>
           <Button onClick={() => setShowWelcome(false)} className="mt-4 bg-green-500 hover:bg-green-600">
@@ -148,15 +157,16 @@ export default function BankOfCelo({ title = "Bank of Celo" }: { title?: string 
         transition={{ duration: 0.5 }}
         className="sticky top-0 z-10 bg-white/80 dark:bg-gray-800/80 backdrop-blur-md shadow-md p-4"
       >
-        <div className="flex items-center justify-between">
-          <h1 className="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-green-600 to-yellow-500">
+        <div className="flex items-center justify-between flex-wrap gap-2 max-w-md mx-auto">
+          <h1 className="text-lg sm:text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-green-600 to-yellow-500 truncate max-w-[150px]">
             {title}
           </h1>
           <div className="flex items-center gap-2">
             {isConnected ? (
               <Button
                 onClick={() => disconnect()}
-                className="text-red-500 hover:bg-red-100"
+                className="text-red-500 hover:bg-red-100 font-mono text-xs max-w-[120px] truncate"
+                aria-label="Disconnect wallet"
               >
                 <Wallet className="w-4 h-4 mr-1" />
                 {truncateAddress(address!)}
@@ -164,7 +174,8 @@ export default function BankOfCelo({ title = "Bank of Celo" }: { title?: string 
             ) : (
               <Button
                 onClick={() => connect({ connector: connectors[0] })}
-                className="bg-green-500 hover:bg-green-600"
+                className="bg-green-500 hover:bg-green-600 text-xs"
+                aria-label="Connect wallet"
               >
                 <Wallet className="w-4 h-4 mr-1" /> Connect
               </Button>
@@ -172,15 +183,17 @@ export default function BankOfCelo({ title = "Bank of Celo" }: { title?: string 
             {status === "authenticated" ? (
               <Button
                 onClick={handleSignOut}
-                className="text-blue-500 hover:bg-blue-100"
+                className="text-blue-500 hover:bg-blue-100 text-xs"
+                aria-label="Sign out from Farcaster"
               >
                 <LogOut className="w-4 h-4" />
               </Button>
             ) : (
               <Button
                 onClick={handleSignIn}
-                className="bg-blue-500 hover:bg-blue-600"
+                className="bg-blue-500 hover:bg-blue-600 text-xs"
                 disabled={status === "loading"}
+                aria-label="Sign in with Farcaster"
               >
                 Sign In
               </Button>
@@ -190,7 +203,7 @@ export default function BankOfCelo({ title = "Bank of Celo" }: { title?: string 
       </motion.div>
 
       {/* Content */}
-      <div className="flex-1 p-4 overflow-y-auto">
+      <div className="flex-1 p-4 overflow-y-auto max-w-md mx-auto w-full">
         <motion.div
           key={activeTab}
           initial={{ opacity: 0, x: 20 }}
@@ -199,9 +212,9 @@ export default function BankOfCelo({ title = "Bank of Celo" }: { title?: string 
           transition={{ duration: 0.3 }}
         >
           {activeTab === "home" && <HomeTab vaultBalance={vaultBalance} />}
-          {activeTab === "donate" && <DonateTab />}
-          {activeTab === "request" && <RequestTab />}
+          {activeTab === "transact" && <TransactTab />}
           {activeTab === "swap" && <SwapBridgeTab />}
+          {activeTab === "leaderboard" && <LeaderboardTab />}
         </motion.div>
       </div>
 
@@ -214,9 +227,9 @@ export default function BankOfCelo({ title = "Bank of Celo" }: { title?: string 
       >
         {[
           { id: "home", icon: <Home className="w-6 h-6" />, label: "Home" },
-          { id: "donate", icon: <Send className="w-6 h-6" />, label: "Donate" },
-          { id: "request", icon: <Send className="w-6 h-6" />, label: "Request" },
+          { id: "transact", icon: <Send className="w-6 h-6" />, label: "Transact" },
           { id: "swap", icon: <ArrowLeftRight className="w-6 h-6" />, label: "Swap" },
+          { id: "leaderboard", icon: <Trophy className="w-6 h-6" />, label: "Leaderboard" },
         ].map((tab) => (
           <button
             key={tab.id}
