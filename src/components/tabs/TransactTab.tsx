@@ -63,7 +63,7 @@ export default function TransactTab() {
           },
         ],
         functionName: "requestCelo",
-        args: [1234], // Replace with actual FID
+        args: [1234n], // Replace with actual FID
       },
       {
         onSuccess: () => {
