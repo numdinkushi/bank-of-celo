@@ -3,6 +3,7 @@ pragma solidity 0.8.24;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
+import "@openzeppelin/contracts/utils/Strings.sol";
 /**
  * @title BankOfCelo
  * @notice Enhanced with leaderboard functionality and donor perks
@@ -13,7 +14,8 @@ contract BankOfCelo is Ownable, ReentrancyGuard {
     uint256 public immutable minVaultBalance;
     uint256 public constant DEV_FEE_PERCENT = 5;
     address public immutable devWallet;
-
+    uint256 public lastPublishedBalance;
+    uint256 public lastPublishedTime;
     // Donor tiers (in CELO)
     uint256 public constant TIER1_THRESHOLD = 10 ether;
     uint256 public constant TIER2_THRESHOLD = 50 ether;
@@ -50,6 +52,14 @@ contract BankOfCelo is Ownable, ReentrancyGuard {
     event BlacklistUpdated(uint256[] fids, bool isBlacklisted);
     event DonorTierUpgraded(address indexed donor, uint8 newTier);
     event LeaderboardUpdated(address indexed donor, uint256 amount, uint256 position);
+
+
+
+function publishBalance() external {
+    require(block.timestamp > lastPublishedTime + 1 days);
+    lastPublishedBalance = address(this).balance;
+    lastPublishedTime = block.timestamp;
+}
 
     constructor(uint256 _minVaultBalance, address _devWallet)
         payable
@@ -196,6 +206,39 @@ contract BankOfCelo is Ownable, ReentrancyGuard {
     function getDonorTier(address donor) external view returns (uint8) {
         return donors[donor].tier;
     }
+     /// Returns vault balance with safety checks
+    /// balance in wei, minReserve in wei, available for claims in wei
+    function getVaultStatus() external view returns (
+        uint256 currentBalance,
+        uint256 minReserve,
+        uint256 availableForClaims
+    ) {
+        currentBalance = address(this).balance;
+        minReserve = minVaultBalance;
+        availableForClaims = currentBalance > minReserve 
+            ? currentBalance - minReserve 
+            : 0;
+    }
+
+    /// @notice User-friendly balance display
+    function getFormattedBalance() external view returns (string memory) {
+        uint256 balance = address(this).balance;
+        uint256 celoAmount = balance / 1 ether;
+        uint256 decimals = (balance % 1 ether) / 1e16; // 2 decimal places
+        
+        return string(abi.encodePacked(
+            Strings.toString(celoAmount),
+            ".",
+            decimals < 10 ? "0" : "",
+            Strings.toString(decimals),
+            " CELO"
+        ));
+    }
+    function getBalanceWithAccessControl() external view returns (uint256) {
+    require(donors[msg.sender].totalDonated > 0.1 ether, 
+        "Only donors can view");
+    return address(this).balance;
+}
 
     // --- Fallback ---
     receive() external payable {
