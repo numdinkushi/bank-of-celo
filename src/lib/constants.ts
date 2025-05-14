@@ -7,7 +7,7 @@ export const APP_SPLASH_URL = `${APP_URL}/splash.png`;
 export const APP_SPLASH_BACKGROUND_COLOR = "#f7f7f7";
 export const APP_BUTTON_TEXT = process.env.NEXT_PUBLIC_FRAME_BUTTON_TEXT;
 
-export const BANK_OF_CELO_CONTRACT_ADDRESS = "0x5F8A37c69E1e3f4822E882d7627aD0Fe0d97035B";
+export const BANK_OF_CELO_CONTRACT_ADDRESS = "0xC96db59ae570B51Cf369cCFaBCCD14B86C32b805";
 export const BANK_OF_CELO_CONTRACT_ABI = [
     {
       "inputs": [
@@ -15,6 +15,11 @@ export const BANK_OF_CELO_CONTRACT_ABI = [
           "internalType": "uint256",
           "name": "_minVaultBalance",
           "type": "uint256"
+        },
+        {
+          "internalType": "address",
+          "name": "_devWallet",
+          "type": "address"
         }
       ],
       "stateMutability": "payable",
@@ -105,9 +110,59 @@ export const BANK_OF_CELO_CONTRACT_ABI = [
           "internalType": "uint256",
           "name": "amount",
           "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "devFee",
+          "type": "uint256"
         }
       ],
       "name": "Donated",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "donor",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint8",
+          "name": "newTier",
+          "type": "uint8"
+        }
+      ],
+      "name": "DonorTierUpgraded",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "donor",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "amount",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "position",
+          "type": "uint256"
+        }
+      ],
+      "name": "LeaderboardUpdated",
       "type": "event"
     },
     {
@@ -131,7 +186,72 @@ export const BANK_OF_CELO_CONTRACT_ABI = [
     },
     {
       "inputs": [],
+      "name": "DEV_FEE_PERCENT",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "LEADERBOARD_SIZE",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
       "name": "MAX_CLAIM",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "TIER1_THRESHOLD",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "TIER2_THRESHOLD",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "TIER3_THRESHOLD",
       "outputs": [
         {
           "internalType": "uint256",
@@ -170,6 +290,19 @@ export const BANK_OF_CELO_CONTRACT_ABI = [
     },
     {
       "inputs": [],
+      "name": "devWallet",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
       "name": "donate",
       "outputs": [],
       "stateMutability": "payable",
@@ -183,12 +316,27 @@ export const BANK_OF_CELO_CONTRACT_ABI = [
           "type": "address"
         }
       ],
-      "name": "donorTotals",
+      "name": "donors",
       "outputs": [
         {
           "internalType": "uint256",
-          "name": "",
+          "name": "totalDonated",
           "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "lastDonationTime",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint8",
+          "name": "tier",
+          "type": "uint8"
+        },
+        {
+          "internalType": "bool",
+          "name": "hasClaimed",
+          "type": "bool"
         }
       ],
       "stateMutability": "view",
@@ -236,19 +384,82 @@ export const BANK_OF_CELO_CONTRACT_ABI = [
       "inputs": [
         {
           "internalType": "address",
-          "name": "",
+          "name": "donor",
           "type": "address"
         }
       ],
-      "name": "hasClaimed",
+      "name": "getDonorRank",
       "outputs": [
         {
-          "internalType": "bool",
+          "internalType": "uint256",
           "name": "",
-          "type": "bool"
+          "type": "uint256"
         }
       ],
       "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "donor",
+          "type": "address"
+        }
+      ],
+      "name": "getDonorTier",
+      "outputs": [
+        {
+          "internalType": "uint8",
+          "name": "",
+          "type": "uint8"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "getLeaderboard",
+      "outputs": [
+        {
+          "components": [
+            {
+              "internalType": "address",
+              "name": "donor",
+              "type": "address"
+            },
+            {
+              "internalType": "uint256",
+              "name": "amount",
+              "type": "uint256"
+            }
+          ],
+          "internalType": "struct BankOfCelo.LeaderboardEntry[]",
+          "name": "",
+          "type": "tuple[]"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "totalDonated",
+          "type": "uint256"
+        }
+      ],
+      "name": "getTier",
+      "outputs": [
+        {
+          "internalType": "uint8",
+          "name": "",
+          "type": "uint8"
+        }
+      ],
+      "stateMutability": "pure",
       "type": "function"
     },
     {
@@ -260,6 +471,43 @@ export const BANK_OF_CELO_CONTRACT_ABI = [
         }
       ],
       "name": "lastClaimAt",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "name": "leaderboard",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "donor",
+          "type": "address"
+        },
+        {
+          "internalType": "uint256",
+          "name": "amount",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "minLeaderboardAmount",
       "outputs": [
         {
           "internalType": "uint256",

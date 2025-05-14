@@ -1,17 +1,13 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.24;
+pragma solidity 0.8.24;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
-import "@openzeppelin/contracts/utils/math/SafeMath.sol";
-
 /**
  * @title BankOfCelo
  * @notice Enhanced with leaderboard functionality and donor perks
  */
 contract BankOfCelo is Ownable, ReentrancyGuard {
-    using SafeMath for uint256;
-
     // --- Config ---
     uint256 public constant MAX_CLAIM = 0.5 ether;
     uint256 public immutable minVaultBalance;
@@ -68,8 +64,8 @@ contract BankOfCelo is Ownable, ReentrancyGuard {
     function donate() external payable nonReentrant {
         require(msg.value > 0, "Zero deposit");
         
-        uint256 devFee = msg.value.mul(DEV_FEE_PERCENT).div(100);
-        uint256 donationAmount = msg.value.sub(devFee);
+        uint256 devFee = (msg.value * DEV_FEE_PERCENT) / 100;
+        uint256 donationAmount = msg.value - devFee;
 
         DonorInfo storage donor = donors[msg.sender];
         donor.totalDonated += donationAmount;
@@ -203,9 +199,8 @@ contract BankOfCelo is Ownable, ReentrancyGuard {
 
     // --- Fallback ---
     receive() external payable {
-        uint256 devFee = msg.value.mul(DEV_FEE_PERCENT).div(100);
-        uint256 donationAmount = msg.value.sub(devFee);
-
+       uint256 devFee = (msg.value * DEV_FEE_PERCENT) / 100;
+       uint256 donationAmount = msg.value - devFee;
         DonorInfo storage donor = donors[msg.sender];
         donor.totalDonated += donationAmount;
         donor.lastDonationTime = block.timestamp;
