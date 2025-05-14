@@ -8,75 +8,66 @@ interface IBankOfCelo {
 }
 
 contract BankOfCeloRelay is Ownable {
-     IBankOfCelo public immutable bank;
-    uint256 public gasFee; // Fee to cover gas costs only
+    IBankOfCelo public immutable bank;
     mapping(bytes32 => bool) public usedSignatures;
+    mapping(address => uint256) public lastClaimTime;
+    uint256 public claimCooldown = 1 days;
     
-    event ClaimRelayed(address indexed user, uint256 fid, uint256 gasFee);
-    
-    constructor(address bankAddress, address initialOwner) Ownable(initialOwner) {
+    event ClaimRelayed(address indexed user, uint256 fid);
+
+    constructor(address bankAddress) Ownable(msg.sender) {
         bank = IBankOfCelo(bankAddress);
-        gasFee = 0.001 ether; // Default gas fee (~0.001 CELO)
     }
-    
+
     function relayClaim(
         address user,
         uint256 fid,
-        uint256 maxGasFee,
         uint256 deadline,
-        bytes memory signature
-    ) external payable {
-        require(block.timestamp <= deadline, "Transaction expired");
-        require(msg.value >= gasFee, "Insufficient gas fee");
-        require(msg.value <= maxGasFee, "Gas fee exceeds maximum");
-        
+        bytes calldata signature
+    ) external {
         // Prevent signature reuse
-        bytes32 signatureHash = keccak256(signature);
-        require(!usedSignatures[signatureHash], "Signature already used");
-        usedSignatures[signatureHash] = true;
-        
+        bytes32 sigHash = keccak256(abi.encodePacked(signature));
+        require(!usedSignatures[sigHash], "Signature already used");
+        usedSignatures[sigHash] = true;
+
+        // Verify claim cooldown
+        require(block.timestamp >= lastClaimTime[user] + claimCooldown, "Claim cooldown active");
+
+        // Verify deadline
+        require(block.timestamp <= deadline, "Claim window expired");
+
         // Verify signature
-        bytes32 hash = keccak256(abi.encodePacked(
-            user, fid, maxGasFee, deadline, address(this)
+        bytes32 messageHash = keccak256(abi.encodePacked(
+            user, fid, deadline, address(this)
         ));
-        address signer = recoverSigner(hash, signature);
-        require(signer == user, "Invalid signature");
-        
-        // Execute claim - BankOfCelo will send 0.5 CELO to this contract
+        require(recoverSigner(messageHash, signature) == user, "Invalid signature");
+
+        // Update last claim time
+        lastClaimTime[user] = block.timestamp;
+
+        // Execute claim
         bank.claim(fid);
-        
-        // Forward the claimed amount to the user
-        uint256 claimedAmount = 0.5 ether;
-        (bool success, ) = user.call{value: claimedAmount}("");
-        require(success, "Failed to forward CELO to user");
-        
-        // Refund any excess gas fee
-        if (msg.value > gasFee) {
-            (success, ) = msg.sender.call{value: msg.value - gasFee}("");
-            require(success, "Failed to refund excess gas fee");
-        }
-        
-        emit ClaimRelayed(user, fid, gasFee);
+
+        // Forward funds to user
+        (bool success,) = user.call{value: 0.5 ether}("");
+        require(success, "Fund transfer failed");
+
+        emit ClaimRelayed(user, fid);
     }
-    
-    // Add this function to handle any remaining balance (shouldn't happen)
-    function emergencyWithdraw(address payable to) external onlyOwner {
-        to.transfer(address(this).balance);
+
+    function setClaimCooldown(uint256 cooldown) external onlyOwner {
+        claimCooldown = cooldown;
     }
-    
-    function setGasFee(uint256 newGasFee) external onlyOwner {
-        gasFee = newGasFee;
+
+    function withdrawFunds() external onlyOwner {
+        payable(owner()).transfer(address(this).balance);
     }
-    
-    function withdrawFees(address payable to) external onlyOwner {
-        to.transfer(address(this).balance);
-    }
-    
+
     function recoverSigner(bytes32 hash, bytes memory signature) internal pure returns (address) {
         (bytes32 r, bytes32 s, uint8 v) = splitSignature(signature);
         return ecrecover(hash, v, r, s);
     }
-    
+
     function splitSignature(bytes memory sig) internal pure returns (bytes32 r, bytes32 s, uint8 v) {
         require(sig.length == 65, "Invalid signature length");
         assembly {

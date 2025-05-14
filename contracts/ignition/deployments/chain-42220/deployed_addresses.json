@@ -1,3 +1,4 @@
 {
-  "BocModule#BankOfCelo": "0x48820Ed9caf01295d2D6b5561E249C5e1E46D5cE"
+  "BocModule#BankOfCelo": "0x48820Ed9caf01295d2D6b5561E249C5e1E46D5cE",
+  "BocRelayModule#BankOfCelo": "0xd980d16cfded70fce09ca8B69FC5404Ea38796Fc"
 }
