@@ -16,10 +16,11 @@ interface SwapBridgeTabProps {
 }
 
 export default function SwapBridgeTab({ isCorrectChain }: SwapBridgeTabProps) {
-  const { isConnected, chainId } = useAccount();
+  const { isConnected,  } = useAccount();
   const { switchChain, isPending: isSwitching } = useSwitchChain();
   const { theme, resolvedTheme } = useTheme(); // Use next-themes to detect theme
   const [isWidgetReady, setIsWidgetReady] = useState(false);
+  const chainId = celo.id;
 
   // Handle chain switching
   const handleSwitchToCelo = useCallback(() => {
@@ -124,7 +125,12 @@ export default function SwapBridgeTab({ isCorrectChain }: SwapBridgeTabProps) {
           ) : (
             <div className="space-y-3">
               <SquidWidget
-                config={squidWidgetConfig}/>
+              config={{
+                integratorId: "bankofcelo752296ef-d9ff-4804-90a5-fab73df78117",
+                apiUrl: "https://v2.api.squidrouter.com",
+                // Add other configuration options here
+        }}
+      />
               <div className="text-xs text-gray-500 dark:text-gray-400 text-center">
                 Powered by Squid Router
               </div>

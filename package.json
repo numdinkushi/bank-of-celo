@@ -14,7 +14,7 @@
   "scripts": {
     "dev": "node scripts/dev.js",
     "build": "node scripts/build.js",
-    "build:prod": "next build", 
+    "build:prod": "next build",
     "start": "next start",
     "lint": "next lint",
     "deploy:vercel": "node scripts/deploy.js",
@@ -43,6 +43,7 @@
     "next": "15.0.3",
     "next-auth": "^4.24.11",
     "next-themes": "^0.4.6",
+    "next-transpile-modules": "^10.0.1",
     "pino-pretty": "^13.0.0",
     "react": "^18",
     "react-dom": "^18",
