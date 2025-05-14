@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Loader2, Send, Gift, HandCoins, Clock } from "lucide-react";
@@ -15,7 +14,7 @@ interface TransactTabProps {
   lastClaimAt?: number;
   isCorrectChain: boolean;
   isPending: boolean;
-  fid?: number; // FID from session
+  fid?: number;
 }
 
 export default function TransactTab({
@@ -32,11 +31,8 @@ export default function TransactTab({
   const [fidInput, setFidInput] = useState("");
   const [activeTab, setActiveTab] = useState<"donate" | "claim">("donate");
 
-  // Auto-populate FID if available from session
   useEffect(() => {
-    if (fid) {
-      setFidInput(fid.toString());
-    }
+    if (fid) setFidInput(fid.toString());
   }, [fid]);
 
   const canClaim = () => {
@@ -66,7 +62,6 @@ export default function TransactTab({
         return;
       }
       onClaim(Number(fidInput));
-      setFidInput(fid ? fid.toString() : "");
     }
   };
 
@@ -77,65 +72,68 @@ export default function TransactTab({
       transition={{ duration: 0.5 }}
       className="space-y-6"
     >
-      {/* Tab Selector */}
-      <div className="flex bg-gray-100 dark:bg-gray-700 rounded-xl p-1">
-        <button
-          onClick={() => setActiveTab("donate")}
-          className={`flex-1 py-2 rounded-lg text-sm font-medium transition-colors ${
-            activeTab === "donate"
-              ? "bg-white dark:bg-gray-800 shadow-sm text-emerald-600 dark:text-emerald-400"
-              : "text-gray-500 dark:text-gray-400"
-          }`}
-          aria-label="Donate tab"
-          role="tab"
-          aria-selected={activeTab === "donate"}
-        >
-          Donate
-        </button>
-        <button
-          onClick={() => setActiveTab("claim")}
-          className={`flex-1 py-2 rounded-lg text-sm font-medium transition-colors ${
-            activeTab === "claim"
-              ? "bg-white dark:bg-gray-800 shadow-sm text-amber-600 dark:text-amber-400"
-              : "text-gray-500 dark:text-gray-400"
-          }`}
-          aria-label="Claim tab"
-          role="tab"
-          aria-selected={activeTab === "claim"}
-        >
-          Claim
-        </button>
+      {/* Header with Tabs */}
+      <div className="flex flex-col gap-4">
+        <div className="flex items-center gap-3">
+          <div className="bg-blue-100 dark:bg-blue-900 p-2 rounded-lg">
+            <Gift className="w-5 h-5 text-blue-600 dark:text-blue-300" />
+          </div>
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+            Bank of Celo Vault
+          </h2>
+        </div>
+        
+        {/* Tab Selector */}
+        <div className="flex bg-gray-100 dark:bg-gray-800 rounded-xl p-1">
+          <button
+            onClick={() => setActiveTab("donate")}
+            className={`flex-1 py-3 rounded-lg font-medium transition-colors flex items-center justify-center gap-2 ${
+              activeTab === "donate"
+                ? "bg-white dark:bg-gray-700 shadow-sm text-emerald-600 dark:text-emerald-400"
+                : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
+            }`}
+          >
+            <Gift className="w-4 h-4" />
+            Donate
+          </button>
+          <button
+            onClick={() => setActiveTab("claim")}
+            className={`flex-1 py-3 rounded-lg font-medium transition-colors flex items-center justify-center gap-2 ${
+              activeTab === "claim"
+                ? "bg-white dark:bg-gray-700 shadow-sm text-amber-600 dark:text-amber-400"
+                : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
+            }`}
+          >
+            <HandCoins className="w-4 h-4" />
+            Claim
+          </button>
+        </div>
       </div>
 
       {!isCorrectChain ? (
-        <div className="p-6 bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 text-center">
-          <p className="text-gray-600 dark:text-gray-300">Please switch to Celo Network to proceed</p>
+        <div className="p-6 bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 text-center">
+          <p className="text-gray-600 dark:text-gray-300">
+            Please switch to Celo Network to proceed
+          </p>
         </div>
       ) : activeTab === "donate" ? (
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3 }}
-          className="p-5 bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700"
+          className="p-6 bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700"
         >
-          <div className="flex items-center gap-3 mb-4">
-            <div className="bg-emerald-100 dark:bg-emerald-900 p-2 rounded-lg">
-              <Gift className="w-5 h-5 text-emerald-600 dark:text-emerald-300" />
-            </div>
-            <h3 className="font-medium text-gray-900 dark:text-white">Donate to the Vault</h3>
-          </div>
-          <div className="space-y-4">
+          <div className="space-y-5">
             <div>
-              <label htmlFor="donate-amount" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                Amount (CELO)
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Amount to Donate (CELO)
               </label>
               <Input
-                id="donate-amount"
                 type="number"
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
                 placeholder="0.0"
-                className="w-full"
+                className="w-full py-3 text-base"
                 min="0"
                 step="0.01"
               />
@@ -143,15 +141,16 @@ export default function TransactTab({
             <Button
               onClick={handleSubmit}
               disabled={isPending || !amount}
-              className="w-full bg-emerald-600 hover:bg-emerald-700"
-              aria-label="Donate CELO"
+              className="w-full py-3 bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-700 hover:to-emerald-600 text-white"
             >
-              {isPending && activeTab === "donate" ? (
-                <Loader2 className="w-4 h-4 animate-spin mr-2" />
+              {isPending ? (
+                <Loader2 className="w-5 h-5 animate-spin" />
               ) : (
-                <Send className="w-4 h-4 mr-2" />
+                <div className="flex items-center justify-center gap-2">
+                  <Send className="w-5 h-5" />
+                  <span>Donate CELO</span>
+                </div>
               )}
-              Donate
             </Button>
           </div>
         </motion.div>
@@ -160,50 +159,45 @@ export default function TransactTab({
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3 }}
-          className="p-5 bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700"
+          className="p-6 bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700"
         >
-          <div className="flex items-center gap-3 mb-4">
-            <div className="bg-amber-100 dark:bg-amber-900 p-2 rounded-lg">
-              <HandCoins className="w-5 h-5 text-amber-600 dark:text-amber-300" />
-            </div>
-            <h3 className="font-medium text-gray-900 dark:text-white">Claim CELO</h3>
-          </div>
-          <div className="space-y-4">
+          <div className="space-y-5">
             {!canClaim() && nextClaimTime && (
-              <div className="p-3 bg-amber-50 dark:bg-amber-900/30 rounded-lg text-sm text-amber-700 dark:text-amber-300 flex items-center">
-                <Clock className="w-4 h-4 mr-2" />
-                You can claim again {formatDistanceToNow(nextClaimTime, { addSuffix: true })}
+              <div className="p-3 bg-amber-50 dark:bg-amber-900/30 rounded-lg text-sm text-amber-800 dark:text-amber-200 flex items-center">
+                <Clock className="w-4 h-4 mr-2 flex-shrink-0" />
+                <span>
+                  You can claim again {formatDistanceToNow(nextClaimTime, { addSuffix: true })}
+                </span>
               </div>
             )}
+            
             <div>
-              <label
-                htmlFor="farcaster-id"
-                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
-              >
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Your Farcaster ID
               </label>
               <Input
-                id="farcaster-id"
                 type="number"
                 value={fidInput}
                 onChange={(e) => setFidInput(e.target.value)}
                 placeholder="1234"
-                className="w-full"
-                disabled={!!fid} // Disable if FID is auto-populated
+                className="w-full py-3 text-base"
+                disabled={!!fid}
               />
             </div>
+            
             <Button
               onClick={handleSubmit}
               disabled={isPending || !fidInput || !canClaim()}
-              className="w-full bg-amber-600 hover:bg-amber-700"
-              aria-label={`Claim ${maxClaim} CELO`}
+              className="w-full py-3 bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-700 hover:to-amber-600 text-white"
             >
-              {isPending && activeTab === "claim" ? (
-                <Loader2 className="w-4 h-4 animate-spin mr-2" />
+              {isPending ? (
+                <Loader2 className="w-5 h-5 animate-spin" />
               ) : (
-                <HandCoins className="w-4 h-4 mr-2" />
+                <div className="flex items-center justify-center gap-2">
+                  <HandCoins className="w-5 h-5" />
+                  <span>Claim {maxClaim} CELO</span>
+                </div>
               )}
-              Claim {maxClaim} CELO
             </Button>
           </div>
         </motion.div>

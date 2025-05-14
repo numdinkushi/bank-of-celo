@@ -85,18 +85,20 @@ export default function SwapBridgeTab({ isCorrectChain }: SwapBridgeTabProps) {
             </div>
           ) : (
             <div className="space-y-3">
-              <div className="relative h-[500px] w-full overflow-hidden rounded-xl">
-                <SquidWidget
-                  config={{
-                    integratorId: "bankofcelo-752296ef-d9ff-4804-90a5-fab73df78117",
-                    apiUrl: "https://v2.api.squidrouter.com",  
-                  }}
-                />
-              </div>
-              <div className="text-xs text-gray-500 dark:text-gray-400 text-center">
-                Powered by Squid Router
-              </div>
-            </div>
+  <div className="relative w-full rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+    <div className="h-[550px] w-full"> {/* Increased height for better display */}
+      <SquidWidget
+        config={{
+          integratorId: "bankofcelo-752296ef-d9ff-4804-90a5-fab73df78117",
+          apiUrl: "https://v2.api.squidrouter.com",
+        }}
+      />
+    </div>
+  </div>
+  <div className="text-xs text-gray-500 dark:text-gray-400 text-center pt-2">
+    Powered by Squid Router
+  </div>
+</div>
           )}
         </div>
       </div>
