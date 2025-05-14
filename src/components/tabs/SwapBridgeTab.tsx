@@ -39,7 +39,7 @@ export default function SwapBridgeTab({ isCorrectChain }: SwapBridgeTabProps) {
 
   // Widget configuration
   const squidWidgetConfig = {
-    integratorId: process.env.NEXT_PUBLIC_SQUID_INTEGRATOR_ID || "default-integrator-id",
+    integratorId: "52296ef-d9ff-4804-90a5-fab73df78117",
     config: {
       defaultChainId: celo.id,
       chains: [celo.id],
