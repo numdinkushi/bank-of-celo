@@ -2,7 +2,7 @@ import { createConfig, http, WagmiProvider } from "wagmi";
 import {celo} from "wagmi/chains";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { farcasterFrame } from "@farcaster/frame-wagmi-connector";
-import { coinbaseWallet, metaMask } from 'wagmi/connectors';
+import { coinbaseWallet, metaMask, walletConnect } from 'wagmi/connectors';
 import { APP_NAME, APP_ICON_URL, APP_URL } from "~/lib/constants";
 import { useEffect, useState } from "react";
 import { useConnect, useAccount } from "wagmi";
@@ -59,6 +59,9 @@ export const config = createConfig({
         name: APP_NAME,
         url: APP_URL,
       },
+    }),
+    walletConnect({
+      projectId: "12ed680dece83c5e9afbcb9ea589bda9"
     }),
   ],
 });

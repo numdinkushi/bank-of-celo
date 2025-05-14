@@ -2,7 +2,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { useAccount, useDisconnect, useConnect, usePublicClient, useWriteContract, useSwitchChain } from "wagmi";
+import { useAccount, useDisconnect, useConnect, usePublicClient, useWriteContract, useSwitchChain, useChainId } from "wagmi";
 import { useSession } from "next-auth/react";
 import { signIn, signOut, getCsrfToken } from "next-auth/react";
 import sdk from "@farcaster/frame-sdk";
@@ -22,7 +22,7 @@ import { BANK_OF_CELO_CONTRACT_ABI, BANK_OF_CELO_CONTRACT_ADDRESS } from "~/lib/
 import { celo } from "viem/chains";
 
 export default function BankOfCelo({ title = "Bank of Celo" }: { title?: string }) {
-  const { address, isConnected, chainId } = useAccount();
+  const { address, isConnected } = useAccount();
   const { disconnect } = useDisconnect();
   const { connect, connectors } = useConnect();
   const { switchChain } = useSwitchChain();
@@ -47,7 +47,8 @@ export default function BankOfCelo({ title = "Bank of Celo" }: { title?: string 
     availableForClaims: "0",
   });
 
-  const CELO_CHAIN_ID = celo.id;
+  const chainId = useChainId();
+  const CELO_CHAIN_ID = celo.id; // Celo chain ID
   const isCorrectChain = chainId === CELO_CHAIN_ID;
 
   // Fetch contract data with memoized function
