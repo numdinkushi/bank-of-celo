@@ -4,7 +4,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useAccount, useDisconnect, useConnect, usePublicClient, useWriteContract, useSwitchChain, useChainId } from "wagmi";
 import { useSession } from "next-auth/react";
-import { signIn, signOut, getCsrfToken } from "next-auth/react";
+import { signOut, getCsrfToken } from "next-auth/react";
 import sdk from "@farcaster/frame-sdk";
 import { formatEther, parseEther } from "viem";
 import { useFrame } from "~/components/providers/FrameProvider";
@@ -50,6 +50,20 @@ export default function BankOfCelo({ title = "Bank of Celo" }: { title?: string 
   const chainId = useChainId();
   const CELO_CHAIN_ID = celo.id; // Celo chain ID
   const isCorrectChain = chainId === CELO_CHAIN_ID;
+
+  // Automatically switch to Celo network if connected to wrong chain
+  useEffect(() => {
+    if (isConnected && !isCorrectChain) {
+      (async () => {
+        console.log(`Currently connected to chain ID: ${chainId}, switching to Celo (${CELO_CHAIN_ID})`);
+        try {
+          await switchChain({ chainId: CELO_CHAIN_ID });
+        } catch (error) {
+          console.error("Failed to switch chain:", error);
+        }
+      })();
+    }
+  }, [isConnected, chainId, isCorrectChain, switchChain, CELO_CHAIN_ID]);
 
   // Fetch contract data with memoized function
   const fetchContractData = useCallback(async () => {
@@ -174,23 +188,6 @@ export default function BankOfCelo({ title = "Bank of Celo" }: { title?: string 
     });
   };
 
-  const handleSignIn = async () => {
-    try {
-      const nonce = await getCsrfToken();
-      if (!nonce) throw new Error("Unable to generate nonce");
-      const result = await sdk.actions.signIn({ nonce });
-      await signIn("credentials", {
-        message: result.message,
-        signature: result.signature,
-        redirect: false,
-      });
-      toast.success("Signed in with Farcaster!");
-    } catch (error) {
-      console.error("Sign-in failed:", error);
-      toast.error("Sign-in failed. Please try again.");
-    }
-  };
-
   const handleSignOut = async () => {
     await signOut({ redirect: false });
     toast.success("Signed out successfully!");
@@ -251,8 +248,9 @@ export default function BankOfCelo({ title = "Bank of Celo" }: { title?: string 
               Welcome to Bank of Celo!
             </DialogTitle>
             <DialogDescription className="text-center text-gray-600 dark:text-gray-300 mt-2">
-              Donate to support the ecosystem or claim {maxClaim} CELO to explore the blockchain.
-              Swap tokens or check the leaderboard!
+              The decentralized vault supporting the Celo ecosystem. Donate to help grow the community
+              or claim {maxClaim} CELO to explore decentralized finance. Swap tokens seamlessly or
+              check the leaderboard to see top contributors!
             </DialogDescription>
           </DialogHeader>
           <div className="mt-6 flex flex-col gap-3">
@@ -279,14 +277,25 @@ export default function BankOfCelo({ title = "Bank of Celo" }: { title?: string 
           </h1>
           <div className="flex items-center gap-2">
             {isConnected ? (
-              <Button
-                onClick={() => disconnect()}
-                className="text-xs font-medium bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 rounded-full px-3 py-1.5"
-                aria-label="Disconnect wallet"
-              >
-                <Wallet className="w-4 h-4 mr-1" />
-                {truncateAddress(address!)}
-              </Button>
+              <>
+                <Button
+                  onClick={() => disconnect()}
+                  className="text-xs font-medium bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 rounded-full px-3 py-1.5"
+                  aria-label="Disconnect wallet"
+                >
+                  <Wallet className="w-4 h-4 mr-1" />
+                  {truncateAddress(address!)}
+                </Button>
+                {status === "authenticated" && (
+                  <Button
+                    onClick={handleSignOut}
+                    className="text-xs font-medium bg-blue-600 hover:bg-blue-700 text-white rounded-full p-1.5"
+                    aria-label="Sign out from Farcaster"
+                  >
+                    <LogOut className="w-4 h-4" />
+                  </Button>
+                )}
+              </>
             ) : (
               <Button
                 onClick={handleConnect}
@@ -294,24 +303,6 @@ export default function BankOfCelo({ title = "Bank of Celo" }: { title?: string 
                 aria-label="Connect wallet"
               >
                 <Wallet className="w-4 h-4 mr-1" /> Connect
-              </Button>
-            )}
-            {status === "authenticated" ? (
-              <Button
-                onClick={handleSignOut}
-                className="text-xs font-medium bg-blue-600 hover:bg-blue-700 text-white rounded-full p-1.5"
-                aria-label="Sign out from Farcaster"
-              >
-                <LogOut className="w-4 h-4" />
-              </Button>
-            ) : (
-              <Button
-                onClick={handleSignIn}
-                className="text-xs font-medium bg-blue-600 hover:bg-blue-700 text-white rounded-full px-3 py-1.5"
-                disabled={status === "loading"}
-                aria-label="Sign in with Farcaster"
-              >
-                Sign In
               </Button>
             )}
           </div>
@@ -349,7 +340,7 @@ export default function BankOfCelo({ title = "Bank of Celo" }: { title?: string 
                 lastClaimAt={lastClaimAt}
                 isCorrectChain={isCorrectChain}
                 isPending={isPending}
-                fid={session?.user?.fid} // Pass FID from session if available
+                fid={session?.user?.fid}
               />
             )}
             {activeTab === "swap" && <SwapBridgeTab isCorrectChain={isCorrectChain} />}
