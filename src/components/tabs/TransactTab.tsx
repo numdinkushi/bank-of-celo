@@ -205,7 +205,7 @@ export default function TransactTab({
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
                 placeholder="0.0"
-                className="w-full py-3 text-base"
+                className="w-full py-3 text-black text-base"
                 min="0"
                 step="0.01"
               />
@@ -247,7 +247,7 @@ export default function TransactTab({
             {fidLoading ? (
               <div className="p-4 text-center bg-gray-50 dark:bg-gray-700 rounded-lg">
                 <Loader2 className="w-5 h-5 animate-spin text-amber-500 mx-auto mb-2" />
-                <p className="text-gray-600 dark:text-gray-300">Fetching Farcaster ID...</p>
+                <p className="text-black ">Fetching Farcaster ID...</p>
               </div>
             ) : fidError || !fid ? (
               <div className="p-4 text-center bg-red-50 dark:bg-red-900/30 rounded-lg">
