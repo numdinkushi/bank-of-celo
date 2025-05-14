@@ -1,13 +1,35 @@
 import { motion } from "framer-motion";
-import { Info, Gift, HandCoins } from "lucide-react";
+import { Info, Gift, HandCoins, Clock } from "lucide-react";
 import { Button } from "~/components/ui/Button";
+import { formatDistanceToNow } from "date-fns";
 
 interface HomeTabProps {
   vaultBalance: string;
   isLoading?: boolean;
+  onNavigate?: (tab: string) => void;
+  maxClaim?: string;
+  claimCooldown?: number;
+  lastClaimAt?: number;
 }
 
-export default function HomeTab({ vaultBalance, isLoading }: HomeTabProps) {
+export default function HomeTab({ 
+  vaultBalance, 
+  isLoading, 
+  onNavigate,
+  maxClaim = "0.5",
+  claimCooldown = 86400,
+  lastClaimAt = 0
+}: HomeTabProps) {
+  const canClaim = () => {
+    if (!lastClaimAt) return true;
+    const now = Math.floor(Date.now() / 1000);
+    return now >= lastClaimAt + claimCooldown;
+  };
+
+  const nextClaimTime = lastClaimAt 
+    ? new Date((lastClaimAt + claimCooldown) * 1000)
+    : null;
+
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -40,13 +62,28 @@ export default function HomeTab({ vaultBalance, isLoading }: HomeTabProps) {
 
       {/* Quick Actions */}
       <div className="grid grid-cols-2 gap-3">
-        <Button className="flex flex-col items-center justify-center p-4 h-full bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-900/30 dark:hover:bg-emerald-900/50 rounded-xl border border-emerald-100 dark:border-emerald-800">
+        <Button 
+          onClick={() => onNavigate?.("transact")}
+          className="flex flex-col items-center justify-center p-4 h-full bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-900/30 dark:hover:bg-emerald-900/50 rounded-xl border border-emerald-100 dark:border-emerald-800"
+        >
           <Gift className="w-6 h-6 text-emerald-600 dark:text-emerald-400 mb-2" />
           <span className="font-medium text-emerald-700 dark:text-emerald-300">Donate</span>
         </Button>
-        <Button className="flex flex-col items-center justify-center p-4 h-full bg-amber-50 hover:bg-amber-100 dark:bg-amber-900/30 dark:hover:bg-amber-900/50 rounded-xl border border-amber-100 dark:border-amber-800">
+        <Button 
+          onClick={() => onNavigate?.("transact")}
+          disabled={!canClaim()}
+          className="flex flex-col items-center justify-center p-4 h-full bg-amber-50 hover:bg-amber-100 dark:bg-amber-900/30 dark:hover:bg-amber-900/50 rounded-xl border border-amber-100 dark:border-amber-800"
+        >
           <HandCoins className="w-6 h-6 text-amber-600 dark:text-amber-400 mb-2" />
-          <span className="font-medium text-amber-700 dark:text-amber-300">Request</span>
+          <span className="font-medium text-amber-700 dark:text-amber-300">
+            {maxClaim} CELO
+          </span>
+          {!canClaim() && nextClaimTime && (
+            <span className="text-xs text-amber-600 dark:text-amber-400 mt-1 flex items-center">
+              <Clock className="w-3 h-3 mr-1" />
+              {formatDistanceToNow(nextClaimTime, { addSuffix: true })}
+            </span>
+          )}
         </Button>
       </div>
 
@@ -59,7 +96,7 @@ export default function HomeTab({ vaultBalance, isLoading }: HomeTabProps) {
           <h2 className="text-lg font-semibold text-gray-900 dark:text-white">About Bank of Celo</h2>
         </div>
         <p className="text-sm text-gray-600 dark:text-gray-300">
-          Support the Celo ecosystem by donating CELO or request 0.5 CELO to explore the blockchain. 
+          Support the Celo ecosystem by donating CELO or claim {maxClaim} CELO (once per day) to explore the blockchain. 
           Swap tokens to Celo using our bridge and track top contributors on the leaderboard!
         </p>
       </div>
