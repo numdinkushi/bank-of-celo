@@ -16,13 +16,12 @@ interface SwapBridgeTabProps {
 }
 
 export default function SwapBridgeTab({ isCorrectChain }: SwapBridgeTabProps) {
-  const { isConnected,  } = useAccount();
+  const { isConnected } = useAccount();
   const { switchChain, isPending: isSwitching } = useSwitchChain();
-  const { theme, resolvedTheme } = useTheme(); // Use next-themes to detect theme
+  const { theme, resolvedTheme } = useTheme();
   const [isWidgetReady, setIsWidgetReady] = useState(false);
   const chainId = celo.id;
 
-  // Handle chain switching
   const handleSwitchToCelo = useCallback(() => {
     switchChain(
       { chainId: celo.id },
@@ -38,45 +37,7 @@ export default function SwapBridgeTab({ isCorrectChain }: SwapBridgeTabProps) {
     );
   }, [switchChain]);
 
-  // Widget configuration
-  const squidWidgetConfig = {
-    integratorId: "52296ef-d9ff-4804-90a5-fab73df78117",
-    config: {
-      defaultChainId: celo.id,
-      chains: [celo.id],
-      theme: (resolvedTheme || theme) === "dark" ? "dark" : "light",
-      style: {
-        neutralContent: "#4B5563", // Tailwind gray-600
-        baseContent: "#1F2937", // Tailwind gray-800
-        base100: "#FFFFFF", // White for light mode
-        base200: "#F3F4F6", // Tailwind gray-100
-        base300: "#E5E7EB", // Tailwind gray-200
-        primary: "#2563EB", // Tailwind blue-600 (matches button theme)
-        primaryForeground: "#FFFFFF", // White text on primary
-        secondary: "#059669", // Tailwind emerald-600 (for consistency)
-        secondaryForeground: "#FFFFFF",
-        success: "#059669", // Tailwind emerald-600
-        successForeground: "#FFFFFF",
-        warning: "#F59E0B", // Tailwind amber-500
-        warningForeground: "#FFFFFF",
-        danger: "#DC2626", // Tailwind red-600
-        dangerForeground: "#FFFFFF",
-        borderRadius: "0.5rem", // Matches rounded-2xl
-      },
-    },
-    onSwapSuccess: (data: any) => {
-      toast.success("Swap/Bridge transaction successful!");
-      console.log("Swap success:", data);
-    },
-    onError: (error: any) => {
-      toast.error("Swap/Bridge transaction failed. Please try again.");
-      console.error("Swap error:", error);
-    },
-  };
-
-  // Simulate widget readiness (since SquidWidget is already loaded via import)
   useEffect(() => {
-    // Delay to simulate widget initialization (replace with actual checks if needed)
     const timer = setTimeout(() => setIsWidgetReady(true), 500);
     return () => clearTimeout(timer);
   }, []);
@@ -124,13 +85,14 @@ export default function SwapBridgeTab({ isCorrectChain }: SwapBridgeTabProps) {
             </div>
           ) : (
             <div className="space-y-3">
-              <SquidWidget
-              config={{
-                integratorId: "bankofcelo752296ef-d9ff-4804-90a5-fab73df78117",
-                apiUrl: "https://v2.api.squidrouter.com",
-                // Add other configuration options here
-        }}
-      />
+              <div className="relative h-[500px] w-full overflow-hidden rounded-xl">
+                <SquidWidget
+                  config={{
+                    integratorId: "bankofcelo-752296ef-d9ff-4804-90a5-fab73df78117",
+                    apiUrl: "https://v2.api.squidrouter.com",  
+                  }}
+                />
+              </div>
               <div className="text-xs text-gray-500 dark:text-gray-400 text-center">
                 Powered by Squid Router
               </div>
