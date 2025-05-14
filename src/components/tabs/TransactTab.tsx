@@ -5,17 +5,16 @@ import { Button } from "~/components/ui/Button";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
 import { Input } from "../ui/input";
-import { useAccount } from "wagmi";
+import { useAccount, usePublicClient, useSignTypedData } from "wagmi";
+import { BANK_OF_CELO_CONTRACT_ADDRESS, BANK_OF_CELO_CONTRACT_ABI } from "~/lib/constants";
 
 interface TransactTabProps {
   onDonate: (amount: string) => void;
-  onClaim: (fid: number) => void; // Kept for compatibility, but we'll use gasless claim
   maxClaim?: string;
   claimCooldown?: number;
   lastClaimAt?: number;
   isCorrectChain: boolean;
   isPending: boolean;
-  fid?: number; // Initial FID (optional, we'll fetch dynamically)
 }
 
 interface NeynarResponse {
@@ -32,6 +31,8 @@ export default function TransactTab({
   isPending,
 }: TransactTabProps) {
   const { address } = useAccount();
+  const publicClient = usePublicClient();
+  const { signTypedDataAsync } = useSignTypedData();
   const [amount, setAmount] = useState("");
   const [fid, setFid] = useState<number | null>(null);
   const [fidLoading, setFidLoading] = useState(false);
@@ -39,7 +40,6 @@ export default function TransactTab({
   const [activeTab, setActiveTab] = useState<"donate" | "claim">("donate");
   const [claimPending, setClaimPending] = useState(false);
 
-  // Fetch FID from Neynar API
   const fetchFid = useCallback(async () => {
     if (!address) return;
     setFidLoading(true);
@@ -56,6 +56,20 @@ export default function TransactTab({
       setFid(data.fid);
       if (!data.fid) {
         setFidError("No Farcaster ID associated with this address");
+      } else {
+        if (!publicClient) {
+          throw new Error("Public client is not available");
+        }
+        const isBlacklisted = await publicClient.readContract({
+          address: BANK_OF_CELO_CONTRACT_ADDRESS,
+          abi: BANK_OF_CELO_CONTRACT_ABI,
+          functionName: "fidBlacklisted",
+          args: [BigInt(data.fid)],
+        });
+        if (isBlacklisted) {
+          setFidError("This Farcaster ID is blacklisted");
+          setFid(null);
+        }
       }
     } catch (error) {
       console.error("Error fetching FID:", error);
@@ -64,7 +78,7 @@ export default function TransactTab({
     } finally {
       setFidLoading(false);
     }
-  }, [address]);
+  }, [address, publicClient]);
 
   useEffect(() => {
     fetchFid();
@@ -78,7 +92,6 @@ export default function TransactTab({
 
   const nextClaimTime = lastClaimAt ? new Date((lastClaimAt + claimCooldown) * 1000) : null;
 
-  // Handle gasless claim via API
   const handleGaslessClaim = async () => {
     if (!fid || !address) {
       toast.error("Farcaster ID or address missing");
@@ -87,10 +100,37 @@ export default function TransactTab({
 
     setClaimPending(true);
     try {
+      const deadline = Math.floor(Date.now() / 1000) + 3600;
+      const domain = {
+        name: "BankOfCelo",
+        version: "1",
+        chainId: 44787, // Celo Alfajores (42220 for mainnet)
+        verifyingContract: BANK_OF_CELO_CONTRACT_ADDRESS,
+      };
+      const types = {
+        Claim: [
+          { name: "claimer", type: "address" },
+          { name: "fid", type: "uint256" },
+          { name: "deadline", type: "uint256" },
+        ],
+      };
+      const message = {
+        claimer: address,
+        fid: BigInt(fid),
+        deadline: BigInt(deadline),
+      };
+
+      const signature = await signTypedDataAsync({
+        domain,
+        types,
+        primaryType: "Claim",
+        message,
+      });
+
       const response = await fetch("/api/claim", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ address, fid }),
+        body: JSON.stringify({ address, fid, deadline, signature }),
       });
 
       if (!response.ok) {
@@ -98,9 +138,8 @@ export default function TransactTab({
         throw new Error(errorData.error || "Failed to process claim");
       }
 
-      const { taskId } = await response.json();
-      toast.success(`Claim submitted! Task ID: ${taskId}`);
-      // Optionally refetch contract data or update UI
+      const { transactionHash } = await response.json();
+      toast.success(`Claim successful! Tx: ${transactionHash.slice(0, 6)}...`);
     } catch (error) {
       console.error("Gasless claim error:", error);
       toast.error(error instanceof Error ? error.message : "Failed to process claim");
@@ -134,7 +173,6 @@ export default function TransactTab({
       transition={{ duration: 0.5 }}
       className="space-y-6"
     >
-      {/* Header with Tabs */}
       <div className="flex flex-col gap-4">
         <div className="flex items-center gap-3">
           <div className="bg-blue-100 dark:bg-blue-900 p-2 rounded-lg">
@@ -144,8 +182,6 @@ export default function TransactTab({
             Bank of Celo Vault
           </h2>
         </div>
-
-        {/* Tab Selector */}
         <div className="flex bg-gray-100 dark:bg-gray-800 rounded-xl p-1">
           <button
             onClick={() => setActiveTab("donate")}
@@ -205,7 +241,7 @@ export default function TransactTab({
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
                 placeholder="0.0"
-                className="w-full py-3 text-black text-base"
+                className="w-full py-3 text-base"
                 min="0"
                 step="0.01"
               />
@@ -247,7 +283,7 @@ export default function TransactTab({
             {fidLoading ? (
               <div className="p-4 text-center bg-gray-50 dark:bg-gray-700 rounded-lg">
                 <Loader2 className="w-5 h-5 animate-spin text-amber-500 mx-auto mb-2" />
-                <p className="text-black ">Fetching Farcaster ID...</p>
+                <p className="text-gray-600 dark:text-gray-300">Fetching Farcaster ID...</p>
               </div>
             ) : fidError || !fid ? (
               <div className="p-4 text-center bg-red-50 dark:bg-red-900/30 rounded-lg">
@@ -287,7 +323,7 @@ export default function TransactTab({
               onClick={handleSubmit}
               disabled={isPending || claimPending || !fid || !canClaim() || !!fidError}
               className="w-full py-3 bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-700 hover:to-amber-600 text-white"
-              aria-label={`Claim ${maxClaim} CELO`}
+              aria-label={`Claim ${maxClaim} CELO (Gasless)`}
             >
               {claimPending || isPending ? (
                 <Loader2 className="w-5 h-5 animate-spin" />

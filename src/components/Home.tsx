@@ -59,8 +59,10 @@ export default function BankOfCelo({ title = "Bank of Celo" }: { title?: string 
       toast.success("Successfully switched to Celo!");
     } catch (error) {
       toast.dismiss();
-      toast.error("Failed to switch networks. Please try again.");
+      toast.error("Failed to switch networks. Please try again or check your wallet.");
       console.error("Chain switching error:", error);
+      // Retry after a delay if needed
+      setTimeout(() => handleSwitchChain(), 2000);
     }
   };
 
@@ -97,19 +99,31 @@ export default function BankOfCelo({ title = "Bank of Celo" }: { title?: string 
           functionName: "MAX_CLAIM",
         }),
       ]);
-
+  
       const [status, cooldown, lastClaim, maxClaimAmount] = data;
       const [currentBalance, minReserve, availableForClaims] = status as [bigint, bigint, bigint];
-
-      setVaultStatus({
+  
+      const newVaultStatus = {
         currentBalance: formatEther(currentBalance),
         minReserve: formatEther(minReserve),
         availableForClaims: formatEther(availableForClaims),
+      };
+  
+      // Only update state if values have changed
+      setVaultStatus((prev) => {
+        if (
+          prev.currentBalance === newVaultStatus.currentBalance &&
+          prev.minReserve === newVaultStatus.minReserve &&
+          prev.availableForClaims === newVaultStatus.availableForClaims
+        ) {
+          return prev;
+        }
+        return newVaultStatus;
       });
-      setVaultBalance(formatEther(currentBalance));
-      setClaimCooldown(Number(cooldown));
-      setLastClaimAt(Number(lastClaim));
-      setMaxClaim(formatEther(maxClaimAmount as bigint));
+      setVaultBalance((prev) => (prev === formatEther(currentBalance) ? prev : formatEther(currentBalance)));
+      setClaimCooldown((prev) => (prev === Number(cooldown) ? prev : Number(cooldown)));
+      setLastClaimAt((prev) => (prev === Number(lastClaim) ? prev : Number(lastClaim)));
+      setMaxClaim((prev) => (prev === formatEther(maxClaimAmount as bigint) ? prev : formatEther(maxClaimAmount as bigint)));
     } catch (error) {
       console.error("Failed to fetch contract data:", error);
       toast.error("Failed to fetch contract data. Please try again.");
@@ -120,10 +134,14 @@ export default function BankOfCelo({ title = "Bank of Celo" }: { title?: string 
 
   useEffect(() => {
     fetchContractData();
-    const interval = setInterval(fetchContractData, 30000);
+    const interval = setInterval(fetchContractData, 3000); 
     return () => clearInterval(interval);
   }, [fetchContractData]);
-
+  useEffect(() => {
+    if (isConnected && !isCorrectChain) {
+      handleSwitchChain();
+    }
+  }, [isConnected, isCorrectChain, handleSwitchChain]);
   const handleDonate = (amount: string) => {
     if (!isCorrectChain) {
       handleSwitchChain();
@@ -184,8 +202,9 @@ export default function BankOfCelo({ title = "Bank of Celo" }: { title?: string 
   };
 
   const handleConnect = () => {
+    const connector = connectors.find((c) => c.id === "injected") || connectors[0]; // Prefer injected (MetaMask) or fallback
     connect({
-      connector: connectors[0],
+      connector,
       chainId: CELO_CHAIN_ID,
     });
   };
@@ -212,6 +231,7 @@ export default function BankOfCelo({ title = "Bank of Celo" }: { title?: string 
       </div>
     );
   }
+  
 
   return (
     <div
@@ -354,13 +374,11 @@ export default function BankOfCelo({ title = "Bank of Celo" }: { title?: string 
             {activeTab === "transact" && (
               <TransactTab
                 onDonate={handleDonate}
-                onClaim={handleClaim}
                 maxClaim={maxClaim}
                 claimCooldown={claimCooldown}
                 lastClaimAt={lastClaimAt}
                 isCorrectChain={isCorrectChain}
                 isPending={isPending}
-                fid={session?.user?.fid}
               />
             )}
             {activeTab === "swap" && <SwapBridgeTab isCorrectChain={isCorrectChain} />}
