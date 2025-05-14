@@ -7,7 +7,7 @@ export const APP_SPLASH_URL = `${APP_URL}/splash.png`;
 export const APP_SPLASH_BACKGROUND_COLOR = "#f7f7f7";
 export const APP_BUTTON_TEXT = process.env.NEXT_PUBLIC_FRAME_BUTTON_TEXT;
 
-export const BANK_OF_CELO_CONTRACT_ADDRESS = "0x48820Ed9caf01295d2D6b5561E249C5e1E46D5cE";
+export const BANK_OF_CELO_CONTRACT_ADDRESS = "0x48820Ed9caf01295d2D6b5561E249C5e1E46D5cE" as `0x${string}`;;
 export const BANK_OF_CELO_CONTRACT_ABI = [
   {
     "inputs": [

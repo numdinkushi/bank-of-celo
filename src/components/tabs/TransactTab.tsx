@@ -1,7 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { useState } from "react";
-import { useAccount, useWriteContract } from "wagmi";
-import { parseEther } from "viem";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Loader2, Send, Gift, HandCoins, Clock } from "lucide-react";
 import { Button } from "~/components/ui/Button";
@@ -15,21 +13,31 @@ interface TransactTabProps {
   maxClaim?: string;
   claimCooldown?: number;
   lastClaimAt?: number;
+  isCorrectChain: boolean;
+  isPending: boolean;
+  fid?: number; // FID from session
 }
 
-export default function TransactTab({ 
-  onDonate, 
+export default function TransactTab({
+  onDonate,
   onClaim,
   maxClaim = "0.5",
   claimCooldown = 86400,
-  lastClaimAt = 0
+  lastClaimAt = 0,
+  isCorrectChain,
+  isPending,
+  fid,
 }: TransactTabProps) {
-  const { isConnected } = useAccount();
   const [amount, setAmount] = useState("");
-  const [fid, setFid] = useState("");
+  const [fidInput, setFidInput] = useState("");
   const [activeTab, setActiveTab] = useState<"donate" | "claim">("donate");
-  const { isPending: isDonating } = useWriteContract();
-  const { isPending: isClaiming } = useWriteContract();
+
+  // Auto-populate FID if available from session
+  useEffect(() => {
+    if (fid) {
+      setFidInput(fid.toString());
+    }
+  }, [fid]);
 
   const canClaim = () => {
     if (!lastClaimAt) return true;
@@ -37,23 +45,28 @@ export default function TransactTab({
     return now >= lastClaimAt + claimCooldown;
   };
 
-  const nextClaimTime = lastClaimAt 
-    ? new Date((lastClaimAt + claimCooldown) * 1000)
-    : null;
+  const nextClaimTime = lastClaimAt ? new Date((lastClaimAt + claimCooldown) * 1000) : null;
 
   const handleSubmit = () => {
+    if (!isCorrectChain) {
+      toast.error("Please switch to Celo Network");
+      return;
+    }
+
     if (activeTab === "donate") {
-      if (!amount || isNaN(Number(amount))) {
+      if (!amount || isNaN(Number(amount)) || Number(amount) <= 0) {
         toast.error("Please enter a valid amount");
         return;
       }
       onDonate(amount);
+      setAmount("");
     } else {
-      if (!fid || isNaN(Number(fid))) {
+      if (!fidInput || isNaN(Number(fidInput))) {
         toast.error("Please enter a valid Farcaster ID");
         return;
       }
-      onClaim(Number(fid));
+      onClaim(Number(fidInput));
+      setFidInput(fid ? fid.toString() : "");
     }
   };
 
@@ -73,6 +86,9 @@ export default function TransactTab({
               ? "bg-white dark:bg-gray-800 shadow-sm text-emerald-600 dark:text-emerald-400"
               : "text-gray-500 dark:text-gray-400"
           }`}
+          aria-label="Donate tab"
+          role="tab"
+          aria-selected={activeTab === "donate"}
         >
           Donate
         </button>
@@ -83,16 +99,17 @@ export default function TransactTab({
               ? "bg-white dark:bg-gray-800 shadow-sm text-amber-600 dark:text-amber-400"
               : "text-gray-500 dark:text-gray-400"
           }`}
+          aria-label="Claim tab"
+          role="tab"
+          aria-selected={activeTab === "claim"}
         >
           Claim
         </button>
       </div>
 
-      {!isConnected ? (
+      {!isCorrectChain ? (
         <div className="p-6 bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 text-center">
-          <p className="text-gray-600 dark:text-gray-300">
-            Please connect your wallet to {activeTab === "donate" ? "donate" : "claim"} CELO
-          </p>
+          <p className="text-gray-600 dark:text-gray-300">Please switch to Celo Network to proceed</p>
         </div>
       ) : activeTab === "donate" ? (
         <motion.div
@@ -109,23 +126,27 @@ export default function TransactTab({
           </div>
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <label htmlFor="donate-amount" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Amount (CELO)
               </label>
               <Input
+                id="donate-amount"
                 type="number"
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
                 placeholder="0.0"
                 className="w-full"
+                min="0"
+                step="0.01"
               />
             </div>
             <Button
               onClick={handleSubmit}
-              disabled={isDonating || !amount}
+              disabled={isPending || !amount}
               className="w-full bg-emerald-600 hover:bg-emerald-700"
+              aria-label="Donate CELO"
             >
-              {isDonating ? (
+              {isPending && activeTab === "donate" ? (
                 <Loader2 className="w-4 h-4 animate-spin mr-2" />
               ) : (
                 <Send className="w-4 h-4 mr-2" />
@@ -155,23 +176,29 @@ export default function TransactTab({
               </div>
             )}
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <label
+                htmlFor="farcaster-id"
+                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+              >
                 Your Farcaster ID
               </label>
               <Input
+                id="farcaster-id"
                 type="number"
-                value={fid}
-                onChange={(e) => setFid(e.target.value)}
+                value={fidInput}
+                onChange={(e) => setFidInput(e.target.value)}
                 placeholder="1234"
                 className="w-full"
+                disabled={!!fid} // Disable if FID is auto-populated
               />
             </div>
             <Button
               onClick={handleSubmit}
-              disabled={isClaiming || !fid || !canClaim()}
+              disabled={isPending || !fidInput || !canClaim()}
               className="w-full bg-amber-600 hover:bg-amber-700"
+              aria-label={`Claim ${maxClaim} CELO`}
             >
-              {isClaiming ? (
+              {isPending && activeTab === "claim" ? (
                 <Loader2 className="w-4 h-4 animate-spin mr-2" />
               ) : (
                 <HandCoins className="w-4 h-4 mr-2" />

@@ -1,8 +1,8 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 
-import { useState, useEffect } from "react";
-import { useAccount, useDisconnect, useConnect, usePublicClient, useWriteContract } from "wagmi";
+import { useState, useEffect, useCallback } from "react";
+import { useAccount, useDisconnect, useConnect, usePublicClient, useWriteContract, useSwitchChain } from "wagmi";
 import { useSession } from "next-auth/react";
 import { signIn, signOut, getCsrfToken } from "next-auth/react";
 import sdk from "@farcaster/frame-sdk";
@@ -10,7 +10,7 @@ import { formatEther, parseEther } from "viem";
 import { useFrame } from "~/components/providers/FrameProvider";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
-import { Wallet, Home, Send, ArrowLeftRight, Trophy, LogOut, ChevronRight, Clock } from "lucide-react";
+import { Wallet, Home, Send, ArrowLeftRight, Trophy, LogOut, ChevronRight, Clock, AlertCircle } from "lucide-react";
 import { Button } from "~/components/ui/Button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "~/components/ui/dialog";
 import HomeTab from "~/components/tabs/HomeTab";
@@ -19,86 +19,119 @@ import SwapBridgeTab from "~/components/tabs/SwapBridgeTab";
 import { truncateAddress } from "~/lib/truncateAddress";
 import LeaderboardTab from "./tabs/LeaderboardTab";
 import { BANK_OF_CELO_CONTRACT_ABI, BANK_OF_CELO_CONTRACT_ADDRESS } from "~/lib/constants";
+import { celo } from "viem/chains";
 
 export default function BankOfCelo({ title = "Bank of Celo" }: { title?: string }) {
-  const { address, isConnected } = useAccount();
+  const { address, isConnected, chainId } = useAccount();
   const { disconnect } = useDisconnect();
   const { connect, connectors } = useConnect();
+  const { switchChain } = useSwitchChain();
   const { data: session, status } = useSession();
   const publicClient = usePublicClient();
-  const { writeContract } = useWriteContract();
+  const { writeContract, isPending } = useWriteContract();
   const { isSDKLoaded, context } = useFrame();
 
   const [activeTab, setActiveTab] = useState("home");
   const [vaultBalance, setVaultBalance] = useState<string>("0");
-  const [showWelcome, setShowWelcome] = useState(true);
+  const [showWelcome, setShowWelcome] = useState(() => {
+    // Only show welcome modal for new users (stored in localStorage)
+    return !localStorage.getItem("hasSeenWelcome");
+  });
   const [isLoading, setIsLoading] = useState(false);
   const [claimCooldown, setClaimCooldown] = useState<number>(0);
   const [lastClaimAt, setLastClaimAt] = useState<number>(0);
   const [maxClaim, setMaxClaim] = useState<string>("0");
+  const [vaultStatus, setVaultStatus] = useState({
+    currentBalance: "0",
+    minReserve: "0",
+    availableForClaims: "0",
+  });
 
-  // Fetch contract data
+  const CELO_CHAIN_ID = celo.id;
+  const isCorrectChain = chainId === CELO_CHAIN_ID;
+
+  // Fetch contract data with memoized function
+  const fetchContractData = useCallback(async () => {
+    if (!publicClient || !address || !isCorrectChain) return;
+    try {
+      setIsLoading(true);
+      const data = await Promise.all([
+        publicClient.readContract({
+          address: BANK_OF_CELO_CONTRACT_ADDRESS as `0x${string}`,
+          abi: BANK_OF_CELO_CONTRACT_ABI,
+          functionName: "getVaultStatus",
+        }),
+        publicClient.readContract({
+          address: BANK_OF_CELO_CONTRACT_ADDRESS as `0x${string}`,
+          abi: BANK_OF_CELO_CONTRACT_ABI,
+          functionName: "claimCooldown",
+        }),
+        publicClient.readContract({
+          address: BANK_OF_CELO_CONTRACT_ADDRESS as `0x${string}`,
+          abi: BANK_OF_CELO_CONTRACT_ABI,
+          functionName: "lastClaimAt",
+          args: [address],
+        }),
+        publicClient.readContract({
+          address: BANK_OF_CELO_CONTRACT_ADDRESS as `0x${string}`,
+          abi: BANK_OF_CELO_CONTRACT_ABI,
+          functionName: "MAX_CLAIM",
+        }),
+      ]);
+
+      const [status, cooldown, lastClaim, maxClaimAmount] = data;
+      const [currentBalance, minReserve, availableForClaims] = status as [bigint, bigint, bigint];
+
+      setVaultStatus({
+        currentBalance: formatEther(currentBalance),
+        minReserve: formatEther(minReserve),
+        availableForClaims: formatEther(availableForClaims),
+      });
+      setVaultBalance(formatEther(currentBalance));
+      setClaimCooldown(Number(cooldown));
+      setLastClaimAt(Number(lastClaim));
+      setMaxClaim(formatEther(maxClaimAmount as bigint));
+    } catch (error) {
+      console.error("Failed to fetch contract data:", error);
+      toast.error("Failed to fetch contract data. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
+  }, [publicClient, address, isCorrectChain]);
+
   useEffect(() => {
-    const fetchContractData = async () => {
-      try {
-        if (!publicClient || !address) return;
-        setIsLoading(true);
-        
-        const data = await Promise.all([
-          publicClient.readContract({
-            address: BANK_OF_CELO_CONTRACT_ADDRESS as `0x${string}`,
-            abi: BANK_OF_CELO_CONTRACT_ABI,
-            functionName: "getVaultBalance",
-          }),
-          publicClient.readContract({
-            address: BANK_OF_CELO_CONTRACT_ADDRESS as `0x${string}`,
-            abi: BANK_OF_CELO_CONTRACT_ABI,
-            functionName: "claimCooldown",
-          }),
-          publicClient.readContract({
-            address: BANK_OF_CELO_CONTRACT_ADDRESS as `0x${string}`,
-            abi: BANK_OF_CELO_CONTRACT_ABI,
-            functionName: "lastClaimAt",
-            args: [address],
-          }),
-          publicClient.readContract({
-            address: BANK_OF_CELO_CONTRACT_ADDRESS as `0x${string}`,
-            abi: BANK_OF_CELO_CONTRACT_ABI,
-            functionName: "MAX_CLAIM",
-          }),
-        ]);
-
-        setVaultBalance(formatEther(data[0] as bigint));
-        setClaimCooldown(Number(data[1]));
-        setLastClaimAt(Number(data[2]));
-        setMaxClaim(formatEther(data[3] as bigint));
-      } catch (error) {
-        console.error("Failed to fetch contract data:", error);
-        toast.error("Failed to fetch contract data");
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    
     fetchContractData();
     const interval = setInterval(fetchContractData, 30000);
     return () => clearInterval(interval);
-  }, [publicClient, address]);
+  }, [fetchContractData]);
 
   const handleDonate = (amount: string) => {
+    if (!isCorrectChain) {
+      toast.error("Switching to Celo Network...");
+      switchChain({ chainId: CELO_CHAIN_ID });
+      return;
+    }
+
+    if (Number(amount) <= 0) {
+      toast.error("Please enter a valid amount");
+      return;
+    }
+
     writeContract(
       {
         address: BANK_OF_CELO_CONTRACT_ADDRESS as `0x${string}`,
         abi: BANK_OF_CELO_CONTRACT_ABI,
         functionName: "donate",
         value: parseEther(amount),
+        chainId: CELO_CHAIN_ID,
       },
       {
         onSuccess: () => {
           toast.success("Donation successful!");
+          fetchContractData();
         },
         onError: (error) => {
-          toast.error("Donation failed");
+          toast.error(`Donation failed: ${error.message}`);
           console.error("Donation error:", error);
         },
       }
@@ -106,23 +139,38 @@ export default function BankOfCelo({ title = "Bank of Celo" }: { title?: string 
   };
 
   const handleClaim = (fid: number) => {
+    if (!isCorrectChain) {
+      toast.error("Switching to Celo Network...");
+      switchChain({ chainId: CELO_CHAIN_ID });
+      return;
+    }
+
     writeContract(
       {
         address: BANK_OF_CELO_CONTRACT_ADDRESS as `0x${string}`,
         abi: BANK_OF_CELO_CONTRACT_ABI,
         functionName: "claim",
-        args: [fid],
+        args: [BigInt(fid)],
+        chainId: CELO_CHAIN_ID,
       },
       {
         onSuccess: () => {
           toast.success("Claim submitted successfully!");
+          fetchContractData();
         },
         onError: (error) => {
-          toast.error("Claim failed");
+          toast.error(`Claim failed: ${error.message}`);
           console.error("Claim error:", error);
         },
       }
     );
+  };
+
+  const handleConnect = () => {
+    connect({
+      connector: connectors[0],
+      chainId: CELO_CHAIN_ID,
+    });
   };
 
   const handleSignIn = async () => {
@@ -145,6 +193,11 @@ export default function BankOfCelo({ title = "Bank of Celo" }: { title?: string 
   const handleSignOut = async () => {
     await signOut({ redirect: false });
     toast.success("Signed out successfully!");
+  };
+
+  const handleCloseWelcome = () => {
+    setShowWelcome(false);
+    localStorage.setItem("hasSeenWelcome", "true");
   };
 
   if (!isSDKLoaded) {
@@ -170,8 +223,22 @@ export default function BankOfCelo({ title = "Bank of Celo" }: { title?: string 
         paddingRight: context?.client.safeAreaInsets?.right ?? 0,
       }}
     >
+      {/* Network Warning Banner */}
+      {isConnected && !isCorrectChain && (
+        <div className="bg-red-500 text-white p-2 text-center flex items-center justify-center gap-2">
+          <AlertCircle className="w-5 h-5" />
+          <span>Please switch to Celo Network to interact with Bank of Celo</span>
+          <Button
+            onClick={() => switchChain({ chainId: CELO_CHAIN_ID })}
+            className="ml-2 bg-white text-red-500 hover:bg-gray-100"
+          >
+            Switch Now
+          </Button>
+        </div>
+      )}
+
       {/* Welcome Modal */}
-      <Dialog open={showWelcome} onOpenChange={setShowWelcome}>
+      <Dialog open={showWelcome} onOpenChange={handleCloseWelcome}>
         <DialogContent className="bg-white dark:bg-gray-800 rounded-2xl border-0 shadow-xl p-6 max-w-md">
           <DialogHeader>
             <div className="flex justify-center mb-4">
@@ -188,8 +255,8 @@ export default function BankOfCelo({ title = "Bank of Celo" }: { title?: string 
             </DialogDescription>
           </DialogHeader>
           <div className="mt-6 flex flex-col gap-3">
-            <Button 
-              onClick={() => setShowWelcome(false)} 
+            <Button
+              onClick={handleCloseWelcome}
               className="w-full bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg py-3"
             >
               Get Started
@@ -221,7 +288,7 @@ export default function BankOfCelo({ title = "Bank of Celo" }: { title?: string 
               </Button>
             ) : (
               <Button
-                onClick={() => connect({ connector: connectors[0] })}
+                onClick={handleConnect}
                 className="text-xs font-medium bg-emerald-600 hover:bg-emerald-700 text-white rounded-full px-3 py-1.5"
                 aria-label="Connect wallet"
               >
@@ -261,25 +328,30 @@ export default function BankOfCelo({ title = "Bank of Celo" }: { title?: string 
             transition={{ duration: 0.2 }}
           >
             {activeTab === "home" && (
-              <HomeTab 
-                vaultBalance={vaultBalance} 
+              <HomeTab
+                vaultBalance={vaultBalance}
+                vaultStatus={vaultStatus}
                 isLoading={isLoading}
                 onNavigate={(tab) => setActiveTab(tab)}
                 maxClaim={maxClaim}
                 claimCooldown={claimCooldown}
                 lastClaimAt={lastClaimAt}
+                isCorrectChain={isCorrectChain}
               />
             )}
             {activeTab === "transact" && (
-              <TransactTab 
+              <TransactTab
                 onDonate={handleDonate}
                 onClaim={handleClaim}
                 maxClaim={maxClaim}
                 claimCooldown={claimCooldown}
                 lastClaimAt={lastClaimAt}
+                isCorrectChain={isCorrectChain}
+                isPending={isPending}
+                fid={session?.user?.fid} // Pass FID from session if available
               />
             )}
-            {activeTab === "swap" && <SwapBridgeTab />}
+            {activeTab === "swap" && <SwapBridgeTab isCorrectChain={isCorrectChain} />}
             {activeTab === "leaderboard" && <LeaderboardTab />}
           </motion.div>
         </AnimatePresence>
@@ -307,6 +379,8 @@ export default function BankOfCelo({ title = "Bank of Celo" }: { title?: string 
                 : "text-gray-500 dark:text-gray-400 hover:text-emerald-600 dark:hover:text-emerald-400"
             }`}
             aria-label={tab.label}
+            role="tab"
+            aria-selected={activeTab === tab.id}
           >
             {tab.icon}
             <span className="text-xs mt-1">{tab.label}</span>
