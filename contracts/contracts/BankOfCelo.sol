@@ -4,11 +4,14 @@ pragma solidity 0.8.24;
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
+import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
+import "@openzeppelin/contracts/utils/cryptography/EIP712.sol";
+
 /**
  * @title BankOfCelo
- * @notice Enhanced with leaderboard functionality and donor perks
+ * @notice Enhanced with gasless claim functionality using EIP-712 signatures
  */
-contract BankOfCelo is Ownable, ReentrancyGuard {
+contract BankOfCelo is Ownable, ReentrancyGuard, EIP712 {
     // --- Config ---
     uint256 public constant MAX_CLAIM = 0.5 ether;
     uint256 public immutable minVaultBalance;
@@ -46,6 +49,10 @@ contract BankOfCelo is Ownable, ReentrancyGuard {
     LeaderboardEntry[LEADERBOARD_SIZE] public leaderboard;
     uint256 public minLeaderboardAmount = 0;
 
+    // --- EIP-712 Types ---
+    bytes32 private constant CLAIM_TYPEHASH =
+        keccak256("Claim(address claimer,uint256 fid,uint256 deadline)");
+
     // --- Events ---
     event Donated(address indexed donor, uint256 amount, uint256 devFee);
     event Claimed(address indexed recipient, uint256 fid, uint256 amount);
@@ -53,17 +60,10 @@ contract BankOfCelo is Ownable, ReentrancyGuard {
     event DonorTierUpgraded(address indexed donor, uint8 newTier);
     event LeaderboardUpdated(address indexed donor, uint256 amount, uint256 position);
 
-
-
-function publishBalance() external {
-    require(block.timestamp > lastPublishedTime + 1 days);
-    lastPublishedBalance = address(this).balance;
-    lastPublishedTime = block.timestamp;
-}
-
     constructor(uint256 _minVaultBalance, address _devWallet)
         payable
         Ownable(msg.sender)
+        EIP712("BankOfCelo", "1")
     {
         require(_devWallet != address(0), "Invalid dev wallet");
         minVaultBalance = _minVaultBalance;
@@ -98,63 +98,53 @@ function publishBalance() external {
         emit Donated(msg.sender, donationAmount, devFee);
     }
 
-    // --- Leaderboard Management ---
-    function _updateLeaderboard(address donor, uint256 newAmount) internal {
-        // Don't update if amount is too small
-        if (newAmount < minLeaderboardAmount && 
-            leaderboard[LEADERBOARD_SIZE-1].amount >= newAmount) {
-            return;
+    // --- Gasless Claim ---
+    function claimGasless(
+        address claimer,
+        uint256 fid,
+        uint256 deadline,
+        bytes memory signature
+    ) external nonReentrant {
+        require(deadline >= block.timestamp, "Signature expired");
+        require(address(this).balance >= MAX_CLAIM + minVaultBalance, "Vault balance too low");
+
+        // Verify EIP-712 signature
+        bytes32 digest = _hashTypedDataV4(
+            keccak256(
+                abi.encode(
+                    CLAIM_TYPEHASH,
+                    claimer,
+                    fid,
+                    deadline
+                )
+            )
+        );
+        address signer = ECDSA.recover(digest, signature);
+        require(signer == claimer, "Invalid signature");
+
+        // Validate claim
+        DonorInfo storage donor = donors[claimer];
+        require(!donor.hasClaimed, "Already claimed (address)");
+        require(!fidClaimed[fid], "Already claimed (FID)");
+        require(!fidBlacklisted[fid], "FID blacklisted");
+
+        if (claimCooldown > 0) {
+            require(block.timestamp - lastClaimAt[claimer] >= claimCooldown, "Cooldown not passed");
         }
 
-        // Find insertion point
-        int256 insertPos = -1;
-        for (uint256 i = 0; i < LEADERBOARD_SIZE; i++) {
-            if (newAmount > leaderboard[i].amount) {
-                insertPos = int256(i);
-                break;
-            }
-        }
+        // Update state
+        donor.hasClaimed = true;
+        fidClaimed[fid] = true;
+        lastClaimAt[claimer] = block.timestamp;
 
-        // Shift entries down and insert new donor
-        if (insertPos >= 0) {
-            // Shift elements down
-            for (uint256 j = LEADERBOARD_SIZE-1; j > uint256(insertPos); j--) {
-                leaderboard[j] = leaderboard[j-1];
-            }
-            
-            // Insert new entry
-            leaderboard[uint256(insertPos)] = LeaderboardEntry(donor, newAmount);
-            minLeaderboardAmount = leaderboard[LEADERBOARD_SIZE-1].amount;
-            
-            emit LeaderboardUpdated(donor, newAmount, uint256(insertPos));
-        }
+        // Send funds to claimer
+        (bool ok, ) = claimer.call{value: MAX_CLAIM}("");
+        require(ok, "CELO transfer failed");
+
+        emit Claimed(claimer, fid, MAX_CLAIM);
     }
 
-    // --- View Functions for Leaderboard ---
-    function getLeaderboard() external view returns (LeaderboardEntry[] memory) {
-        LeaderboardEntry[] memory currentLeaderboard = new LeaderboardEntry[](LEADERBOARD_SIZE);
-        
-        for (uint256 i = 0; i < LEADERBOARD_SIZE; i++) {
-            currentLeaderboard[i] = leaderboard[i];
-        }
-        
-        return currentLeaderboard;
-    }
-
-    function getDonorRank(address donor) external view returns (uint256) {
-        uint256 donorAmount = donors[donor].totalDonated;
-        if (donorAmount == 0) return type(uint256).max; // Not on leaderboard
-        
-        for (uint256 i = 0; i < LEADERBOARD_SIZE; i++) {
-            if (leaderboard[i].donor == donor) {
-                return i + 1; // 1-based ranking
-            }
-        }
-        
-        return type(uint256).max; // Not in top 100
-    }
-
-    // --- Claim Function ---
+    // --- Original Claim (for backward compatibility) ---
     function claim(uint256 fid) external nonReentrant {
         require(tx.origin == msg.sender, "Contracts not allowed");
         DonorInfo storage donor = donors[msg.sender];
@@ -175,6 +165,57 @@ function publishBalance() external {
         require(ok, "CELO transfer failed");
 
         emit Claimed(msg.sender, fid, MAX_CLAIM);
+    }
+
+    // --- Leaderboard Management ---
+    function _updateLeaderboard(address donor, uint256 newAmount) internal {
+        if (newAmount < minLeaderboardAmount && 
+            leaderboard[LEADERBOARD_SIZE-1].amount >= newAmount) {
+            return;
+        }
+
+        int256 insertPos = -1;
+        for (uint256 i = 0; i < LEADERBOARD_SIZE; i++) {
+            if (newAmount > leaderboard[i].amount) {
+                insertPos = int256(i);
+                break;
+            }
+        }
+
+        if (insertPos >= 0) {
+            for (uint256 j = LEADERBOARD_SIZE-1; j > uint256(insertPos); j--) {
+                leaderboard[j] = leaderboard[j-1];
+            }
+            
+            leaderboard[uint256(insertPos)] = LeaderboardEntry(donor, newAmount);
+            minLeaderboardAmount = leaderboard[LEADERBOARD_SIZE-1].amount;
+            
+            emit LeaderboardUpdated(donor, newAmount, uint256(insertPos));
+        }
+    }
+
+    // --- View Functions for Leaderboard ---
+    function getLeaderboard() external view returns (LeaderboardEntry[] memory) {
+        LeaderboardEntry[] memory currentLeaderboard = new LeaderboardEntry[](LEADERBOARD_SIZE);
+        
+        for (uint256 i = 0; i < LEADERBOARD_SIZE; i++) {
+            currentLeaderboard[i] = leaderboard[i];
+        }
+        
+        return currentLeaderboard;
+    }
+
+    function getDonorRank(address donor) external view returns (uint256) {
+        uint256 donorAmount = donors[donor].totalDonated;
+        if (donorAmount == 0) return type(uint256).max;
+        
+        for (uint256 i = 0; i < LEADERBOARD_SIZE; i++) {
+            if (leaderboard[i].donor == donor) {
+                return i + 1;
+            }
+        }
+        
+        return type(uint256).max;
     }
 
     // --- Admin Functions ---
@@ -206,8 +247,7 @@ function publishBalance() external {
     function getDonorTier(address donor) external view returns (uint8) {
         return donors[donor].tier;
     }
-     /// Returns vault balance with safety checks
-    /// balance in wei, minReserve in wei, available for claims in wei
+
     function getVaultStatus() external view returns (
         uint256 currentBalance,
         uint256 minReserve,
@@ -220,11 +260,10 @@ function publishBalance() external {
             : 0;
     }
 
-    /// @notice User-friendly balance display
     function getFormattedBalance() external view returns (string memory) {
         uint256 balance = address(this).balance;
         uint256 celoAmount = balance / 1 ether;
-        uint256 decimals = (balance % 1 ether) / 1e16; // 2 decimal places
+        uint256 decimals = (balance % 1 ether) / 1e16;
         
         return string(abi.encodePacked(
             Strings.toString(celoAmount),
@@ -234,16 +273,17 @@ function publishBalance() external {
             " CELO"
         ));
     }
+
     function getBalanceWithAccessControl() external view returns (uint256) {
-    require(donors[msg.sender].totalDonated > 0.1 ether, 
-        "Only donors can view");
-    return address(this).balance;
-}
+        require(donors[msg.sender].totalDonated > 0.1 ether, 
+            "Only donors can view");
+        return address(this).balance;
+    }
 
     // --- Fallback ---
     receive() external payable {
-       uint256 devFee = (msg.value * DEV_FEE_PERCENT) / 100;
-       uint256 donationAmount = msg.value - devFee;
+        uint256 devFee = (msg.value * DEV_FEE_PERCENT) / 100;
+        uint256 donationAmount = msg.value - devFee;
         DonorInfo storage donor = donors[msg.sender];
         donor.totalDonated += donationAmount;
         donor.lastDonationTime = block.timestamp;
@@ -257,4 +297,10 @@ function publishBalance() external {
 
         emit Donated(msg.sender, donationAmount, devFee);
     }
+
+    function publishBalance() external {
+    require(block.timestamp > lastPublishedTime + 1 days);
+    lastPublishedBalance = address(this).balance;
+    lastPublishedTime = block.timestamp;
+}
 }

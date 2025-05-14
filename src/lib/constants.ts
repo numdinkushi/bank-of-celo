@@ -7,7 +7,8 @@ export const APP_SPLASH_URL = `${APP_URL}/splash.png`;
 export const APP_SPLASH_BACKGROUND_COLOR = "#f7f7f7";
 export const APP_BUTTON_TEXT = process.env.NEXT_PUBLIC_FRAME_BUTTON_TEXT;
 
-export const BANK_OF_CELO_CONTRACT_ADDRESS = "0x48820Ed9caf01295d2D6b5561E249C5e1E46D5cE" as `0x${string}`;;
+//0x48820Ed9caf01295d2D6b5561E249C5e1E46D5cE
+export const BANK_OF_CELO_CONTRACT_ADDRESS = "0xB604B57e66B6f0F3AD7AecA58Bf306f640EF1270" as `0x${string}`;;
 export const BANK_OF_CELO_RELAYER_ADDRESS = "0xd980d16cfded70fce09ca8B69FC5404Ea38796Fc" as `0x${string}`;;
 export const BANK_OF_CELO_CONTRACT_ABI = [
   {
@@ -25,6 +26,38 @@ export const BANK_OF_CELO_CONTRACT_ABI = [
     ],
     "stateMutability": "payable",
     "type": "constructor"
+  },
+  {
+    "inputs": [],
+    "name": "ECDSAInvalidSignature",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "length",
+        "type": "uint256"
+      }
+    ],
+    "name": "ECDSAInvalidSignatureLength",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "s",
+        "type": "bytes32"
+      }
+    ],
+    "name": "ECDSAInvalidSignatureS",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "InvalidShortString",
+    "type": "error"
   },
   {
     "inputs": [
@@ -51,6 +84,17 @@ export const BANK_OF_CELO_CONTRACT_ABI = [
   {
     "inputs": [],
     "name": "ReentrancyGuardReentrantCall",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "string",
+        "name": "str",
+        "type": "string"
+      }
+    ],
+    "name": "StringTooLong",
     "type": "error"
   },
   {
@@ -139,6 +183,12 @@ export const BANK_OF_CELO_CONTRACT_ABI = [
       }
     ],
     "name": "DonorTierUpgraded",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [],
+    "name": "EIP712DomainChanged",
     "type": "event"
   },
   {
@@ -290,6 +340,34 @@ export const BANK_OF_CELO_CONTRACT_ABI = [
     "type": "function"
   },
   {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "claimer",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "fid",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "deadline",
+        "type": "uint256"
+      },
+      {
+        "internalType": "bytes",
+        "name": "signature",
+        "type": "bytes"
+      }
+    ],
+    "name": "claimGasless",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
     "inputs": [],
     "name": "devWallet",
     "outputs": [
@@ -338,6 +416,49 @@ export const BANK_OF_CELO_CONTRACT_ABI = [
         "internalType": "bool",
         "name": "hasClaimed",
         "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "eip712Domain",
+    "outputs": [
+      {
+        "internalType": "bytes1",
+        "name": "fields",
+        "type": "bytes1"
+      },
+      {
+        "internalType": "string",
+        "name": "name",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
+        "name": "version",
+        "type": "string"
+      },
+      {
+        "internalType": "uint256",
+        "name": "chainId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "address",
+        "name": "verifyingContract",
+        "type": "address"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "salt",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "uint256[]",
+        "name": "extensions",
+        "type": "uint256[]"
       }
     ],
     "stateMutability": "view",
@@ -708,11 +829,6 @@ export const BANK_OF_CELO_RELAY_ABI =[
         "internalType": "address",
         "name": "bankAddress",
         "type": "address"
-      },
-      {
-        "internalType": "address",
-        "name": "initialOwner",
-        "type": "address"
       }
     ],
     "stateMutability": "nonpayable",
@@ -754,12 +870,6 @@ export const BANK_OF_CELO_RELAY_ABI =[
         "internalType": "uint256",
         "name": "fid",
         "type": "uint256"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "gasFee",
-        "type": "uint256"
       }
     ],
     "name": "ClaimRelayed",
@@ -798,21 +908,27 @@ export const BANK_OF_CELO_RELAY_ABI =[
     "type": "function"
   },
   {
-    "inputs": [
+    "inputs": [],
+    "name": "claimCooldown",
+    "outputs": [
       {
-        "internalType": "address payable",
-        "name": "to",
-        "type": "address"
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
       }
     ],
-    "name": "emergencyWithdraw",
-    "outputs": [],
-    "stateMutability": "nonpayable",
+    "stateMutability": "view",
     "type": "function"
   },
   {
-    "inputs": [],
-    "name": "gasFee",
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "name": "lastClaimTime",
     "outputs": [
       {
         "internalType": "uint256",
@@ -850,11 +966,6 @@ export const BANK_OF_CELO_RELAY_ABI =[
       },
       {
         "internalType": "uint256",
-        "name": "maxGasFee",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
         "name": "deadline",
         "type": "uint256"
       },
@@ -866,7 +977,7 @@ export const BANK_OF_CELO_RELAY_ABI =[
     ],
     "name": "relayClaim",
     "outputs": [],
-    "stateMutability": "payable",
+    "stateMutability": "nonpayable",
     "type": "function"
   },
   {
@@ -880,11 +991,11 @@ export const BANK_OF_CELO_RELAY_ABI =[
     "inputs": [
       {
         "internalType": "uint256",
-        "name": "newGasFee",
+        "name": "cooldown",
         "type": "uint256"
       }
     ],
-    "name": "setGasFee",
+    "name": "setClaimCooldown",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -922,14 +1033,8 @@ export const BANK_OF_CELO_RELAY_ABI =[
     "type": "function"
   },
   {
-    "inputs": [
-      {
-        "internalType": "address payable",
-        "name": "to",
-        "type": "address"
-      }
-    ],
-    "name": "withdrawFees",
+    "inputs": [],
+    "name": "withdrawFunds",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"

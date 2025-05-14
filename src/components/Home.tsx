@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 
@@ -34,7 +35,6 @@ export default function BankOfCelo({ title = "Bank of Celo" }: { title?: string 
   const [activeTab, setActiveTab] = useState("home");
   const [vaultBalance, setVaultBalance] = useState<string>("0");
   const [showWelcome, setShowWelcome] = useState(() => {
-    // Only show welcome modal for new users (stored in localStorage)
     return !localStorage.getItem("hasSeenWelcome");
   });
   const [isLoading, setIsLoading] = useState(false);
@@ -48,24 +48,28 @@ export default function BankOfCelo({ title = "Bank of Celo" }: { title?: string 
   });
 
   const chainId = useChainId();
-  const CELO_CHAIN_ID = celo.id; // Celo chain ID
+  const CELO_CHAIN_ID = celo.id;
   const isCorrectChain = chainId === CELO_CHAIN_ID;
 
-  // Automatically switch to Celo network if connected to wrong chain
+  const handleSwitchChain = async () => {
+    toast.loading("Switching to Celo network...");
+    try {
+      await switchChain({ chainId: CELO_CHAIN_ID });
+      toast.dismiss();
+      toast.success("Successfully switched to Celo!");
+    } catch (error) {
+      toast.dismiss();
+      toast.error("Failed to switch networks. Please try again.");
+      console.error("Chain switching error:", error);
+    }
+  };
+
   useEffect(() => {
     if (isConnected && !isCorrectChain) {
-      (async () => {
-        console.log(`Currently connected to chain ID: ${chainId}, switching to Celo (${CELO_CHAIN_ID})`);
-        try {
-          await switchChain({ chainId: CELO_CHAIN_ID });
-        } catch (error) {
-          console.error("Failed to switch chain:", error);
-        }
-      })();
+      handleSwitchChain();
     }
-  }, [isConnected, chainId, isCorrectChain, switchChain, CELO_CHAIN_ID]);
+  }, [isConnected, chainId, isCorrectChain]);
 
-  // Fetch contract data with memoized function
   const fetchContractData = useCallback(async () => {
     if (!publicClient || !address || !isCorrectChain) return;
     try {
@@ -122,8 +126,7 @@ export default function BankOfCelo({ title = "Bank of Celo" }: { title?: string 
 
   const handleDonate = (amount: string) => {
     if (!isCorrectChain) {
-      toast.error("Switching to Celo Network...");
-      switchChain({ chainId: CELO_CHAIN_ID });
+      handleSwitchChain();
       return;
     }
 
@@ -155,8 +158,7 @@ export default function BankOfCelo({ title = "Bank of Celo" }: { title?: string 
 
   const handleClaim = (fid: number) => {
     if (!isCorrectChain) {
-      toast.error("Switching to Celo Network...");
-      switchChain({ chainId: CELO_CHAIN_ID });
+      handleSwitchChain();
       return;
     }
 
@@ -200,7 +202,7 @@ export default function BankOfCelo({ title = "Bank of Celo" }: { title?: string 
 
   if (!isSDKLoaded) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-emerald-50 to-amber-50 dark:from-emerald-900 dark:to-amber-900">
+      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-emerald-100 to-amber-100 dark:from-emerald-950 dark:to-amber-950">
         <motion.div
           animate={{ rotate: 360, scale: [1, 1.2, 1] }}
           transition={{ repeat: Infinity, duration: 1.5, ease: "easeInOut" }}
@@ -213,7 +215,7 @@ export default function BankOfCelo({ title = "Bank of Celo" }: { title?: string 
 
   return (
     <div
-      className="min-h-screen bg-gradient-to-br from-emerald-50 to-amber-50 dark:from-emerald-900 dark:to-amber-900 flex flex-col"
+      className="min-h-screen bg-gradient-to-br from-emerald-100 via-amber-50 to-emerald-100 dark:from-emerald-950 dark:via-gray-900 dark:to-emerald-950 flex flex-col"
       style={{
         paddingTop: context?.client.safeAreaInsets?.top ?? 0,
         paddingBottom: context?.client.safeAreaInsets?.bottom ?? 60,
@@ -223,21 +225,30 @@ export default function BankOfCelo({ title = "Bank of Celo" }: { title?: string 
     >
       {/* Network Warning Banner */}
       {isConnected && !isCorrectChain && (
-        <div className="bg-red-500 text-white p-2 text-center flex items-center justify-center gap-2">
-          <AlertCircle className="w-5 h-5" />
-          <span>Please switch to Celo Network to interact with Bank of Celo</span>
+        <motion.div 
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-amber-100 dark:bg-amber-900/50 border-l-4 border-amber-500 dark:border-amber-400 p-3 text-center flex flex-col sm:flex-row items-center justify-center gap-3"
+        >
+          <div className="flex items-center gap-2">
+            <AlertCircle className="w-5 h-5 text-amber-600 dark:text-amber-300" />
+            <span className="text-amber-800 dark:text-amber-100 font-medium">
+              You are on the wrong network
+            </span>
+          </div>
           <Button
-            onClick={() => switchChain({ chainId: CELO_CHAIN_ID })}
-            className="ml-2 bg-white text-red-500 hover:bg-gray-100"
+            onClick={handleSwitchChain}
+            className="bg-amber-600 hover:bg-amber-700 text-white text-sm py-1 px-4 rounded-full flex items-center gap-1"
           >
-            Switch Now
+            <ArrowLeftRight className="w-4 h-4" />
+            Switch to Celo
           </Button>
-        </div>
+        </motion.div>
       )}
 
       {/* Welcome Modal */}
       <Dialog open={showWelcome} onOpenChange={handleCloseWelcome}>
-        <DialogContent className="bg-white dark:bg-gray-800 rounded-2xl border-0 shadow-xl p-6 max-w-md">
+        <DialogContent className="bg-white dark:bg-gray-900 rounded-2xl border-0 shadow-xl p-6 max-w-md">
           <DialogHeader>
             <div className="flex justify-center mb-4">
               <div className="bg-emerald-100 dark:bg-emerald-900 p-3 rounded-full">
@@ -256,7 +267,7 @@ export default function BankOfCelo({ title = "Bank of Celo" }: { title?: string 
           <div className="mt-6 flex flex-col gap-3">
             <Button
               onClick={handleCloseWelcome}
-              className="w-full bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg py-3"
+              className="w-full bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-700 hover:to-emerald-600 text-white rounded-lg py-3 shadow-md"
             >
               Get Started
             </Button>
@@ -269,7 +280,7 @@ export default function BankOfCelo({ title = "Bank of Celo" }: { title?: string 
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="sticky top-0 z-10 bg-white/80 dark:bg-gray-800/80 backdrop-blur-md shadow-sm p-4"
+        className="sticky top-0 z-10 bg-white/90 dark:bg-gray-900/90 backdrop-blur-md border-b border-gray-200 dark:border-gray-700 p-4"
       >
         <div className="flex items-center justify-between max-w-md mx-auto">
           <h1 className="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-emerald-600 to-amber-500">
@@ -280,7 +291,7 @@ export default function BankOfCelo({ title = "Bank of Celo" }: { title?: string 
               <>
                 <Button
                   onClick={() => disconnect()}
-                  className="text-xs text-black font-medium bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 rounded-full px-3 py-1.5"
+                  className="text-xs text-gray-800 dark:text-gray-200 font-medium bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 rounded-full px-3 py-1.5"
                   aria-label="Disconnect wallet"
                 >
                   <Wallet className="w-4 h-4 mr-1" />
@@ -289,7 +300,7 @@ export default function BankOfCelo({ title = "Bank of Celo" }: { title?: string 
                 {status === "authenticated" && (
                   <Button
                     onClick={handleSignOut}
-                    className="text-xs font-medium bg-blue-600 hover:bg-blue-700 text-white rounded-full p-1.5"
+                    className="text-xs font-medium bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 text-white rounded-full p-1.5 shadow-sm"
                     aria-label="Sign out from Farcaster"
                   >
                     <LogOut className="w-4 h-4" />
@@ -299,7 +310,7 @@ export default function BankOfCelo({ title = "Bank of Celo" }: { title?: string 
             ) : (
               <Button
                 onClick={handleConnect}
-                className="text-xs font-medium bg-emerald-600 hover:bg-emerald-700 text-white rounded-full px-3 py-1.5"
+                className="text-xs font-medium bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-700 hover:to-emerald-600 text-white rounded-full px-3 py-1.5 shadow-sm"
                 aria-label="Connect wallet"
               >
                 <Wallet className="w-4 h-4 mr-1" /> Connect
@@ -310,7 +321,16 @@ export default function BankOfCelo({ title = "Bank of Celo" }: { title?: string 
       </motion.div>
 
       {/* Content */}
-      <div className="flex-1 p-4 overflow-y-auto max-w-md mx-auto w-full">
+      <div className="flex-1 p-4 overflow-y-auto max-w-md mx-auto w-full relative">
+        {isLoading && (
+          <div className="absolute inset-0 bg-white/50 dark:bg-gray-900/50 backdrop-blur-sm flex items-center justify-center z-20 rounded-xl">
+            <motion.div
+              animate={{ rotate: 360 }}
+              transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
+              className="w-8 h-8 border-4 border-emerald-500 border-t-transparent rounded-full"
+            />
+          </div>
+        )}
         <AnimatePresence mode="wait">
           <motion.div
             key={activeTab}
@@ -354,7 +374,7 @@ export default function BankOfCelo({ title = "Bank of Celo" }: { title?: string 
         initial={{ y: 100 }}
         animate={{ y: 0 }}
         transition={{ duration: 0.5 }}
-        className="fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-800 shadow-t-lg border-t border-gray-100 dark:border-gray-700 flex justify-around py-2 px-4"
+        className="fixed bottom-0 left-0 right-0 bg-white/95 dark:bg-gray-900/95 backdrop-blur-lg shadow-t-lg border-t border-gray-200 dark:border-gray-700 flex justify-around py-2 px-4"
       >
         {[
           { id: "home", icon: <Home className="w-5 h-5" />, label: "Home" },
@@ -365,17 +385,21 @@ export default function BankOfCelo({ title = "Bank of Celo" }: { title?: string 
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
-            className={`flex flex-col items-center p-2 rounded-lg transition-colors ${
+            className={`relative flex flex-col items-center p-2 rounded-xl transition-all ${
               activeTab === tab.id
-                ? "text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30"
-                : "text-gray-500 dark:text-gray-400 hover:text-emerald-600 dark:hover:text-emerald-400"
+                ? "text-white bg-gradient-to-r from-emerald-500 to-emerald-600 shadow-md"
+                : "text-gray-600 dark:text-gray-300 hover:text-emerald-600 dark:hover:text-emerald-400"
             }`}
             aria-label={tab.label}
-            role="tab"
-            aria-selected={activeTab === tab.id}
           >
             {tab.icon}
             <span className="text-xs mt-1">{tab.label}</span>
+            {activeTab === tab.id && (
+              <motion.div
+                layoutId="activeTabIndicator"
+                className="absolute bottom-0 w-1/2 h-1 bg-emerald-300 rounded-full"
+              />
+            )}
           </button>
         ))}
       </motion.nav>
