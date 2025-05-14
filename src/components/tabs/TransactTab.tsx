@@ -104,7 +104,7 @@ export default function TransactTab({
       const domain = {
         name: "BankOfCelo",
         version: "1",
-        chainId: 44787, // Celo Alfajores (42220 for mainnet)
+        chainId: 42220, 
         verifyingContract: BANK_OF_CELO_CONTRACT_ADDRESS,
       };
       const types = {

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { encodeFunctionData, createPublicClient, http } from "viem";
-import { celoAlfajores } from "viem/chains";
+import { celo } from "viem/chains";
 import { BANK_OF_CELO_CONTRACT_ABI, BANK_OF_CELO_CONTRACT_ADDRESS } from "~/lib/constants";
 
 export async function POST(req: NextRequest) {
@@ -13,8 +13,8 @@ export async function POST(req: NextRequest) {
 
     // Initialize public client
     const publicClient = createPublicClient({
-      chain: celoAlfajores, // Use celo for mainnet
-      transport: http("https://alfajores-forno.celo-testnet.org"),
+      chain: celo, 
+      transport: http("forno.celo.org"),
     });
 
     // Encode claimGasless call
