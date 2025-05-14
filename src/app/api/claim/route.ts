@@ -14,7 +14,7 @@ export async function POST(req: NextRequest) {
     // Initialize public client
     const publicClient = createPublicClient({
       chain: celo, 
-      transport: http("forno.celo.org"),
+      transport: http("https://forno.celo.org"),
     });
 
     // Encode claimGasless call
