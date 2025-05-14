@@ -280,7 +280,7 @@ export default function BankOfCelo({ title = "Bank of Celo" }: { title?: string 
               <>
                 <Button
                   onClick={() => disconnect()}
-                  className="text-xs font-medium bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 rounded-full px-3 py-1.5"
+                  className="text-xs text-black font-medium bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 rounded-full px-3 py-1.5"
                   aria-label="Disconnect wallet"
                 >
                   <Wallet className="w-4 h-4 mr-1" />
