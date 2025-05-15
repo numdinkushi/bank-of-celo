@@ -39,7 +39,7 @@ export function getSecretEnvVars() {
 }
 
 export async function getFarcasterMetadata(): Promise<FrameMetadata> {
-  // First check for FRAME_METADATA in .env and use that if it exists
+  // 1) Pre-signed FRAME_METADATA?
   if (process.env.FRAME_METADATA) {
     try {
       const metadata = JSON.parse(process.env.FRAME_METADATA);
@@ -50,65 +50,69 @@ export async function getFarcasterMetadata(): Promise<FrameMetadata> {
     }
   }
 
+  // 2) APP_URL must be set
   if (!APP_URL) {
-    throw new Error('NEXT_PUBLIC_URL not configured');
+    throw new Error('NEXT_PUBLIC_URL (APP_URL) not configured');
   }
-
-  // Get the domain from the URL (without https:// prefix)
   const domain = new URL(APP_URL).hostname;
   console.log('Using domain for manifest:', domain);
 
-  const secretEnvVars = getSecretEnvVars();
-  if (!secretEnvVars) {
-    console.warn('No seed phrase or FID found in environment variables -- generating unsigned metadata');
+  // 3) STATIC_ACCOUNT_ASSOCIATION override?
+  let accountAssociation: FrameMetadata['accountAssociation'] | undefined;
+  if (process.env.STATIC_ACCOUNT_ASSOCIATION) {
+    try {
+      accountAssociation = JSON.parse(process.env.STATIC_ACCOUNT_ASSOCIATION);
+      console.log('Using STATIC_ACCOUNT_ASSOCIATION from env');
+    } catch (err) {
+      console.warn('Bad STATIC_ACCOUNT_ASSOCIATION JSON:', err);
+    }
   }
 
-  let accountAssociation;
-  if (secretEnvVars) {
-    // Generate account from seed phrase
+  // 4) Fallback to seed-phrase if no static override
+  const secretEnvVars = getSecretEnvVars();
+  if (!accountAssociation && secretEnvVars) {
     const account = mnemonicToAccount(secretEnvVars.seedPhrase);
-    const custodyAddress = account.address;
-
     const header = {
-      fid: parseInt(secretEnvVars.fid),
+      fid: parseInt(secretEnvVars.fid, 10),
       type: 'custody',
-      key: custodyAddress,
+      key: account.address,
     };
     const encodedHeader = Buffer.from(JSON.stringify(header), 'utf-8').toString('base64');
 
-    const payload = {
-      domain
-    };
+    const payload = { domain };
     const encodedPayload = Buffer.from(JSON.stringify(payload), 'utf-8').toString('base64url');
 
-    const signature = await account.signMessage({ 
-      message: `${encodedHeader}.${encodedPayload}`
+    const signature = await account.signMessage({
+      message: `${encodedHeader}.${encodedPayload}`,
     });
     const encodedSignature = Buffer.from(signature, 'utf-8').toString('base64url');
 
     accountAssociation = {
       header: encodedHeader,
       payload: encodedPayload,
-      signature: encodedSignature
+      signature: encodedSignature,
     };
+    console.log('Generated accountAssociation from seed phrase');
+  } else if (!accountAssociation) {
+    console.warn('No STATIC_ACCOUNT_ASSOCIATION or seedPhrase/FID—metadata will be unsigned');
   }
 
-  // Determine webhook URL based on whether Neynar is enabled
-  const neynarApiKey = process.env.NEYNAR_API_KEY;
-  const neynarClientId = process.env.NEYNAR_CLIENT_ID;
-  const webhookUrl = neynarApiKey && neynarClientId 
-    ? `https://api.neynar.com/f/app/${neynarClientId}/event`
-    : `${APP_URL}/api/webhook`;
+  // 5) Determine webhook URL
+  const webhookUrl =
+    process.env.NEYNAR_API_KEY && process.env.NEYNAR_CLIENT_ID
+      ? `https://api.neynar.com/f/app/${process.env.NEYNAR_CLIENT_ID}/event`
+      : `${APP_URL}/api/webhook`;
 
+  // 6) Build and return FrameMetadata
   return {
     accountAssociation,
     frame: {
-      version: "1",
-      name: APP_NAME ?? "Frames v2 Demo",
+      version: '1',
+      name: APP_NAME ?? 'Frames v2 Demo',
       iconUrl: APP_ICON_URL,
       homeUrl: APP_URL,
       imageUrl: APP_OG_IMAGE_URL,
-      buttonTitle: APP_BUTTON_TEXT ?? "Launch Frame",
+      buttonTitle: APP_BUTTON_TEXT ?? 'Launch Frame',
       splashImageUrl: APP_SPLASH_URL,
       splashBackgroundColor: APP_SPLASH_BACKGROUND_COLOR,
       webhookUrl,
