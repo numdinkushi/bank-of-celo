@@ -41,7 +41,7 @@ export async function POST(req: NextRequest) {
         args: [BigInt(fid), BigInt(deadline), signature],
       });
 
-      const finalData = dataSuffix ? contractData + dataSuffix : contractData;
+      const finalData = dataSuffix ? contractData + (dataSuffix.startsWith("0x") ? dataSuffix.slice(2) : dataSuffix) : contractData;
 
       const txRequest = {
         to: BANK_OF_CELO_CONTRACT_ADDRESS as `0x${string}`,
@@ -57,9 +57,17 @@ export async function POST(req: NextRequest) {
       });
     } else {
       // User has no CELO: Use private key to call executeGaslessClaim
-      const privateKey = process.env.SPONSOR_PRIVATE_KEY;
+      const privateKey =process.env.SPONSOR_PRIVATE_KEY;
       if (!privateKey) {
-        throw new Error("Sponsor private key not configured");
+        throw new Error("SPONSOR_PRIVATE_KEY not configured in environment variables");
+      }
+
+      // Validate private key format
+      const hexRegex = /^0x[0-9a-fA-F]{64}$/;
+      if (!hexRegex.test(privateKey)) {
+        throw new Error(
+          "Invalid SPONSOR_PRIVATE_KEY: must be a 64-character hex string starting with 0x"
+        );
       }
 
       const account = privateKeyToAccount(privateKey as `0x${string}`);
@@ -77,7 +85,7 @@ export async function POST(req: NextRequest) {
       });
 
       // Append dataSuffix if provided
-      const finalData = dataSuffix ? contractData + dataSuffix : contractData;
+      const finalData = dataSuffix ? contractData + (dataSuffix.startsWith("0x") ? dataSuffix.slice(2) : dataSuffix) : contractData;
 
       // Call executeGaslessClaim
       const hash = await walletClient.sendTransaction({
