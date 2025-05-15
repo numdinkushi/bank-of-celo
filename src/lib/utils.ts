@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { type ClassValue, clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import { mnemonicToAccount } from 'viem/accounts';
@@ -54,56 +55,22 @@ export async function getFarcasterMetadata(): Promise<FrameMetadata> {
   if (!APP_URL) {
     throw new Error('NEXT_PUBLIC_URL (APP_URL) not configured');
   }
-  const domain = new URL(APP_URL).hostname;
-  console.log('Using domain for manifest:', domain);
 
-  // 3) STATIC_ACCOUNT_ASSOCIATION override?
-  let accountAssociation: FrameMetadata['accountAssociation'] | undefined;
-  if (process.env.STATIC_ACCOUNT_ASSOCIATION) {
-    try {
-      accountAssociation = JSON.parse(process.env.STATIC_ACCOUNT_ASSOCIATION);
-      console.log('Using STATIC_ACCOUNT_ASSOCIATION from env');
-    } catch (err) {
-      console.warn('Bad STATIC_ACCOUNT_ASSOCIATION JSON:', err);
-    }
-  }
+  // 3) Hardcoded account association
+  const accountAssociation = {
+    header: "eyJmaWQiOjQyMDU2NCwidHlwZSI6ImN1c3RvZHkiLCJrZXkiOiIweGREOGVFNTU1NTc0NGQ2ODQyZTNjNTcyZTQ2RjQyMDkyZWQ3MzI2YjYifQ",
+    payload: "eyJkb21haW4iOiJiYW5rLW9mLWNlbG8udmVyY2VsLmFwcCJ9",
+    signature: "MHg0MTI0YWMzZDMwMGJjNWMwMGRhYjFhODgyNmQxYzIyYTk5NDM1OWRmYjA4NWQyNGYwZmQ0YzdmZjk1ZDM2MjcxN2VmZGY2MGU5NzFiNTQ4ODk2NzM2MzlmOWE4ZTVhMjI5N2Q0MGEwYzZkMGE1YjI5OGQwMzZhZWQ4YzYyN2VkMjFj"
+  };
+  console.log('Using hardcoded account association');
 
-  // 4) Fallback to seed-phrase if no static override
-  const secretEnvVars = getSecretEnvVars();
-  if (!accountAssociation && secretEnvVars) {
-    const account = mnemonicToAccount(secretEnvVars.seedPhrase);
-    const header = {
-      fid: parseInt(secretEnvVars.fid, 10),
-      type: 'custody',
-      key: account.address,
-    };
-    const encodedHeader = Buffer.from(JSON.stringify(header), 'utf-8').toString('base64');
-
-    const payload = { domain };
-    const encodedPayload = Buffer.from(JSON.stringify(payload), 'utf-8').toString('base64url');
-
-    const signature = await account.signMessage({
-      message: `${encodedHeader}.${encodedPayload}`,
-    });
-    const encodedSignature = Buffer.from(signature, 'utf-8').toString('base64url');
-
-    accountAssociation = {
-      header: encodedHeader,
-      payload: encodedPayload,
-      signature: encodedSignature,
-    };
-    console.log('Generated accountAssociation from seed phrase');
-  } else if (!accountAssociation) {
-    console.warn('No STATIC_ACCOUNT_ASSOCIATION or seedPhrase/FID—metadata will be unsigned');
-  }
-
-  // 5) Determine webhook URL
+  // 4) Determine webhook URL
   const webhookUrl =
     process.env.NEYNAR_API_KEY && process.env.NEYNAR_CLIENT_ID
       ? `https://api.neynar.com/f/app/${process.env.NEYNAR_CLIENT_ID}/event`
       : `${APP_URL}/api/webhook`;
 
-  // 6) Build and return FrameMetadata
+  // 5) Build and return FrameMetadata
   return {
     accountAssociation,
     frame: {
