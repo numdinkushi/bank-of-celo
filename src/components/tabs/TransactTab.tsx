@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
 import { Loader2, Send, Gift, HandCoins, Clock, AlertCircle } from "lucide-react";
@@ -5,7 +6,7 @@ import { Button } from "~/components/ui/Button";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
 import { Input } from "../ui/input";
-import { useAccount, usePublicClient, useSignTypedData } from "wagmi";
+import { useAccount, usePublicClient, useSignTypedData, useSendTransaction } from "wagmi";
 import { BANK_OF_CELO_CONTRACT_ADDRESS, BANK_OF_CELO_CONTRACT_ABI } from "~/lib/constants";
 
 interface TransactTabProps {
@@ -33,12 +34,14 @@ export default function TransactTab({
   const { address } = useAccount();
   const publicClient = usePublicClient();
   const { signTypedDataAsync } = useSignTypedData();
+  const { sendTransactionAsync } = useSendTransaction();
   const [amount, setAmount] = useState("");
   const [fid, setFid] = useState<number | null>(null);
   const [fidLoading, setFidLoading] = useState(false);
   const [fidError, setFidError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<"donate" | "claim">("donate");
   const [claimPending, setClaimPending] = useState(false);
+  const [txHash, setTxHash] = useState<string | null>(null);
 
   const fetchFid = useCallback(async () => {
     if (!address) return;
@@ -92,62 +95,103 @@ export default function TransactTab({
 
   const nextClaimTime = lastClaimAt ? new Date((lastClaimAt + claimCooldown) * 1000) : null;
 
-  const handleGaslessClaim = async () => {
-    if (!fid || !address) {
+  const handleClaim = async () => {
+    if (!fid || !address || !publicClient) {
       toast.error("Farcaster ID or address missing");
       return;
     }
-
+  
     setClaimPending(true);
+    setTxHash(null);
+  
     try {
-      const deadline = Math.floor(Date.now() / 1000) + 3600;
+      const deadline = Math.floor(Date.now() / 1000) + 3600; // 1 hour from now
+      
+      // Get current nonce from contract
+      const nonce: any = await publicClient.readContract({
+        address: BANK_OF_CELO_CONTRACT_ADDRESS,
+        abi: BANK_OF_CELO_CONTRACT_ABI,
+        functionName: "nonces",
+        args: [address],
+      });
+  
+      // EIP-712 typed data
       const domain = {
         name: "BankOfCelo",
         version: "1",
-        chainId: 42220, 
+        chainId: 42220,
         verifyingContract: BANK_OF_CELO_CONTRACT_ADDRESS,
       };
+  
       const types = {
         Claim: [
           { name: "claimer", type: "address" },
           { name: "fid", type: "uint256" },
           { name: "deadline", type: "uint256" },
+          { name: "nonce", type: "uint256" },
         ],
       };
+  
       const message = {
         claimer: address,
         fid: BigInt(fid),
         deadline: BigInt(deadline),
+        nonce: BigInt(nonce),
       };
-
+  
       const signature = await signTypedDataAsync({
         domain,
         types,
         primaryType: "Claim",
         message,
       });
-
+  
+      // Convert BigInt values to strings for JSON serialization
+      const requestBody = {
+        address,
+        fid: fid.toString(), // Convert number to string
+        deadline: deadline.toString(), // Convert number to string
+        signature,
+        nonce: nonce.toString(), // Convert BigInt to string
+      };
+  
       const response = await fetch("/api/claim", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ address, fid, deadline, signature }),
+        body: JSON.stringify(requestBody),
       });
-
+  
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.error || "Failed to process claim");
       }
-
-      const { transactionHash } = await response.json();
-      toast.success(`Claim successful! Tx: ${transactionHash.slice(0, 6)}...`);
+  
+      const result = await response.json();
+  
+      if (result.action === "signAndSend") {
+        // User has CELO: Sign and send transaction
+        const { to, data, value, gas, gasPrice } = result.transaction;
+        const hash = await sendTransactionAsync({
+          to,
+          data,
+          value: BigInt(value),
+          gas: BigInt(gas),
+          gasPrice: BigInt(gasPrice),
+        });
+        setTxHash(hash);
+        toast.success(`Claimed ${maxClaim} CELO! Transaction hash: ${hash.slice(0, 6)}...`);
+      } else {
+        // Sponsor executed gasless claim
+        setTxHash(result.transactionHash);
+        toast.success(`Claimed ${maxClaim} CELO (Gasless)! Transaction hash: ${result.transactionHash.slice(0, 6)}...`);
+      }
     } catch (error) {
-      console.error("Gasless claim error:", error);
+      console.error("Claim error:", error);
       toast.error(error instanceof Error ? error.message : "Failed to process claim");
     } finally {
       setClaimPending(false);
     }
   };
-
   const handleSubmit = () => {
     if (!isCorrectChain) {
       toast.error("Please switch to Celo Network");
@@ -162,7 +206,7 @@ export default function TransactTab({
       onDonate(amount);
       setAmount("");
     } else {
-      handleGaslessClaim();
+      handleClaim();
     }
   };
 
@@ -241,7 +285,7 @@ export default function TransactTab({
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
                 placeholder="0.0"
-                className="w-full py-3 text-base"
+                className="w-full py-3 text-black"
                 min="0"
                 step="0.01"
               />
@@ -280,6 +324,22 @@ export default function TransactTab({
               </div>
             )}
 
+            {txHash && (
+              <div className="p-3 bg-green-50 dark:bg-green-900/30 rounded-lg text-sm text-green-800 dark:text-green-200 flex items-center">
+                <span>
+                  Claim successful!{" "}
+                  <a
+                    href={`https://celoscan.io/tx/${txHash}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="underline"
+                  >
+                    View on CeloScan
+                  </a>
+                </span>
+              </div>
+            )}
+
             {fidLoading ? (
               <div className="p-4 text-center bg-gray-50 dark:bg-gray-700 rounded-lg">
                 <Loader2 className="w-5 h-5 animate-spin text-amber-500 mx-auto mb-2" />
@@ -313,7 +373,7 @@ export default function TransactTab({
                   type="number"
                   value={fid}
                   disabled
-                  className="w-full py-3 text-base bg-gray-100 dark:bg-gray-700"
+                  className="w-full py-3 text-black bg-gray-100 dark:bg-gray-700"
                   aria-readonly="true"
                 />
               </div>
@@ -323,14 +383,14 @@ export default function TransactTab({
               onClick={handleSubmit}
               disabled={isPending || claimPending || !fid || !canClaim() || !!fidError}
               className="w-full py-3 bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-700 hover:to-amber-600 text-white"
-              aria-label={`Claim ${maxClaim} CELO (Gasless)`}
+              aria-label={`Claim ${maxClaim} CELO`}
             >
               {claimPending || isPending ? (
                 <Loader2 className="w-5 h-5 animate-spin" />
               ) : (
                 <div className="flex items-center justify-center gap-2">
                   <HandCoins className="w-5 h-5" />
-                  <span>Claim {maxClaim} CELO (Gasless)</span>
+                  <span>Claim {maxClaim} CELO</span>
                 </div>
               )}
             </Button>

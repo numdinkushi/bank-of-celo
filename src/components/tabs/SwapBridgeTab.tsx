@@ -49,59 +49,60 @@ export default function SwapBridgeTab({ isCorrectChain }: SwapBridgeTabProps) {
       transition={{ duration: 0.5 }}
       className="space-y-6"
     >
-      <div className="p-5 bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700">
-        <h2 className="text-lg font-semibold flex items-center gap-3 mb-4">
-          <div className="bg-blue-100 dark:bg-blue-900 p-2 rounded-lg">
-            <ArrowLeftRight className="w-5 h-5 text-blue-600 dark:text-blue-300" />
-          </div>
-          <span className="text-gray-900 dark:text-white">Swap & Bridge Tokens</span>
-        </h2>
-
-        <div className="space-y-4">
-          {!isConnected ? (
-            <div className="p-4 text-center bg-gray-50 dark:bg-gray-700 rounded-lg">
-              <p className="text-gray-600 dark:text-gray-300">
-                Connect your wallet to swap or bridge tokens
-              </p>
-            </div>
-          ) : !isCorrectChain ? (
-            <Button
-              onClick={handleSwitchToCelo}
-              disabled={isSwitching}
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white"
-              aria-label="Switch to Celo Network"
-            >
-              {isSwitching ? (
-                <Loader2 className="w-4 h-4 animate-spin mr-2" />
-              ) : (
-                <ArrowLeftRight className="w-4 h-4 mr-2" />
-              )}
-              Switch to Celo Network
-            </Button>
-          ) : !isWidgetReady ? (
-            <div className="flex items-center justify-center p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
-              <Loader2 className="w-5 h-5 animate-spin text-blue-500 mr-2" />
-              <span className="text-gray-600 dark:text-gray-300">Loading widget...</span>
-            </div>
-          ) : (
-            <div className="space-y-3">
-  <div className="relative w-full rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
-    <div className="h-[550px] w-full"> {/* Increased height for better display */}
-      <SquidWidget
-        config={{
-          integratorId: "bankofcelo-752296ef-d9ff-4804-90a5-fab73df78117",
-          apiUrl: "https://v2.api.squidrouter.com",
-        }}
-      />
+  <div className="p-4 bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 mx-auto w-full">
+  <h2 className="text-lg font-semibold flex items-center gap-3 mb-4">
+    <div className="bg-blue-100 dark:bg-blue-900 p-2 rounded-lg">
+      <ArrowLeftRight className="w-5 h-5 text-blue-600 dark:text-blue-300" />
     </div>
-  </div>
-  <div className="text-xs text-gray-500 dark:text-gray-400 text-center pt-2">
-    Powered by Squid Router
-  </div>
-</div>
-          )}
+    <span className="text-gray-900 dark:text-white">Swap & Bridge Tokens</span>
+  </h2>
+
+  <div className="space-y-4">
+    {!isConnected ? (
+      <div className="p-4 text-center bg-gray-50 dark:bg-gray-700 rounded-lg">
+        <p className="text-gray-600 dark:text-gray-300">
+          Connect your wallet to swap or bridge tokens
+        </p>
+      </div>
+    ) : !isCorrectChain ? (
+      <Button
+        onClick={handleSwitchToCelo}
+        disabled={isSwitching}
+        className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+        aria-label="Switch to Celo Network"
+      >
+        {isSwitching ? (
+          <Loader2 className="w-4 h-4 animate-spin mr-2" />
+        ) : (
+          <ArrowLeftRight className="w-4 h-4 mr-2" />
+        )}
+        Switch to Celo Network
+      </Button>
+    ) : !isWidgetReady ? (
+      <div className="flex items-center justify-center p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+        <Loader2 className="w-5 h-5 animate-spin text-blue-500 mr-2" />
+        <span className="text-gray-600 dark:text-gray-300">Loading widget...</span>
+      </div>
+    ) : (
+      <div className="space-y-3">
+        <div className="relative w-full rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+          {/* Improved widget container with responsive height */}
+          <div className="h-[600px] w-full min-h-[500px] overflow-y-auto">
+            <SquidWidget
+              config={{
+                integratorId: "bankofcelo-752296ef-d9ff-4804-90a5-fab73df78117",
+                apiUrl: "https://v2.api.squidrouter.com",
+              }}
+            />
+          </div>
+        </div>
+        <div className="text-xs text-gray-500 dark:text-gray-400 text-center pt-2">
+          Powered by Squid Router
         </div>
       </div>
+    )}
+  </div>
+</div>
 
       {/* Bridge Information */}
       <div className="p-5 bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700">

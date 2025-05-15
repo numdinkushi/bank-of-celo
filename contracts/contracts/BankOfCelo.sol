@@ -7,18 +7,16 @@ import "@openzeppelin/contracts/utils/Strings.sol";
 import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import "@openzeppelin/contracts/utils/cryptography/EIP712.sol";
 
-/**
- * @title BankOfCelo
- * @notice Enhanced with gasless claim functionality using EIP-712 signatures
- */
 contract BankOfCelo is Ownable, ReentrancyGuard, EIP712 {
     // --- Config ---
     uint256 public constant MAX_CLAIM = 0.5 ether;
     uint256 public immutable minVaultBalance;
     uint256 public constant DEV_FEE_PERCENT = 5;
     address public immutable devWallet;
+    address public immutable gaslessOperator;
     uint256 public lastPublishedBalance;
     uint256 public lastPublishedTime;
+
     // Donor tiers (in CELO)
     uint256 public constant TIER1_THRESHOLD = 10 ether;
     uint256 public constant TIER2_THRESHOLD = 50 ether;
@@ -45,13 +43,14 @@ contract BankOfCelo is Ownable, ReentrancyGuard, EIP712 {
     mapping(uint256 => bool) public fidClaimed;
     mapping(uint256 => bool) public fidBlacklisted;
     mapping(address => uint256) public lastClaimAt;
+    mapping(address => uint256) public nonces; // Added for EIP-712 security
 
     LeaderboardEntry[LEADERBOARD_SIZE] public leaderboard;
     uint256 public minLeaderboardAmount = 0;
 
     // --- EIP-712 Types ---
     bytes32 private constant CLAIM_TYPEHASH =
-        keccak256("Claim(address claimer,uint256 fid,uint256 deadline)");
+        keccak256("Claim(address claimer,uint256 fid,uint256 deadline,uint256 nonce)");
 
     // --- Events ---
     event Donated(address indexed donor, uint256 amount, uint256 devFee);
@@ -59,21 +58,24 @@ contract BankOfCelo is Ownable, ReentrancyGuard, EIP712 {
     event BlacklistUpdated(uint256[] fids, bool isBlacklisted);
     event DonorTierUpgraded(address indexed donor, uint8 newTier);
     event LeaderboardUpdated(address indexed donor, uint256 amount, uint256 position);
+    event GaslessClaimExecuted(address indexed operator, address indexed claimer, uint256 fid);
 
-    constructor(uint256 _minVaultBalance, address _devWallet)
-        payable
-        Ownable(msg.sender)
-        EIP712("BankOfCelo", "1")
-    {
+    constructor(
+        uint256 _minVaultBalance,
+        address _devWallet,
+        address _gaslessOperator
+    ) Ownable(msg.sender) EIP712("BankOfCelo", "1") {
         require(_devWallet != address(0), "Invalid dev wallet");
+        require(_gaslessOperator != address(0), "Invalid gasless operator");
         minVaultBalance = _minVaultBalance;
         devWallet = _devWallet;
+        gaslessOperator = _gaslessOperator;
     }
 
     // --- Donations ---
     function donate() external payable nonReentrant {
         require(msg.value > 0, "Zero deposit");
-        
+
         uint256 devFee = (msg.value * DEV_FEE_PERCENT) / 100;
         uint256 donationAmount = msg.value - devFee;
 
@@ -98,79 +100,65 @@ contract BankOfCelo is Ownable, ReentrancyGuard, EIP712 {
         emit Donated(msg.sender, donationAmount, devFee);
     }
 
-    // --- Gasless Claim ---
-    function claimGasless(
-        address claimer,
-        uint256 fid,
-        uint256 deadline,
-        bytes memory signature
-    ) external nonReentrant {
-        require(deadline >= block.timestamp, "Signature expired");
+    // --- Regular Claim (User pays gas) ---
+    function claim(uint256 fid, uint256 deadline, bytes memory signature)
+        external
+        nonReentrant
+    {
+        _validateClaim(msg.sender, fid, deadline, signature);
+        _executeClaim(msg.sender, fid);
+    }
+
+    // --- Gasless Claim (Operator pays gas) ---
+    function executeGaslessClaim(address claimer, uint256 fid, uint256 deadline, bytes memory signature)
+        external
+        nonReentrant
+    {
+        require(msg.sender == gaslessOperator, "Only operator");
+        _validateClaim(claimer, fid, deadline, signature);
+        _executeClaim(claimer, fid);
+    }
+
+    // --- Internal Claim Logic ---
+    function _validateClaim(address claimer, uint256 fid, uint256 deadline, bytes memory signature)
+        internal
+    {
+        require(block.timestamp <= deadline, "Signature expired");
+        require(!donors[claimer].hasClaimed, "Already claimed (address)");
+        require(!fidClaimed[fid], "Already claimed (FID)");
+        require(!fidBlacklisted[fid], "FID blacklisted");
         require(address(this).balance >= MAX_CLAIM + minVaultBalance, "Vault balance too low");
+        if (claimCooldown > 0) {
+            require(block.timestamp >= lastClaimAt[claimer] + claimCooldown, "Cooldown not passed");
+        }
 
         // Verify EIP-712 signature
         bytes32 digest = _hashTypedDataV4(
-            keccak256(
-                abi.encode(
-                    CLAIM_TYPEHASH,
-                    claimer,
-                    fid,
-                    deadline
-                )
-            )
+            keccak256(abi.encode(CLAIM_TYPEHASH, claimer, fid, deadline, nonces[claimer]))
         );
         address signer = ECDSA.recover(digest, signature);
         require(signer == claimer, "Invalid signature");
+        nonces[claimer]++;
+    }
 
-        // Validate claim
+    function _executeClaim(address claimer, uint256 fid) internal {
         DonorInfo storage donor = donors[claimer];
-        require(!donor.hasClaimed, "Already claimed (address)");
-        require(!fidClaimed[fid], "Already claimed (FID)");
-        require(!fidBlacklisted[fid], "FID blacklisted");
-
-        if (claimCooldown > 0) {
-            require(block.timestamp - lastClaimAt[claimer] >= claimCooldown, "Cooldown not passed");
-        }
-
-        // Update state
         donor.hasClaimed = true;
         fidClaimed[fid] = true;
         lastClaimAt[claimer] = block.timestamp;
 
-        // Send funds to claimer
-        (bool ok, ) = claimer.call{value: MAX_CLAIM}("");
-        require(ok, "CELO transfer failed");
+        (bool sent, ) = claimer.call{value: MAX_CLAIM}("");
+        require(sent, "CELO transfer failed");
 
         emit Claimed(claimer, fid, MAX_CLAIM);
-    }
-
-    // --- Original Claim (for backward compatibility) ---
-    function claim(uint256 fid) external nonReentrant {
-        require(tx.origin == msg.sender, "Contracts not allowed");
-        DonorInfo storage donor = donors[msg.sender];
-        require(!donor.hasClaimed, "Already claimed (address)");
-        require(!fidClaimed[fid], "Already claimed (FID)");
-        require(!fidBlacklisted[fid], "FID blacklisted");
-        require(address(this).balance >= MAX_CLAIM + minVaultBalance, "Vault balance too low");
-
-        if (claimCooldown > 0) {
-            require(block.timestamp - lastClaimAt[msg.sender] >= claimCooldown, "Cooldown not passed");
+        if (msg.sender == gaslessOperator) {
+            emit GaslessClaimExecuted(msg.sender, claimer, fid);
         }
-
-        donor.hasClaimed = true;
-        fidClaimed[fid] = true;
-        lastClaimAt[msg.sender] = block.timestamp;
-
-        (bool ok, ) = msg.sender.call{value: MAX_CLAIM}("");
-        require(ok, "CELO transfer failed");
-
-        emit Claimed(msg.sender, fid, MAX_CLAIM);
     }
 
     // --- Leaderboard Management ---
     function _updateLeaderboard(address donor, uint256 newAmount) internal {
-        if (newAmount < minLeaderboardAmount && 
-            leaderboard[LEADERBOARD_SIZE-1].amount >= newAmount) {
+        if (newAmount < minLeaderboardAmount && leaderboard[LEADERBOARD_SIZE - 1].amount >= newAmount) {
             return;
         }
 
@@ -183,13 +171,11 @@ contract BankOfCelo is Ownable, ReentrancyGuard, EIP712 {
         }
 
         if (insertPos >= 0) {
-            for (uint256 j = LEADERBOARD_SIZE-1; j > uint256(insertPos); j--) {
-                leaderboard[j] = leaderboard[j-1];
+            for (uint256 j = LEADERBOARD_SIZE - 1; j > uint256(insertPos); j--) {
+                leaderboard[j] = leaderboard[j - 1];
             }
-            
             leaderboard[uint256(insertPos)] = LeaderboardEntry(donor, newAmount);
-            minLeaderboardAmount = leaderboard[LEADERBOARD_SIZE-1].amount;
-            
+            minLeaderboardAmount = leaderboard[LEADERBOARD_SIZE - 1].amount;
             emit LeaderboardUpdated(donor, newAmount, uint256(insertPos));
         }
     }
@@ -197,24 +183,20 @@ contract BankOfCelo is Ownable, ReentrancyGuard, EIP712 {
     // --- View Functions for Leaderboard ---
     function getLeaderboard() external view returns (LeaderboardEntry[] memory) {
         LeaderboardEntry[] memory currentLeaderboard = new LeaderboardEntry[](LEADERBOARD_SIZE);
-        
         for (uint256 i = 0; i < LEADERBOARD_SIZE; i++) {
             currentLeaderboard[i] = leaderboard[i];
         }
-        
         return currentLeaderboard;
     }
 
     function getDonorRank(address donor) external view returns (uint256) {
         uint256 donorAmount = donors[donor].totalDonated;
         if (donorAmount == 0) return type(uint256).max;
-        
         for (uint256 i = 0; i < LEADERBOARD_SIZE; i++) {
             if (leaderboard[i].donor == donor) {
                 return i + 1;
             }
         }
-        
         return type(uint256).max;
     }
 
@@ -224,7 +206,7 @@ contract BankOfCelo is Ownable, ReentrancyGuard, EIP712 {
     }
 
     function updateBlacklist(uint256[] calldata fids, bool isBlacklisted) external onlyOwner {
-        for (uint256 i = 0; i < fids.length; ++i) {
+        for (uint256 i = 0; i < fids.length; i++) {
             fidBlacklisted[fids[i]] = isBlacklisted;
         }
         emit BlacklistUpdated(fids, isBlacklisted);
@@ -232,8 +214,8 @@ contract BankOfCelo is Ownable, ReentrancyGuard, EIP712 {
 
     function sweep(address payable to, uint256 amount) external onlyOwner {
         require(address(this).balance - amount >= minVaultBalance, "Cannot sweep below min balance");
-        (bool ok, ) = to.call{value: amount}("");
-        require(ok, "Sweep failed");
+        (bool sent, ) = to.call{value: amount}("");
+        require(sent, "Sweep failed");
     }
 
     // --- Donor Utilities ---
@@ -255,16 +237,13 @@ contract BankOfCelo is Ownable, ReentrancyGuard, EIP712 {
     ) {
         currentBalance = address(this).balance;
         minReserve = minVaultBalance;
-        availableForClaims = currentBalance > minReserve 
-            ? currentBalance - minReserve 
-            : 0;
+        availableForClaims = currentBalance > minReserve ? currentBalance - minReserve : 0;
     }
 
     function getFormattedBalance() external view returns (string memory) {
         uint256 balance = address(this).balance;
         uint256 celoAmount = balance / 1 ether;
         uint256 decimals = (balance % 1 ether) / 1e16;
-        
         return string(abi.encodePacked(
             Strings.toString(celoAmount),
             ".",
@@ -275,8 +254,7 @@ contract BankOfCelo is Ownable, ReentrancyGuard, EIP712 {
     }
 
     function getBalanceWithAccessControl() external view returns (uint256) {
-        require(donors[msg.sender].totalDonated > 0.1 ether, 
-            "Only donors can view");
+        require(donors[msg.sender].totalDonated > 0.1 ether, "Only donors can view");
         return address(this).balance;
     }
 
@@ -299,8 +277,8 @@ contract BankOfCelo is Ownable, ReentrancyGuard, EIP712 {
     }
 
     function publishBalance() external {
-    require(block.timestamp > lastPublishedTime + 1 days);
-    lastPublishedBalance = address(this).balance;
-    lastPublishedTime = block.timestamp;
-}
+        require(block.timestamp > lastPublishedTime + 1 days);
+        lastPublishedBalance = address(this).balance;
+        lastPublishedTime = block.timestamp;
+    }
 }

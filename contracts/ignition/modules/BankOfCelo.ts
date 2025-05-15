@@ -11,8 +11,9 @@ const BocModule = buildModule("BocModule", (m) => {
   
     const minBalance = m.getParameter("_minVaultBalance", MIN_BALANCE);
     const devAddress = m.getParameter("_devWallet", "0xC5337CeE97fF5B190F26C4A12341dd210f26e17c");
+    const gaslessOperator = m.getParameter("_gaslessOperator", "0xC32ecED3420f59e38b0F719AAC67b3C36c6A5d97");
 
-  const BOC = m.contract("BankOfCelo", [minBalance,devAddress]);
+  const BOC = m.contract("BankOfCelo", [minBalance,devAddress,gaslessOperator]);
 
   return { BOC };
 });

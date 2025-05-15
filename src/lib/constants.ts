@@ -8,7 +8,8 @@ export const APP_SPLASH_BACKGROUND_COLOR = "#f7f7f7";
 export const APP_BUTTON_TEXT = process.env.NEXT_PUBLIC_FRAME_BUTTON_TEXT;
 
 //0x48820Ed9caf01295d2D6b5561E249C5e1E46D5cE
-export const BANK_OF_CELO_CONTRACT_ADDRESS = "0xB604B57e66B6f0F3AD7AecA58Bf306f640EF1270" as `0x${string}`;;
+//0xB604B57e66B6f0F3AD7AecA58Bf306f640EF1270
+export const BANK_OF_CELO_CONTRACT_ADDRESS = "0x6DD5608Bf1F68C23Bf5D519161128240C7D764Fc" as `0x${string}`;;
 export const BANK_OF_CELO_RELAYER_ADDRESS = "0xd980d16cfded70fce09ca8B69FC5404Ea38796Fc" as `0x${string}`;;
 export const BANK_OF_CELO_CONTRACT_ABI = [
   {
@@ -22,9 +23,14 @@ export const BANK_OF_CELO_CONTRACT_ABI = [
         "internalType": "address",
         "name": "_devWallet",
         "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "_gaslessOperator",
+        "type": "address"
       }
     ],
-    "stateMutability": "payable",
+    "stateMutability": "nonpayable",
     "type": "constructor"
   },
   {
@@ -197,6 +203,31 @@ export const BANK_OF_CELO_CONTRACT_ABI = [
       {
         "indexed": true,
         "internalType": "address",
+        "name": "operator",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "claimer",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "fid",
+        "type": "uint256"
+      }
+    ],
+    "name": "GaslessClaimExecuted",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
         "name": "donor",
         "type": "address"
       },
@@ -319,6 +350,16 @@ export const BANK_OF_CELO_CONTRACT_ABI = [
         "internalType": "uint256",
         "name": "fid",
         "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "deadline",
+        "type": "uint256"
+      },
+      {
+        "internalType": "bytes",
+        "name": "signature",
+        "type": "bytes"
       }
     ],
     "name": "claim",
@@ -337,34 +378,6 @@ export const BANK_OF_CELO_CONTRACT_ABI = [
       }
     ],
     "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "claimer",
-        "type": "address"
-      },
-      {
-        "internalType": "uint256",
-        "name": "fid",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "deadline",
-        "type": "uint256"
-      },
-      {
-        "internalType": "bytes",
-        "name": "signature",
-        "type": "bytes"
-      }
-    ],
-    "name": "claimGasless",
-    "outputs": [],
-    "stateMutability": "nonpayable",
     "type": "function"
   },
   {
@@ -467,6 +480,34 @@ export const BANK_OF_CELO_CONTRACT_ABI = [
   {
     "inputs": [
       {
+        "internalType": "address",
+        "name": "claimer",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "fid",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "deadline",
+        "type": "uint256"
+      },
+      {
+        "internalType": "bytes",
+        "name": "signature",
+        "type": "bytes"
+      }
+    ],
+    "name": "executeGaslessClaim",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
         "internalType": "uint256",
         "name": "",
         "type": "uint256"
@@ -497,6 +538,19 @@ export const BANK_OF_CELO_CONTRACT_ABI = [
         "internalType": "bool",
         "name": "",
         "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "gaslessOperator",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
       }
     ],
     "stateMutability": "view",
@@ -718,6 +772,25 @@ export const BANK_OF_CELO_CONTRACT_ABI = [
   {
     "inputs": [],
     "name": "minVaultBalance",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "name": "nonces",
     "outputs": [
       {
         "internalType": "uint256",
@@ -1040,3 +1113,9 @@ export const BANK_OF_CELO_RELAY_ABI =[
     "type": "function"
   }
 ]
+export const BANK_OF_CELO_EIP712_DOMAIN = {
+  name: "BankOfCelo",
+  version: "1",
+  chainId: 42220, // Celo mainnet
+  verifyingContract: BANK_OF_CELO_CONTRACT_ADDRESS as `0x${string}`,
+};
