@@ -3,7 +3,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { useAccount, useDisconnect, useConnect, usePublicClient, useWriteContract, useSwitchChain, useChainId } from "wagmi";
+import { useAccount, useDisconnect, useConnect, usePublicClient, useWriteContract, useSwitchChain, useChainId, useSendTransaction } from "wagmi";
 import { useSession } from "next-auth/react";
 import { signOut, getCsrfToken } from "next-auth/react";
 import sdk from "@farcaster/frame-sdk";
@@ -21,12 +21,15 @@ import { truncateAddress } from "~/lib/truncateAddress";
 import LeaderboardTab from "./tabs/LeaderboardTab";
 import { BANK_OF_CELO_CONTRACT_ABI, BANK_OF_CELO_CONTRACT_ADDRESS } from "~/lib/constants";
 import { celo } from "viem/chains";
+import { getDataSuffix, submitReferral } from '@divvi/referral-sdk';
 
 export default function BankOfCelo({ title = "Bank of Celo" }: { title?: string }) {
   const { address, isConnected } = useAccount();
   const { disconnect } = useDisconnect();
   const { connect, connectors } = useConnect();
-  const { switchChain, isPending: isSwitchChainPending } = useSwitchChain();  const { data: session, status } = useSession();
+  const { switchChain, isPending: isSwitchChainPending } = useSwitchChain();
+    const { data: session, status } = useSession();
+    const { sendTransactionAsync } = useSendTransaction();
   const publicClient = usePublicClient();
   const { writeContract, isPending } = useWriteContract();
   const { isSDKLoaded, context } = useFrame();
@@ -138,63 +141,44 @@ export default function BankOfCelo({ title = "Bank of Celo" }: { title?: string 
       handleSwitchChain();
     }
   }, [isConnected, isCorrectChain, handleSwitchChain]);
-  const handleDonate = (amount: string) => {
+  const handleDonate = async (amount: string) => {
     if (!isCorrectChain) {
       handleSwitchChain();
       return;
     }
-
+  
     if (Number(amount) <= 0) {
       toast.error("Please enter a valid amount");
       return;
     }
-
-    writeContract(
-      {
-        address: BANK_OF_CELO_CONTRACT_ADDRESS as `0x${string}`,
-        abi: BANK_OF_CELO_CONTRACT_ABI,
-        functionName: "donate",
+  
+    try {
+      // Get the referral data suffix
+      const dataSuffix = getDataSuffix({
+        consumer: '0xC5337CeE97fF5B190F26C4A12341dd210f26e17c',
+        providers: ['0x5f0a55FaD9424ac99429f635dfb9bF20c3360Ab8','0x6226ddE08402642964f9A6de844ea3116F0dFc7e'],
+      });
+  
+      // Send donation transaction with referral data
+      const hash = await sendTransactionAsync({
+        to: BANK_OF_CELO_CONTRACT_ADDRESS as `0x${string}`,
+        data: `0x${dataSuffix}`, // Only the data suffix for donation
         value: parseEther(amount),
         chainId: CELO_CHAIN_ID,
-      },
-      {
-        onSuccess: () => {
-          toast.success("Donation successful!");
-          fetchContractData();
-        },
-        onError: (error) => {
-          toast.error(`Donation failed: ${error.message}`);
-          console.error("Donation error:", error);
-        },
-      }
-    );
-  };
-
-  const handleClaim = (fid: number) => {
-    if (!isCorrectChain) {
-      handleSwitchChain();
-      return;
-    }
-
-    writeContract(
-      {
-        address: BANK_OF_CELO_CONTRACT_ADDRESS as `0x${string}`,
-        abi: BANK_OF_CELO_CONTRACT_ABI,
-        functionName: "claim",
-        args: [BigInt(fid)],
+      });
+  
+      // Report the transaction to Divvi
+      await submitReferral({
+        txHash: hash,
         chainId: CELO_CHAIN_ID,
-      },
-      {
-        onSuccess: () => {
-          toast.success("Claim submitted successfully!");
-          fetchContractData();
-        },
-        onError: (error) => {
-          toast.error(`Claim failed: ${error.message}`);
-          console.error("Claim error:", error);
-        },
-      }
-    );
+      });
+  
+      toast.success("Donation successful!");
+      fetchContractData();
+    } catch (error) {
+      toast.error(`Donation failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      console.error("Donation error:", error);
+    }
   };
 
   const handleConnect = () => {

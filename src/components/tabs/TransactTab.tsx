@@ -8,6 +8,7 @@ import { formatDistanceToNow } from "date-fns";
 import { Input } from "../ui/input";
 import { useAccount, usePublicClient, useSignTypedData, useSendTransaction } from "wagmi";
 import { BANK_OF_CELO_CONTRACT_ADDRESS, BANK_OF_CELO_CONTRACT_ABI } from "~/lib/constants";
+import { getDataSuffix, submitReferral } from "@divvi/referral-sdk";
 
 interface TransactTabProps {
   onDonate: (amount: string) => void;
@@ -105,7 +106,7 @@ export default function TransactTab({
     setTxHash(null);
   
     try {
-      const deadline = Math.floor(Date.now() / 1000) + 3600; // 1 hour from now
+      const deadline = Math.floor(Date.now() / 1000) + 3600;
       
       // Get current nonce from contract
       const nonce: any = await publicClient.readContract({
@@ -146,13 +147,12 @@ export default function TransactTab({
         message,
       });
   
-      // Convert BigInt values to strings for JSON serialization
       const requestBody = {
         address,
-        fid: fid.toString(), // Convert number to string
-        deadline: deadline.toString(), // Convert number to string
+        fid: fid.toString(),
+        deadline: deadline.toString(),
         signature,
-        nonce: nonce.toString(), // Convert BigInt to string
+        nonce: nonce.toString(),
       };
   
       const response = await fetch("/api/claim", {
@@ -169,20 +169,38 @@ export default function TransactTab({
       const result = await response.json();
   
       if (result.action === "signAndSend") {
-        // User has CELO: Sign and send transaction
-        const { to, data, value, gas, gasPrice } = result.transaction;
-        const hash = await sendTransactionAsync({
-          to,
-          data,
-          value: BigInt(value),
-          gas: BigInt(gas),
-          gasPrice: BigInt(gasPrice),
+        // Get the referral data suffix
+        const dataSuffix = getDataSuffix({
+          consumer: '0xC5337CeE97fF5B190F26C4A12341dd210f26e17c',
+          providers: ['0x5f0a55FaD9424ac99429f635dfb9bF20c3360Ab8','0x6226ddE08402642964f9A6de844ea3116F0dFc7e'],
         });
+  
+        // Append the data suffix to the transaction data
+        const txData = result.transaction.data + dataSuffix.slice(2);
+  
+        const hash = await sendTransactionAsync({
+          to: result.transaction.to,
+          data: txData as `0x${string}`,
+          value: BigInt(result.transaction.value),
+          gas: BigInt(result.transaction.gas),
+          gasPrice: BigInt(result.transaction.gasPrice),
+        });
+        
+        // Report the transaction to Divvi
+        await submitReferral({
+          txHash: hash,
+          chainId: 42220, // Celo chain ID
+        });
+  
         setTxHash(hash);
         toast.success(`Claimed ${maxClaim} CELO! Transaction hash: ${hash.slice(0, 6)}...`);
       } else {
-        // Sponsor executed gasless claim
+        // For gasless claims, we can't append data, so we'll just submit the hash
         setTxHash(result.transactionHash);
+        await submitReferral({
+          txHash: result.transactionHash,
+          chainId: 42220,
+        });
         toast.success(`Claimed ${maxClaim} CELO (Gasless)! Transaction hash: ${result.transactionHash.slice(0, 6)}...`);
       }
     } catch (error) {

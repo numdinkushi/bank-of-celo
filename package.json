@@ -22,6 +22,7 @@
   },
   "dependencies": {
     "@0xsquid/widget": "^4.4.0",
+    "@divvi/referral-sdk": "^1.0.0",
     "@farcaster/auth-client": "^0.3.0",
     "@farcaster/auth-kit": "^0.6.0",
     "@farcaster/frame-core": "^0.0.29",
@@ -49,6 +50,7 @@
     "react": "^18",
     "react-dom": "^18",
     "react-hot-toast": "^2.5.2",
+    "react-toast": "^1.0.3",
     "sonner": "^2.0.3",
     "tailwind-merge": "^2.6.0",
     "tailwindcss-animate": "^1.0.7",
