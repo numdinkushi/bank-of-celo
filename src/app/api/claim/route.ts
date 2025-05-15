@@ -5,10 +5,11 @@ import { celo } from "viem/chains";
 import { privateKeyToAccount } from "viem/accounts";
 import { BANK_OF_CELO_CONTRACT_ABI, BANK_OF_CELO_CONTRACT_ADDRESS } from "~/lib/constants";
 import { encodeFunctionData } from "viem";
+import { submitReferral } from "@divvi/referral-sdk";
 
 export async function POST(req: NextRequest) {
   try {
-    const { address, fid, deadline, signature, nonce } = await req.json();
+    const { address, fid, deadline, signature, nonce, dataSuffix } = await req.json();
 
     if (!address || !fid || !deadline || !signature || nonce === undefined) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
@@ -34,13 +35,17 @@ export async function POST(req: NextRequest) {
         account: address,
       });
 
+      const contractData = encodeFunctionData({
+        abi: BANK_OF_CELO_CONTRACT_ABI,
+        functionName: "claim",
+        args: [BigInt(fid), BigInt(deadline), signature],
+      });
+
+      const finalData = dataSuffix ? contractData + dataSuffix : contractData;
+
       const txRequest = {
         to: BANK_OF_CELO_CONTRACT_ADDRESS as `0x${string}`,
-        data: encodeFunctionData({
-          abi: BANK_OF_CELO_CONTRACT_ABI,
-          functionName: "claim",
-          args: [BigInt(fid), BigInt(deadline), signature],
-        }),
+        data: finalData as `0x${string}`,
         value: 0n,
         gas,
         gasPrice: await publicClient.getGasPrice(),
@@ -64,16 +69,39 @@ export async function POST(req: NextRequest) {
         transport: http("https://forno.celo.org"),
       });
 
-      // Call executeGaslessClaim
-      const hash = await walletClient.writeContract({
-        address: BANK_OF_CELO_CONTRACT_ADDRESS as `0x${string}`,
+      // Encode executeGaslessClaim data
+      const contractData = encodeFunctionData({
         abi: BANK_OF_CELO_CONTRACT_ABI,
         functionName: "executeGaslessClaim",
         args: [address, BigInt(fid), BigInt(deadline), signature],
       });
 
+      // Append dataSuffix if provided
+      const finalData = dataSuffix ? contractData + dataSuffix : contractData;
+
+      // Call executeGaslessClaim
+      const hash = await walletClient.sendTransaction({
+        account,
+        to: BANK_OF_CELO_CONTRACT_ADDRESS,
+        data: finalData as `0x${string}`,
+        value: 0n,
+      });
+
       // Wait for transaction receipt
       const receipt = await publicClient.waitForTransactionReceipt({ hash });
+
+      // Report to Divi
+      if (dataSuffix) {
+        try {
+          await submitReferral({
+            txHash: receipt.transactionHash,
+            chainId: 42220, // Celo mainnet
+          });
+        } catch (diviError) {
+          console.error("Divi submitReferral error:", diviError);
+          // Continue to return success, as referral tracking is secondary
+        }
+      }
 
       return NextResponse.json({ transactionHash: receipt.transactionHash });
     }

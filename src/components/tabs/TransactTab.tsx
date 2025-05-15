@@ -9,6 +9,7 @@ import { Input } from "../ui/input";
 import { useAccount, usePublicClient, useSignTypedData, useSendTransaction } from "wagmi";
 import { BANK_OF_CELO_CONTRACT_ADDRESS, BANK_OF_CELO_CONTRACT_ABI } from "~/lib/constants";
 import { getDataSuffix, submitReferral } from "@divvi/referral-sdk";
+import { encodeFunctionData, parseEther } from "viem";
 
 interface TransactTabProps {
   onDonate: (amount: string) => void;
@@ -101,21 +102,21 @@ export default function TransactTab({
       toast.error("Farcaster ID or address missing");
       return;
     }
-  
+
     setClaimPending(true);
     setTxHash(null);
-  
+
     try {
-      const deadline = Math.floor(Date.now() / 1000) + 3600;
-      
+      const deadline = Math.floor(Date.now() / 1000) + 3600; // 1 hour from now
+
       // Get current nonce from contract
-      const nonce: any = await publicClient.readContract({
+      const nonce = await publicClient.readContract({
         address: BANK_OF_CELO_CONTRACT_ADDRESS,
         abi: BANK_OF_CELO_CONTRACT_ABI,
         functionName: "nonces",
         args: [address],
-      });
-  
+      }) as bigint;
+
       // EIP-712 typed data
       const domain = {
         name: "BankOfCelo",
@@ -123,7 +124,7 @@ export default function TransactTab({
         chainId: 42220,
         verifyingContract: BANK_OF_CELO_CONTRACT_ADDRESS,
       };
-  
+
       const types = {
         Claim: [
           { name: "claimer", type: "address" },
@@ -132,76 +133,103 @@ export default function TransactTab({
           { name: "nonce", type: "uint256" },
         ],
       };
-  
+
       const message = {
         claimer: address,
         fid: BigInt(fid),
         deadline: BigInt(deadline),
-        nonce: BigInt(nonce),
+        nonce,
       };
-  
+
       const signature = await signTypedDataAsync({
         domain,
         types,
         primaryType: "Claim",
         message,
       });
-  
-      const requestBody = {
-        address,
-        fid: fid.toString(),
-        deadline: deadline.toString(),
-        signature,
-        nonce: nonce.toString(),
-      };
-  
-      const response = await fetch("/api/claim", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(requestBody),
-      });
-  
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || "Failed to process claim");
-      }
-  
-      const result = await response.json();
-  
-      if (result.action === "signAndSend") {
-        // Get the referral data suffix
-        const dataSuffix = getDataSuffix({
+
+      // Get Divi referral data suffix
+      let dataSuffix;
+      try {
+        dataSuffix = getDataSuffix({
           consumer: '0xC5337CeE97fF5B190F26C4A12341dd210f26e17c',
-          providers: ['0x5f0a55FaD9424ac99429f635dfb9bF20c3360Ab8','0x6226ddE08402642964f9A6de844ea3116F0dFc7e'],
+          providers: ['0x5f0a55FaD9424ac99429f635dfb9bF20c3360Ab8', '0x6226ddE08402642964f9A6de844ea3116F0dFc7e'],
         });
-  
-        // Append the data suffix to the transaction data
-        const txData = result.transaction.data + dataSuffix.slice(2);
-  
+      } catch (diviError) {
+        console.error("Divi getDataSuffix error:", diviError);
+        throw new Error("Failed to generate referral data");
+      }
+
+      // Check user's balance
+      const balance = await publicClient.getBalance({ address });
+      const minBalance = parseEther("0.001"); // Minimum to cover gas (~0.001 CELO)
+
+      if (balance >= minBalance) {
+        // User has CELO: Call claim directly
+        const contractData = encodeFunctionData({
+          abi: BANK_OF_CELO_CONTRACT_ABI,
+          functionName: "claim",
+          args: [BigInt(fid), BigInt(deadline), signature],
+        });
+
+        const finalData = dataSuffix ? contractData + dataSuffix : contractData;
+
         const hash = await sendTransactionAsync({
-          to: result.transaction.to,
-          data: txData as `0x${string}`,
-          value: BigInt(result.transaction.value),
-          gas: BigInt(result.transaction.gas),
-          gasPrice: BigInt(result.transaction.gasPrice),
+          to: BANK_OF_CELO_CONTRACT_ADDRESS,
+          data: finalData as `0x${string}`,
+          value: 0n,
         });
-        
-        // Report the transaction to Divvi
-        await submitReferral({
-          txHash: hash,
-          chainId: 42220, // Celo chain ID
-        });
-  
+
+        // Report to Divi
+        try {
+          await submitReferral({
+            txHash: hash,
+            chainId: 42220, // Celo mainnet
+          });
+        } catch (diviError) {
+          console.error("Divi submitReferral error:", diviError);
+          toast.warning("Claim succeeded, but referral tracking failed");
+        }
+
         setTxHash(hash);
         toast.success(`Claimed ${maxClaim} CELO! Transaction hash: ${hash.slice(0, 6)}...`);
       } else {
-        // For gasless claims, we can't append data, so we'll just submit the hash
-        setTxHash(result.transactionHash);
-        await submitReferral({
-          txHash: result.transactionHash,
-          chainId: 42220,
+        // User has no CELO: Use API route for gasless claim
+        const requestBody = {
+          address,
+          fid: fid.toString(),
+          deadline: deadline.toString(),
+          signature,
+          nonce: nonce.toString(),
+          dataSuffix, // Include dataSuffix for gasless claim
+        };
+
+        const response = await fetch("/api/claim", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(requestBody),
         });
-        toast.success(`Claimed ${maxClaim} CELO (Gasless)! Transaction hash: ${result.transactionHash.slice(0, 6)}...`);
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || "Failed to process claim");
+        }
+
+        const result = await response.json();
+        setTxHash(result.transactionHash);
+
+        // Report to Divi
+        try {
+          await submitReferral({
+            txHash: result.transactionHash,
+            chainId: 42220,
+          });
+        } catch (diviError) {
+          console.error("Divi submitReferral error:", diviError);
+          toast.warning("Claim succeeded, but referral tracking failed");
+        }
+
+        toast.success(`Claimed ${maxClaim} CELO (gasless)! Transaction hash: ${result.transactionHash.slice(0, 6)}...`);
       }
     } catch (error) {
       console.error("Claim error:", error);
@@ -210,6 +238,7 @@ export default function TransactTab({
       setClaimPending(false);
     }
   };
+
   const handleSubmit = () => {
     if (!isCorrectChain) {
       toast.error("Please switch to Celo Network");
