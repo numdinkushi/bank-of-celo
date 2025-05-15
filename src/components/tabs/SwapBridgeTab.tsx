@@ -49,13 +49,7 @@ export default function SwapBridgeTab({ isCorrectChain }: SwapBridgeTabProps) {
       transition={{ duration: 0.5 }}
       className="space-y-6"
     >
-  <div className="p-4 bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 mx-auto w-full">
-  <h2 className="text-lg font-semibold flex items-center gap-3 mb-4">
-    <div className="bg-blue-100 dark:bg-blue-900 p-2 rounded-lg">
-      <ArrowLeftRight className="w-5 h-5 text-blue-600 dark:text-blue-300" />
-    </div>
-    <span className="text-gray-900 dark:text-white">Swap & Bridge Tokens</span>
-  </h2>
+ 
 
   <div className="space-y-4">
     {!isConnected ? (
@@ -95,7 +89,7 @@ export default function SwapBridgeTab({ isCorrectChain }: SwapBridgeTabProps) {
 
     )}
   </div>
-</div>
+
 
       {/* Bridge Information */}
       <div className="p-5 bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700">
