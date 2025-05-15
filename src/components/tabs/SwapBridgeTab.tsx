@@ -31,7 +31,7 @@ export default function SwapBridgeTab({ isCorrectChain }: SwapBridgeTabProps) {
         },
         onError: (error) => {
           toast.error(`Failed to switch to Celo: ${error.message}`);
-          console.error("Switch chain error:", error);
+          console.log("Switch chain error:", error);
         },
       }
     );

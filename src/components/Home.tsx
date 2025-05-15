@@ -60,7 +60,7 @@ export default function BankOfCelo({ title = "Bank of Celo" }: { title?: string 
     try {
       switchChain({ chainId: targetChain.id });
     } catch (error) {
-      console.error("Chain switch failed:", error, {
+      console.log("Chain switch failed:", error, {
         targetChainId: targetChain.id,
       });
     }
@@ -124,7 +124,7 @@ export default function BankOfCelo({ title = "Bank of Celo" }: { title?: string 
       setLastClaimAt((prev) => (prev === Number(lastClaim) ? prev : Number(lastClaim)));
       setMaxClaim((prev) => (prev === formatEther(maxClaimAmount as bigint) ? prev : formatEther(maxClaimAmount as bigint)));
     } catch (error) {
-      console.error("Failed to fetch contract data:", error);
+      console.log("Failed to fetch contract data:", error);
       toast.error("Failed to fetch contract data. Please try again.");
     } finally {
       setIsLoading(false);
@@ -186,7 +186,7 @@ export default function BankOfCelo({ title = "Bank of Celo" }: { title?: string 
       toast.success("Donation successful!");
       fetchContractData();
     } catch (error) {
-      console.error("Donation error:", error);
+      console.log("Donation error:", error);
       toast.error(`Donation failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   };
@@ -371,7 +371,7 @@ export default function BankOfCelo({ title = "Bank of Celo" }: { title?: string 
                 isPending={isPending}
               />
             )}
-            {activeTab === "swap" && <SwapBridgeTab isCorrectChain={isCorrectChain} />}
+            {/* {activeTab === "swap" && <SwapBridgeTab isCorrectChain={isCorrectChain} />} */}
             {activeTab === "leaderboard" && <LeaderboardTab />}
           </motion.div>
         </AnimatePresence>
@@ -387,7 +387,7 @@ export default function BankOfCelo({ title = "Bank of Celo" }: { title?: string 
         {[
           { id: "home", icon: <Home className="w-5 h-5" />, label: "Home" },
           { id: "transact", icon: <Send className="w-5 h-5" />, label: "Transact" },
-          { id: "swap", icon: <ArrowLeftRight className="w-5 h-5" />, label: "Swap" },
+          // { id: "swap", icon: <ArrowLeftRight className="w-5 h-5" />, label: "Swap" },
           { id: "leaderboard", icon: <Trophy className="w-5 h-5" />, label: "Leaderboard" },
         ].map((tab) => (
           <button
