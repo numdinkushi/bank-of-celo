@@ -7,7 +7,7 @@ import { useAccount, useDisconnect, useConnect, usePublicClient, useWriteContrac
 import { useSession } from "next-auth/react";
 import { signOut, getCsrfToken } from "next-auth/react";
 import sdk from "@farcaster/frame-sdk";
-import { formatEther, parseEther } from "viem";
+import { encodeFunctionData, formatEther, parseEther } from "viem";
 import { useFrame } from "~/components/providers/FrameProvider";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
@@ -153,21 +153,30 @@ export default function BankOfCelo({ title = "Bank of Celo" }: { title?: string 
     }
   
     try {
-      // Get the referral data suffix
+      // 1. Prepare the contract call data for donate()
+      const donateData = encodeFunctionData({
+        abi: BANK_OF_CELO_CONTRACT_ABI,
+        functionName: "donate",
+      });
+  
+      // 2. Get the referral data suffix
       const dataSuffix = getDataSuffix({
         consumer: '0xC5337CeE97fF5B190F26C4A12341dd210f26e17c',
         providers: ['0x5f0a55FaD9424ac99429f635dfb9bF20c3360Ab8','0x6226ddE08402642964f9A6de844ea3116F0dFc7e'],
       });
   
-      // Send donation transaction with referral data
+      // 3. Combine the contract call with referral data
+      const combinedData = donateData + dataSuffix.slice(2); // Remove 0x from suffix
+  
+      // 4. Send the transaction
       const hash = await sendTransactionAsync({
         to: BANK_OF_CELO_CONTRACT_ADDRESS as `0x${string}`,
-        data: `0x${dataSuffix}`, // Only the data suffix for donation
+        data: `0x${combinedData.replace(/^0x/, "")}` as `0x${string}`,
         value: parseEther(amount),
         chainId: CELO_CHAIN_ID,
       });
   
-      // Report the transaction to Divvi
+      // 5. Report to Divvi
       await submitReferral({
         txHash: hash,
         chainId: CELO_CHAIN_ID,
@@ -176,9 +185,23 @@ export default function BankOfCelo({ title = "Bank of Celo" }: { title?: string 
       toast.success("Donation successful!");
       fetchContractData();
     } catch (error) {
-      toast.error(`Donation failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
-      console.error("Donation error:", error);
-    }
+  console.warn("Failed with referral data, trying without...");
+  try {
+    const donateData = encodeFunctionData({
+      abi: BANK_OF_CELO_CONTRACT_ABI,
+      functionName: "donate",
+    });
+    const hash = await sendTransactionAsync({
+      to: BANK_OF_CELO_CONTRACT_ADDRESS as `0x${string}`,
+      data: donateData, // Without referral suffix
+      value: parseEther(amount),
+      chainId: CELO_CHAIN_ID,
+    });
+    toast.success("Donation successful (without referral tracking)");
+  } catch (fallbackError) {
+    toast.error(`Donation failed completely: ${fallbackError instanceof Error ? fallbackError.message : 'Unknown error'}`);
+  }
+}
   };
 
   const handleConnect = () => {
