@@ -153,7 +153,7 @@ export default function BankOfCelo({ title = "Bank of Celo" }: { title?: string 
     }
   
     try {
-      // 1. Prepare the contract call data for donate()
+      // 1. Encode the donate function call
       const donateData = encodeFunctionData({
         abi: BANK_OF_CELO_CONTRACT_ABI,
         functionName: "donate",
@@ -165,13 +165,14 @@ export default function BankOfCelo({ title = "Bank of Celo" }: { title?: string 
         providers: ['0x5f0a55FaD9424ac99429f635dfb9bF20c3360Ab8','0x6226ddE08402642964f9A6de844ea3116F0dFc7e'],
       });
   
-      // 3. Combine the contract call with referral data
-      const combinedData = donateData + dataSuffix.slice(2); // Remove 0x from suffix
+      // 3. Properly combine the data
+      // The first 4 bytes (8 hex characters) must match Divvi's expected prefix
+      const combinedData = donateData.slice(0, 10) + dataSuffix.slice(10);
   
       // 4. Send the transaction
       const hash = await sendTransactionAsync({
         to: BANK_OF_CELO_CONTRACT_ADDRESS as `0x${string}`,
-        data: `0x${combinedData.replace(/^0x/, "")}` as `0x${string}`,
+        data: combinedData as `0x${string}`,
         value: parseEther(amount),
         chainId: CELO_CHAIN_ID,
       });
@@ -185,23 +186,9 @@ export default function BankOfCelo({ title = "Bank of Celo" }: { title?: string 
       toast.success("Donation successful!");
       fetchContractData();
     } catch (error) {
-  console.warn("Failed with referral data, trying without...");
-  try {
-    const donateData = encodeFunctionData({
-      abi: BANK_OF_CELO_CONTRACT_ABI,
-      functionName: "donate",
-    });
-    const hash = await sendTransactionAsync({
-      to: BANK_OF_CELO_CONTRACT_ADDRESS as `0x${string}`,
-      data: donateData, // Without referral suffix
-      value: parseEther(amount),
-      chainId: CELO_CHAIN_ID,
-    });
-    toast.success("Donation successful (without referral tracking)");
-  } catch (fallbackError) {
-    toast.error(`Donation failed completely: ${fallbackError instanceof Error ? fallbackError.message : 'Unknown error'}`);
-  }
-}
+      console.error("Donation error:", error);
+      toast.error(`Donation failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
   };
 
   const handleConnect = () => {
