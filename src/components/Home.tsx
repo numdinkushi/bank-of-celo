@@ -26,8 +26,7 @@ export default function BankOfCelo({ title = "Bank of Celo" }: { title?: string 
   const { address, isConnected } = useAccount();
   const { disconnect } = useDisconnect();
   const { connect, connectors } = useConnect();
-  const { switchChain } = useSwitchChain();
-  const { data: session, status } = useSession();
+  const { switchChain, isPending: isSwitchChainPending } = useSwitchChain();  const { data: session, status } = useSession();
   const publicClient = usePublicClient();
   const { writeContract, isPending } = useWriteContract();
   const { isSDKLoaded, context } = useFrame();
@@ -49,22 +48,20 @@ export default function BankOfCelo({ title = "Bank of Celo" }: { title?: string 
 
   const chainId = useChainId();
   const CELO_CHAIN_ID = celo.id;
+  const targetChain = celo;
   const isCorrectChain = chainId === CELO_CHAIN_ID;
+  console.log("Current chain ID:", chainId);
+  console.log("Is correct chain:", isCorrectChain);
 
-  const handleSwitchChain = async () => {
-    toast.loading("Switching to Celo network...");
+  const handleSwitchChain = useCallback(() => {
     try {
-      await switchChain({ chainId: CELO_CHAIN_ID });
-      toast.dismiss();
-      toast.success("Successfully switched to Celo!");
+      switchChain({ chainId: targetChain.id });
     } catch (error) {
-      toast.dismiss();
-      toast.error("Failed to switch networks. Please try again or check your wallet.");
-      console.error("Chain switching error:", error);
-      // Retry after a delay if needed
-      setTimeout(() => handleSwitchChain(), 2000);
+      console.error("Chain switch failed:", error, {
+        targetChainId: targetChain.id,
+      });
     }
-  };
+  }, [switchChain, targetChain]);
 
   useEffect(() => {
     if (isConnected && !isCorrectChain) {
@@ -310,7 +307,7 @@ export default function BankOfCelo({ title = "Bank of Celo" }: { title?: string 
               <>
                 <Button
                   onClick={() => disconnect()}
-                  className="text-xs text-black font-medium bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 rounded-full px-3 py-1.5"
+                  className="text-xs text-black font-medium  hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 rounded-full px-3 py-1.5"
                   aria-label="Disconnect wallet"
                 >
                   <Wallet className="w-4 h-4 mr-1" />
