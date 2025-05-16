@@ -77,7 +77,7 @@ export default function TransactTab({
         }
       }
     } catch (error) {
-      console.error("Error fetching FID:", error);
+      console.log("Error fetching FID:", error);
       setFidError(error instanceof Error ? error.message : "Failed to fetch FID");
       setFid(null);
     } finally {
@@ -156,7 +156,7 @@ export default function TransactTab({
           providers: ['0x5f0a55FaD9424ac99429f635dfb9bF20c3360Ab8', '0x6226ddE08402642964f9A6de844ea3116F0dFc7e'],
         });
       } catch (diviError) {
-        console.error("Divi getDataSuffix error:", diviError);
+        console.log("Divi getDataSuffix error:", diviError);
         throw new Error("Failed to generate referral data");
       }
 
@@ -187,7 +187,7 @@ export default function TransactTab({
             chainId: 42220, // Celo mainnet
           });
         } catch (diviError) {
-          console.error("Divi submitReferral error:", diviError);
+          console.log("Divi submitReferral error:", diviError);
           toast.warning("Claim succeeded, but referral tracking failed");
         }
 
@@ -225,14 +225,14 @@ export default function TransactTab({
             chainId: 42220,
           });
         } catch (diviError) {
-          console.error("Divi submitReferral error:", diviError);
+          console.log("Divi submitReferral error:", diviError);
           toast.warning("Claim succeeded, but referral tracking failed");
         }
 
         toast.success(`Claimed ${maxClaim} CELO (gasless)! Transaction hash: ${result.transactionHash.slice(0, 6)}...`);
       }
     } catch (error) {
-      console.error("Claim error:", error);
+      console.log("Claim error:", error);
       toast.error(error instanceof Error ? error.message : "Failed to process claim");
     } finally {
       setClaimPending(false);

@@ -60,7 +60,7 @@ export default function BankOfCelo({ title = "Bank of Celo" }: { title?: string 
     try {
       switchChain({ chainId: targetChain.id });
     } catch (error) {
-      console.error("Chain switch failed:", error, {
+      console.log("Chain switch failed:", error, {
         targetChainId: targetChain.id,
       });
     }
@@ -124,7 +124,7 @@ export default function BankOfCelo({ title = "Bank of Celo" }: { title?: string 
       setLastClaimAt((prev) => (prev === Number(lastClaim) ? prev : Number(lastClaim)));
       setMaxClaim((prev) => (prev === formatEther(maxClaimAmount as bigint) ? prev : formatEther(maxClaimAmount as bigint)));
     } catch (error) {
-      console.error("Failed to fetch contract data:", error);
+      console.log("Failed to fetch contract data:", error);
       toast.error("Failed to fetch contract data. Please try again.");
     } finally {
       setIsLoading(false);
@@ -186,7 +186,7 @@ export default function BankOfCelo({ title = "Bank of Celo" }: { title?: string 
       toast.success("Donation successful!");
       fetchContractData();
     } catch (error) {
-      console.error("Donation error:", error);
+      console.log("Donation error:", error);
       toast.error(`Donation failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   };
@@ -294,14 +294,14 @@ export default function BankOfCelo({ title = "Bank of Celo" }: { title?: string 
       >
         <div className="flex items-center justify-between max-w-md mx-auto">
           <h1 className="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-emerald-600 to-amber-500">
-            {title}
+            {title} 
           </h1>
           <div className="flex items-center gap-2">
             {isConnected ? (
               <>
                 <Button
                   onClick={() => disconnect()}
-                  className="text-xs text-black font-medium  hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 rounded-full px-3 py-1.5"
+                  className="text-xs text-black font-medium flex  hover:bg-gray-200 bg-gradient-to-r from-emerald-600 to-amber-500 rounded-full px-3 py-1.5"
                   aria-label="Disconnect wallet"
                 >
                   <Wallet className="w-4 h-4 mr-1" />
@@ -371,7 +371,7 @@ export default function BankOfCelo({ title = "Bank of Celo" }: { title?: string 
                 isPending={isPending}
               />
             )}
-            {activeTab === "swap" && <SwapBridgeTab isCorrectChain={isCorrectChain} />}
+            {/* {activeTab === "swap" && <SwapBridgeTab isCorrectChain={isCorrectChain} />} */}
             {activeTab === "leaderboard" && <LeaderboardTab />}
           </motion.div>
         </AnimatePresence>
@@ -387,7 +387,7 @@ export default function BankOfCelo({ title = "Bank of Celo" }: { title?: string 
         {[
           { id: "home", icon: <Home className="w-5 h-5" />, label: "Home" },
           { id: "transact", icon: <Send className="w-5 h-5" />, label: "Transact" },
-          { id: "swap", icon: <ArrowLeftRight className="w-5 h-5" />, label: "Swap" },
+          // { id: "swap", icon: <ArrowLeftRight className="w-5 h-5" />, label: "Swap" },
           { id: "leaderboard", icon: <Trophy className="w-5 h-5" />, label: "Leaderboard" },
         ].map((tab) => (
           <button

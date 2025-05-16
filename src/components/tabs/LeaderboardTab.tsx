@@ -57,7 +57,7 @@ export default function LeaderboardTab({ isCorrectChain = true }: LeaderboardTab
       setDonors(formattedDonors);
       toast.success("Leaderboard updated");
     } catch (error) {
-      console.error("Failed to fetch leaderboard:", error);
+      console.log("Failed to fetch leaderboard:", error);
       toast.error("Failed to load leaderboard");
     } finally {
       setIsLoading(false);
@@ -131,7 +131,7 @@ export default function LeaderboardTab({ isCorrectChain = true }: LeaderboardTab
             <AnimatePresence>
               {donors.map((donor, index) => (
                 <motion.div
-                  key={donor.donor}
+                  key={`${donor}-${index}`}
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: 10 }}
