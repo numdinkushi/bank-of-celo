@@ -106,8 +106,8 @@ export default function HomeTab({
           <h2 className="text-lg font-semibold text-gray-900 dark:text-white">About Bank of Celo</h2>
         </div>
         <p className="text-sm text-gray-600 dark:text-gray-300">
-          Support the Celo ecosystem by donating CELO or claim {maxClaim} CELO (once per day) to explore the blockchain.
-          Swap tokens to Celo using our bridge and track top contributors on the leaderboard!
+          Support the Celo ecosystem by donating CELO to the vault or claim {maxClaim} CELO to explore and support builders and OGs on the Celo blockchain.
+          Track top contributors on the leaderboard!
         </p>
       </div>
     </motion.div>
