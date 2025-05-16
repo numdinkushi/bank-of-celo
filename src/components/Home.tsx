@@ -5,7 +5,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useAccount, useDisconnect, useConnect, usePublicClient, useWriteContract, useSwitchChain, useChainId, useSendTransaction } from "wagmi";
 import { useSession } from "next-auth/react";
-import { signOut, getCsrfToken } from "next-auth/react";
+import { signOut } from "next-auth/react";
 import sdk from "@farcaster/frame-sdk";
 import { encodeFunctionData, formatEther, parseEther } from "viem";
 import { useFrame } from "~/components/providers/FrameProvider";
@@ -24,12 +24,12 @@ import { celo } from "viem/chains";
 import { getDataSuffix, submitReferral } from '@divvi/referral-sdk';
 
 export default function BankOfCelo({ title = "Bank of Celo" }: { title?: string }) {
-  const { address, isConnected } = useAccount();
+  const { address, isConnected, chain } = useAccount();
   const { disconnect } = useDisconnect();
   const { connect, connectors } = useConnect();
   const { switchChain, isPending: isSwitchChainPending } = useSwitchChain();
-    const { data: session, status } = useSession();
-    const { sendTransactionAsync } = useSendTransaction();
+  const { data: session, status } = useSession();
+  const { sendTransactionAsync } = useSendTransaction();
   const publicClient = usePublicClient();
   const { writeContract, isPending } = useWriteContract();
   const { isSDKLoaded, context } = useFrame();
@@ -52,7 +52,7 @@ export default function BankOfCelo({ title = "Bank of Celo" }: { title?: string 
   const chainId = useChainId();
   const CELO_CHAIN_ID = celo.id;
   const targetChain = celo;
-  const isCorrectChain = chainId === CELO_CHAIN_ID;
+  const isCorrectChain = chain?.id === CELO_CHAIN_ID;
   console.log("Current chain ID:", chainId);
   console.log("Is correct chain:", isCorrectChain);
 
@@ -60,17 +60,12 @@ export default function BankOfCelo({ title = "Bank of Celo" }: { title?: string 
     try {
       switchChain({ chainId: targetChain.id });
     } catch (error) {
-      console.log("Chain switch failed:", error, {
+      console.error("Chain switch failed:", error, {
         targetChainId: targetChain.id,
       });
+      toast.error(`Failed to switch to ${targetChain.name}. Please try again.`);
     }
   }, [switchChain, targetChain]);
-
-  useEffect(() => {
-    if (isConnected && !isCorrectChain) {
-      handleSwitchChain();
-    }
-  }, [isConnected, chainId, isCorrectChain]);
 
   const fetchContractData = useCallback(async () => {
     if (!publicClient || !address || !isCorrectChain) return;
@@ -98,16 +93,16 @@ export default function BankOfCelo({ title = "Bank of Celo" }: { title?: string 
           functionName: "MAX_CLAIM",
         }),
       ]);
-  
+
       const [status, cooldown, lastClaim, maxClaimAmount] = data;
       const [currentBalance, minReserve, availableForClaims] = status as [bigint, bigint, bigint];
-  
+
       const newVaultStatus = {
         currentBalance: formatEther(currentBalance),
         minReserve: formatEther(minReserve),
         availableForClaims: formatEther(availableForClaims),
       };
-  
+
       // Only update state if values have changed
       setVaultStatus((prev) => {
         if (
@@ -124,7 +119,7 @@ export default function BankOfCelo({ title = "Bank of Celo" }: { title?: string 
       setLastClaimAt((prev) => (prev === Number(lastClaim) ? prev : Number(lastClaim)));
       setMaxClaim((prev) => (prev === formatEther(maxClaimAmount as bigint) ? prev : formatEther(maxClaimAmount as bigint)));
     } catch (error) {
-      console.log("Failed to fetch contract data:", error);
+      console.error("Failed to fetch contract data:", error);
       toast.error("Failed to fetch contract data. Please try again.");
     } finally {
       setIsLoading(false);
@@ -133,17 +128,13 @@ export default function BankOfCelo({ title = "Bank of Celo" }: { title?: string 
 
   useEffect(() => {
     fetchContractData();
-    const interval = setInterval(fetchContractData, 3000); 
+    const interval = setInterval(fetchContractData, 3000);
     return () => clearInterval(interval);
   }, [fetchContractData]);
-  useEffect(() => {
-    if (isConnected && !isCorrectChain) {
-      handleSwitchChain();
-    }
-  }, [isConnected, isCorrectChain, handleSwitchChain]);
+
   const handleDonate = async (amount: string) => {
     if (!isCorrectChain) {
-      handleSwitchChain();
+      toast.error("Please switch to Celo Network");
       return;
     }
   
@@ -162,12 +153,11 @@ export default function BankOfCelo({ title = "Bank of Celo" }: { title?: string 
       // 2. Get the referral data suffix
       const dataSuffix = getDataSuffix({
         consumer: '0xC5337CeE97fF5B190F26C4A12341dd210f26e17c',
-        providers: ['0x5f0a55FaD9424ac99429f635dfb9bF20c3360Ab8','0x6226ddE08402642964f9A6de844ea3116F0dFc7e'],
+        providers: ['0x5f0a55FaD9424ac99429f635dfb9bF20c3360Ab8', '0x6226ddE08402642964f9A6de844ea3116F0dFc7e'],
       });
   
       // 3. Properly combine the data
-      // The first 4 bytes (8 hex characters) must match Divvi's expected prefix
-      const combinedData = donateData.slice(0, 10) + dataSuffix.slice(10);
+      const combinedData = dataSuffix ? donateData + (dataSuffix.startsWith("0x") ? dataSuffix.slice(2) : dataSuffix) : donateData;
   
       // 4. Send the transaction
       const hash = await sendTransactionAsync({
@@ -177,16 +167,25 @@ export default function BankOfCelo({ title = "Bank of Celo" }: { title?: string 
         chainId: CELO_CHAIN_ID,
       });
   
-      // 5. Report to Divvi
-      await submitReferral({
-        txHash: hash,
-        chainId: CELO_CHAIN_ID,
-      });
-  
-      toast.success("Donation successful!");
+      // 5. Show success toast and update contract data immediately
+      toast.success(`Donation successful! Transaction hash: ${hash.slice(0, 6)}...`);
       fetchContractData();
+  
+      // 6. Report to Divi in a separate try-catch
+      try {
+        console.log("Submitting referral to Divi:", { txHash: hash, chainId: CELO_CHAIN_ID });
+        await submitReferral({
+          txHash: hash,
+          chainId: CELO_CHAIN_ID,
+        });
+        console.log("Referral submitted successfully");
+      } catch (diviError) {
+        console.error("Divi submitReferral error:", diviError);
+        // Optionally show a warning toast, but don't mark donation as failed
+        toast.warning("Donation succeeded, but referral tracking failed. We're looking into it.");
+      }
     } catch (error) {
-      console.log("Donation error:", error);
+      console.error("Donation error:", error);
       toast.error(`Donation failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   };
@@ -221,7 +220,6 @@ export default function BankOfCelo({ title = "Bank of Celo" }: { title?: string 
       </div>
     );
   }
-  
 
   return (
     <div
@@ -248,9 +246,18 @@ export default function BankOfCelo({ title = "Bank of Celo" }: { title?: string 
           </div>
           <Button
             onClick={handleSwitchChain}
+            disabled={isSwitchChainPending}
             className="bg-amber-600 hover:bg-amber-700 text-white text-sm py-1 px-4 rounded-full flex items-center gap-1"
           >
-            <ArrowLeftRight className="w-4 h-4" />
+            {isSwitchChainPending ? (
+              <motion.div
+                animate={{ rotate: 360 }}
+                transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
+                className="w-4 h-4 border-2 border-white border-t-transparent rounded-full"
+              />
+            ) : (
+              <ArrowLeftRight className="w-4 h-4" />
+            )}
             Switch to Celo
           </Button>
         </motion.div>
@@ -294,14 +301,14 @@ export default function BankOfCelo({ title = "Bank of Celo" }: { title?: string 
       >
         <div className="flex items-center justify-between max-w-md mx-auto">
           <h1 className="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-emerald-600 to-amber-500">
-            {title} 
+            {title}
           </h1>
           <div className="flex items-center gap-2">
             {isConnected ? (
               <>
                 <Button
                   onClick={() => disconnect()}
-                  className="text-xs text-black font-medium flex  hover:bg-gray-200 bg-gradient-to-r from-emerald-600 to-amber-500 rounded-full px-3 py-1.5"
+                  className="text-xs text-black font-medium flex hover:bg-gray-200 bg-gradient-to-r from-emerald-600 to-amber-500 rounded-full px-3 py-1.5"
                   aria-label="Disconnect wallet"
                 >
                   <Wallet className="w-4 h-4 mr-1" />
