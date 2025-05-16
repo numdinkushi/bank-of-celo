@@ -294,14 +294,14 @@ export default function BankOfCelo({ title = "Bank of Celo" }: { title?: string 
       >
         <div className="flex items-center justify-between max-w-md mx-auto">
           <h1 className="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-emerald-600 to-amber-500">
-            {title}
+            {title} 
           </h1>
           <div className="flex items-center gap-2">
             {isConnected ? (
               <>
                 <Button
                   onClick={() => disconnect()}
-                  className="text-xs text-black font-medium  hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 rounded-full px-3 py-1.5"
+                  className="text-xs text-black font-medium flex  hover:bg-gray-200 bg-gradient-to-r from-emerald-600 to-amber-500 rounded-full px-3 py-1.5"
                   aria-label="Disconnect wallet"
                 >
                   <Wallet className="w-4 h-4 mr-1" />
