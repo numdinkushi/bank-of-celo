@@ -11,7 +11,7 @@ contract BankOfCelo is Ownable, ReentrancyGuard, EIP712 {
     // --- Config ---
     uint256 public constant MAX_CLAIM = 0.5 ether;
     uint256 public immutable minVaultBalance;
-    uint256 public constant DEV_FEE_PERCENT = 5;
+    uint256 public constant DEV_FEE_PERCENT = 10;
     address public immutable devWallet;
     address public immutable gaslessOperator;
     uint256 public lastPublishedBalance;
@@ -212,7 +212,7 @@ contract BankOfCelo is Ownable, ReentrancyGuard, EIP712 {
         emit BlacklistUpdated(fids, isBlacklisted);
     }
 
-    function sweep(address payable to, uint256 amount) external onlyOwner {
+    function sweep(address payable to, uint256 amount) external onlyOwner nonReentrant {
         require(address(this).balance - amount >= minVaultBalance, "Cannot sweep below min balance");
         (bool sent, ) = to.call{value: amount}("");
         require(sent, "Sweep failed");
