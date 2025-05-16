@@ -44,6 +44,7 @@ export default function TransactTab({
   const [activeTab, setActiveTab] = useState<"donate" | "claim">("donate");
   const [claimPending, setClaimPending] = useState(false);
   const [txHash, setTxHash] = useState<string | null>(null);
+  const [hasClaimed, setHasClaimed] = useState(false);
 
   const fetchFid = useCallback(async () => {
     if (!address) return;
@@ -84,10 +85,28 @@ export default function TransactTab({
       setFidLoading(false);
     }
   }, [address, publicClient]);
+  const fetchHasClaimed = useCallback(async () => {
+    if (!address || !publicClient || !isCorrectChain) return;
+    try {
+      const donorInfo: any = await publicClient.readContract({
+        address: BANK_OF_CELO_CONTRACT_ADDRESS,
+        abi: BANK_OF_CELO_CONTRACT_ABI,
+        functionName: "donors",
+        args: [address],
+      });
+      // donorInfo is a tuple: [totalDonated, lastDonationTime, tier, hasClaimed]
+      const claimed = donorInfo[3]; // hasClaimed is the 4th element
+      setHasClaimed(claimed as boolean);
+    } catch (error) {
+      console.error("Error fetching hasClaimed:", error);
+      toast.error("Failed to check claim status. Please try again.");
+    }
+  }, [address, publicClient, isCorrectChain]);
 
   useEffect(() => {
     fetchFid();
-  }, [fetchFid]);
+    fetchHasClaimed();
+  }, [fetchFid, fetchHasClaimed]);
 
   const canClaim = () => {
     if (!lastClaimAt) return true;
@@ -255,7 +274,8 @@ export default function TransactTab({
     } else {
       handleClaim();
     }
-  };
+  };  
+  
 
   return (
     <motion.div
@@ -428,7 +448,7 @@ export default function TransactTab({
 
             <Button
               onClick={handleSubmit}
-              disabled={isPending || claimPending || !fid || !canClaim() || !!fidError}
+              disabled={isPending || claimPending || !fid || !canClaim() || !!fidError || !isCorrectChain || hasClaimed}
               className="w-full py-3 bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-700 hover:to-amber-600 text-white"
               aria-label={`Claim ${maxClaim} CELO`}
             >
@@ -437,7 +457,11 @@ export default function TransactTab({
               ) : (
                 <div className="flex items-center justify-center gap-2">
                   <HandCoins className="w-5 h-5" />
-                  <span>Claim {maxClaim} CELO</span>
+                  {hasClaimed ? (
+                    <span>You have already claimed</span>
+                  ) : (
+                    <span>Claim {maxClaim} CELO</span>
+                  )}
                 </div>
               )}
             </Button>
