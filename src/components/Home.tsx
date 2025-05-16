@@ -131,6 +131,15 @@ export default function BankOfCelo({ title = "Bank of Celo" }: { title?: string 
     const interval = setInterval(fetchContractData, 3000);
     return () => clearInterval(interval);
   }, [fetchContractData]);
+  useEffect(() => {
+    const load = async () => {
+      if (!sdk) return;
+      sdk.actions.ready({});
+      await sdk.actions.addFrame();
+    };
+
+    load();
+  }, []);
 
   const handleDonate = async (amount: string) => {
     if (!isCorrectChain) {
