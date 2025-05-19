@@ -5,12 +5,13 @@ import { useState, useEffect } from "react";
 import { usePublicClient, useAccount } from "wagmi";
 import { formatEther } from "viem";
 import { motion, AnimatePresence } from "framer-motion";
-import { Trophy, Loader2, Award, ChevronDown, ChevronUp } from "lucide-react";
 import { Button } from "~/components/ui/Button";
 import { truncateAddress } from "~/lib/truncateAddress";
 import { toast } from "sonner";
 import { BANK_OF_CELO_CONTRACT_ABI, BANK_OF_CELO_CONTRACT_ADDRESS } from "~/lib/constants";
 import { celo } from "viem/chains";
+import { Trophy, Loader2, Award, ChevronDown, ChevronUp, RefreshCcw } from "lucide-react";
+
 
 interface Donor {
   donor: string;
@@ -74,7 +75,7 @@ export default function LeaderboardTab({ isCorrectChain = true }: LeaderboardTab
 
   useEffect(() => {
     fetchLeaderboard();
-    
+
     // Watch for new donations
     const unwatch = publicClient?.watchContractEvent({
       address: BANK_OF_CELO_CONTRACT_ADDRESS as `0x${string}`,
@@ -101,13 +102,13 @@ export default function LeaderboardTab({ isCorrectChain = true }: LeaderboardTab
             </div>
             <span className="text-gray-900 dark:text-white">Top Donors</span>
           </h2>
-          <Button
+          <button
             onClick={fetchLeaderboard}
             disabled={isLoading || !isCorrectChain}
-            className="text-xs font-medium bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 rounded-full px-3 py-1.5"
+            className="text-xs text-center flex items-center justify-center w-10 h-10  font-medium bg-gradient-to-br from-emerald-400 to-emerald-600 dark:bg-gray-700 dark:hover:bg-gray-600 rounded-full  py-1.5"
           >
-            {isLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : "Refresh"}
-          </Button>
+            {isLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : <RefreshCcw />}
+          </button>
         </div>
 
         {!isCorrectChain ? (
@@ -136,23 +137,20 @@ export default function LeaderboardTab({ isCorrectChain = true }: LeaderboardTab
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: 10 }}
                   transition={{ delay: index * 0.05 }}
-                  className={`overflow-hidden rounded-lg ${
-                    expandedDonor === donor.donor 
+                  className={`overflow-hidden rounded-lg ${expandedDonor === donor.donor
                       ? "bg-purple-50 dark:bg-purple-900/30 border border-purple-100 dark:border-purple-800"
                       : "bg-gray-50 dark:bg-gray-700"
-                  } ${donor.donor === address ? 'ring-2 ring-purple-500' : ''}`}
+                    } ${donor.donor === address ? 'ring-2 ring-purple-500' : ''}`}
                 >
                   <button
                     onClick={() => setExpandedDonor(expandedDonor === donor.donor ? null : donor.donor)}
                     className="w-full flex items-center p-3"
                   >
                     <div className="flex items-center w-full">
-                      <div className={`w-8 h-8 flex items-center justify-center rounded-full mr-3 ${
-                        index < 3 ? 'bg-gradient-to-br from-yellow-400 to-yellow-600' : 'bg-purple-100 dark:bg-purple-900'
-                      }`}>
-                        <span className={`text-sm font-bold ${
-                          index < 3 ? 'text-white' : 'text-purple-600 dark:text-purple-300'
+                      <div className={`w-8 h-8 flex items-center justify-center rounded-full mr-3 ${index < 3 ? 'bg-gradient-to-br from-yellow-400 to-yellow-600' : 'bg-purple-100 dark:bg-purple-900'
                         }`}>
+                        <span className={`text-sm font-bold ${index < 3 ? 'text-white' : 'text-purple-600 dark:text-purple-300'
+                          }`}>
                           {index + 1}
                         </span>
                       </div>
@@ -176,7 +174,7 @@ export default function LeaderboardTab({ isCorrectChain = true }: LeaderboardTab
                       )}
                     </div>
                   </button>
-                  
+
                   {expandedDonor === donor.donor && (
                     <motion.div
                       initial={{ height: 0, opacity: 0 }}
@@ -243,4 +241,5 @@ export default function LeaderboardTab({ isCorrectChain = true }: LeaderboardTab
       )}
     </motion.div>
   );
+
 }
