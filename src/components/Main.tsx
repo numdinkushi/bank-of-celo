@@ -137,7 +137,7 @@ export default function BankOfCelo({ title = "Bank of Celo" }: { title?: string;
   }, [fetchContractData]);
   useEffect(() => {
     const load = async () => {
-      if (!sdk || !sdk?.actions?.addframe) return;
+      if (!sdk || !sdk?.actions?.addFrame) return;
       sdk.actions.ready({});
       await sdk.actions.addFrame();
     };
