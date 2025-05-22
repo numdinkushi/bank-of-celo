@@ -3,16 +3,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import {
-  useAccount,
-  useDisconnect,
-  useConnect,
-  usePublicClient,
-  useWriteContract,
-  useSwitchChain,
-  useChainId,
-  useSendTransaction,
-} from "wagmi";
+import { useAccount, useDisconnect, useConnect, usePublicClient, useWriteContract, useSwitchChain, useChainId, useSendTransaction } from "wagmi";
 import { useSession } from "next-auth/react";
 import { signOut } from "next-auth/react";
 import sdk from "@farcaster/frame-sdk";
@@ -20,42 +11,21 @@ import { encodeFunctionData, formatEther, parseEther } from "viem";
 import { useFrame } from "~/components/providers/FrameProvider";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
-import {
-  Wallet,
-  Home,
-  Send,
-  ArrowLeftRight,
-  Trophy,
-  LogOut,
-  ChevronRight,
-  Clock,
-  AlertCircle,
-} from "lucide-react";
+import { Wallet, Home, Send, ArrowLeftRight, Trophy, LogOut, ChevronRight, Clock, AlertCircle } from "lucide-react";
 import { Button } from "~/components/ui/Button";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from "~/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "~/components/ui/dialog";
 import HomeTab from "~/components/tabs/HomeTab";
 import TransactTab from "~/components/tabs/TransactTab";
 import SwapBridgeTab from "~/components/tabs/SwapBridgeTab";
 import { truncateAddress } from "~/lib/truncateAddress";
-import LeaderboardTab from "./tabs/LeaderboardTab";
-import {
-  BANK_OF_CELO_CONTRACT_ABI,
-  BANK_OF_CELO_CONTRACT_ADDRESS,
-} from "~/lib/constants";
+import { BANK_OF_CELO_CONTRACT_ABI, BANK_OF_CELO_CONTRACT_ADDRESS } from "~/lib/constants";
 import { celo } from "viem/chains";
-import { getDataSuffix, submitReferral } from "@divvi/referral-sdk";
+import { getDataSuffix, submitReferral } from '@divvi/referral-sdk';
+import { cubesImage } from "~/constants/images";
+import { cn } from "~/lib/utils";
+import Rewards from "./tabs/rewards";
 
-export default function BankOfCelo({
-  title = "Bank of Celo",
-}: {
-  title?: string;
-}) {
+export default function BankOfCelo({ title = "Bank of Celo" }: { title?: string; }) {
   const { address, isConnected, chain } = useAccount();
   const { disconnect } = useDisconnect();
   const { connect, connectors } = useConnect();
@@ -85,6 +55,8 @@ export default function BankOfCelo({
   const CELO_CHAIN_ID = celo.id;
   const targetChain = celo;
   const isCorrectChain = chain?.id === CELO_CHAIN_ID;
+  const showSwitchNetworkBanner = isConnected && !isCorrectChain;
+
   console.log("Current chain ID:", chainId);
   console.log("Is correct chain:", isCorrectChain);
 
@@ -127,11 +99,7 @@ export default function BankOfCelo({
       ]);
 
       const [status, cooldown, lastClaim, maxClaimAmount] = data;
-      const [currentBalance, minReserve, availableForClaims] = status as [
-        bigint,
-        bigint,
-        bigint,
-      ];
+      const [currentBalance, minReserve, availableForClaims] = status as [bigint, bigint, bigint];
 
       const newVaultStatus = {
         currentBalance: formatEther(currentBalance),
@@ -150,22 +118,10 @@ export default function BankOfCelo({
         }
         return newVaultStatus;
       });
-      setVaultBalance((prev) =>
-        prev === formatEther(currentBalance)
-          ? prev
-          : formatEther(currentBalance),
-      );
-      setClaimCooldown((prev) =>
-        prev === Number(cooldown) ? prev : Number(cooldown),
-      );
-      setLastClaimAt((prev) =>
-        prev === Number(lastClaim) ? prev : Number(lastClaim),
-      );
-      setMaxClaim((prev) =>
-        prev === formatEther(maxClaimAmount as bigint)
-          ? prev
-          : formatEther(maxClaimAmount as bigint),
-      );
+      setVaultBalance((prev) => (prev === formatEther(currentBalance) ? prev : formatEther(currentBalance)));
+      setClaimCooldown((prev) => (prev === Number(cooldown) ? prev : Number(cooldown)));
+      setLastClaimAt((prev) => (prev === Number(lastClaim) ? prev : Number(lastClaim)));
+      setMaxClaim((prev) => (prev === formatEther(maxClaimAmount as bigint) ? prev : formatEther(maxClaimAmount as bigint)));
     } catch (error) {
       console.error("Failed to fetch contract data:", error);
       toast.error("Failed to fetch contract data. Please try again.");
@@ -181,7 +137,7 @@ export default function BankOfCelo({
   }, [fetchContractData]);
   useEffect(() => {
     const load = async () => {
-      if (!sdk) return;
+      if (!sdk || !sdk?.actions?.addFrame) return;
       sdk.actions.ready({});
       await sdk.actions.addFrame();
     };
@@ -209,18 +165,12 @@ export default function BankOfCelo({
 
       // 2. Get the referral data suffix
       const dataSuffix = getDataSuffix({
-        consumer: "0xC5337CeE97fF5B190F26C4A12341dd210f26e17c",
-        providers: [
-          "0x5f0a55FaD9424ac99429f635dfb9bF20c3360Ab8",
-          "0x6226ddE08402642964f9A6de844ea3116F0dFc7e",
-        ],
+        consumer: '0xC5337CeE97fF5B190F26C4A12341dd210f26e17c',
+        providers: ['0x5f0a55FaD9424ac99429f635dfb9bF20c3360Ab8', '0x6226ddE08402642964f9A6de844ea3116F0dFc7e'],
       });
 
       // 3. Properly combine the data
-      const combinedData = dataSuffix
-        ? donateData +
-          (dataSuffix.startsWith("0x") ? dataSuffix.slice(2) : dataSuffix)
-        : donateData;
+      const combinedData = dataSuffix ? donateData + (dataSuffix.startsWith("0x") ? dataSuffix.slice(2) : dataSuffix) : donateData;
 
       // 4. Send the transaction
       const hash = await sendTransactionAsync({
@@ -231,17 +181,12 @@ export default function BankOfCelo({
       });
 
       // 5. Show success toast and update contract data immediately
-      toast.success(
-        `Donation successful! Transaction hash: ${hash.slice(0, 6)}...`,
-      );
+      toast.success(`Donation successful! Transaction hash: ${hash.slice(0, 6)}...`);
       fetchContractData();
 
       // 6. Report to Divi in a separate try-catch
       try {
-        console.log("Submitting referral to Divi:", {
-          txHash: hash,
-          chainId: CELO_CHAIN_ID,
-        });
+        console.log("Submitting referral to Divi:", { txHash: hash, chainId: CELO_CHAIN_ID });
         await submitReferral({
           txHash: hash,
           chainId: CELO_CHAIN_ID,
@@ -250,21 +195,16 @@ export default function BankOfCelo({
       } catch (diviError) {
         console.error("Divi submitReferral error:", diviError);
         // Optionally show a warning toast, but don't mark donation as failed
-        toast.warning(
-          "Donation succeeded, but referral tracking failed. We're looking into it.",
-        );
+        toast.warning("Donation succeeded, but referral tracking failed. We're looking into it.");
       }
     } catch (error) {
       console.error("Donation error:", error);
-      toast.error(
-        `Donation failed: ${error instanceof Error ? error.message : "Unknown error"}`,
-      );
+      toast.error(`Donation failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   };
 
   const handleConnect = () => {
-    const connector =
-      connectors.find((c) => c.id === "injected") || connectors[0]; // Prefer injected (MetaMask) or fallback
+    const connector = connectors.find((c) => c.id === "injected") || connectors[0]; // Prefer injected (MetaMask) or fallback
     connect({
       connector,
       chainId: CELO_CHAIN_ID,
@@ -302,39 +242,18 @@ export default function BankOfCelo({
         paddingBottom: context?.client.safeAreaInsets?.bottom ?? 60,
         paddingLeft: context?.client.safeAreaInsets?.left ?? 0,
         paddingRight: context?.client.safeAreaInsets?.right ?? 0,
+        backgroundImage: `url(${cubesImage})`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundAttachment: 'fixed',
+        backgroundRepeat: 'no-repeat',
+        minHeight: '100vh',
+        // padding: '20px',
       }}
     >
-      {/* Network Warning Banner */}
-      {isConnected && !isCorrectChain && (
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="bg-amber-100 dark:bg-amber-900/50 border-l-4 border-amber-500 dark:border-amber-400 p-3 text-center flex flex-col sm:flex-row items-center justify-center gap-3"
-        >
-          <div className="flex items-center gap-2">
-            <AlertCircle className="w-5 h-5 text-amber-600 dark:text-amber-300" />
-            <span className="text-amber-800 dark:text-amber-100 font-medium">
-              You are on the wrong network
-            </span>
-          </div>
-          <Button
-            onClick={handleSwitchChain}
-            disabled={isSwitchChainPending}
-            className="bg-amber-600 hover:bg-amber-700 text-white text-sm py-1 px-4 rounded-full flex items-center gap-1"
-          >
-            {isSwitchChainPending ? (
-              <motion.div
-                animate={{ rotate: 360 }}
-                transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
-                className="w-4 h-4 border-2 border-white border-t-transparent rounded-full"
-              />
-            ) : (
-              <ArrowLeftRight className="w-4 h-4" />
-            )}
-            Switch to Celo
-          </Button>
-        </motion.div>
-      )}
+      <div className=" min-h-[100vh] fixed inset-0 bg-emerald-800 opacity-50"></div>
+
+
 
       {/* Welcome Modal */}
       <Dialog open={showWelcome} onOpenChange={handleCloseWelcome}>
@@ -349,10 +268,9 @@ export default function BankOfCelo({
               Welcome to Bank of Celo!
             </DialogTitle>
             <DialogDescription className="text-center text-gray-600 dark:text-gray-300 mt-2">
-              The decentralized vault supporting the Celo ecosystem. Donate to
-              help grow the community or claim {maxClaim} CELO to explore
-              decentralized finance. Swap tokens seamlessly or check the
-              leaderboard to see top contributors!
+              The decentralized vault supporting the Celo ecosystem. Donate to help grow the community
+              or claim {maxClaim} CELO to explore decentralized finance. Swap tokens seamlessly or
+              check the leaderboard to see top contributors!
             </DialogDescription>
           </DialogHeader>
           <div className="mt-6 flex flex-col gap-3">
@@ -371,9 +289,9 @@ export default function BankOfCelo({
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="sticky top-0 z-10 bg-white/90 dark:bg-gray-900/90 backdrop-blur-md border-b border-gray-200 dark:border-gray-700 p-4"
+        className={cn("sticky top-0 z-10 bg-white/90  dark:bg-gray-900/90 backdrop-blur-md border-b border-gray-200 dark:border-gray-700", showSwitchNetworkBanner ? 'pt-7' : "p-4")}
       >
-        <div className="flex items-center justify-between max-w-md mx-auto">
+        <div className="flex items-center justify-between mx-0 md:mx-20">
           <h1 className="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-emerald-600 to-amber-500">
             {title}
           </h1>
@@ -401,7 +319,7 @@ export default function BankOfCelo({
             ) : (
               <Button
                 onClick={handleConnect}
-                className="text-xs font-medium bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-700 hover:to-emerald-600 text-white rounded-full px-3 py-1.5 shadow-sm"
+                className="text-xs text-black font-medium flex hover:bg-gray-200 bg-gradient-to-r from-emerald-600 to-amber-500 rounded-full px-3 py-1.5"
                 aria-label="Connect wallet"
               >
                 <Wallet className="w-4 h-4 mr-1" /> Connect
@@ -409,6 +327,38 @@ export default function BankOfCelo({
             )}
           </div>
         </div>
+        {/* Network Warning Banner */}
+        {isConnected && !isCorrectChain && (
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            style={{ zIndex: 10000 }}
+            className="bg-amber-100 mt-5 dark:bg-amber-900/50 border-l-4 border-amber-500 dark:border-amber-400 p-3 text-center flex flex-col sm:flex-row items-center justify-center gap-3"
+          >
+            <div className="flex items-center gap-2">
+              <AlertCircle className="w-5 h-5 text-amber-600 dark:text-amber-300" />
+              <span className="text-amber-800 dark:text-amber-100 font-medium">
+                You are on the wrong network
+              </span>
+            </div>
+            <Button
+              onClick={handleSwitchChain}
+              disabled={isSwitchChainPending}
+              className="bg-amber-600 hover:bg-amber-700 text-white text-sm py-1 px-4 rounded-full flex items-center gap-1"
+            >
+              {isSwitchChainPending ? (
+                <motion.div
+                  animate={{ rotate: 360 }}
+                  transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
+                  className="w-4 h-4 border-2 border-white border-t-transparent rounded-full"
+                />
+              ) : (
+                <ArrowLeftRight className="w-4 h-4" />
+              )}
+              Switch to Celo
+            </Button>
+          </motion.div>
+        )}
       </motion.div>
 
       {/* Content */}
@@ -453,7 +403,7 @@ export default function BankOfCelo({
               />
             )}
             {/* {activeTab === "swap" && <SwapBridgeTab isCorrectChain={isCorrectChain} />} */}
-            {activeTab === "leaderboard" && <LeaderboardTab />}
+            {activeTab === "rewards" && <Rewards  />}
           </motion.div>
         </AnimatePresence>
       </div>
@@ -463,30 +413,21 @@ export default function BankOfCelo({
         initial={{ y: 100 }}
         animate={{ y: 0 }}
         transition={{ duration: 0.5 }}
-        className="fixed bottom-0 left-0 right-0 bg-white/95 dark:bg-gray-900/95 backdrop-blur-lg shadow-t-lg border-t border-gray-200 dark:border-gray-700 flex justify-around py-2 px-4"
+        className="fixed bottom-0 left-0 right-0 z-50 bg-white/95 dark:bg-gray-900/95 backdrop-blur-lg shadow-t-lg border-t border-gray-200 dark:border-gray-700 flex justify-around py-2 px-4"
       >
         {[
           { id: "home", icon: <Home className="w-5 h-5" />, label: "Home" },
-          {
-            id: "transact",
-            icon: <Send className="w-5 h-5" />,
-            label: "Transact",
-          },
+          { id: "transact", icon: <Send className="w-5 h-5" />, label: "Transact" },
           // { id: "swap", icon: <ArrowLeftRight className="w-5 h-5" />, label: "Swap" },
-          {
-            id: "leaderboard",
-            icon: <Trophy className="w-5 h-5" />,
-            label: "Leaderboard",
-          },
+          { id: "rewards", icon: <Trophy className="w-5 h-5" />, label: "Rewards" },
         ].map((tab) => (
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
-            className={`relative flex flex-col items-center p-2 rounded-xl transition-all ${
-              activeTab === tab.id
-                ? "text-white bg-gradient-to-r from-emerald-500 to-emerald-600 shadow-md"
-                : "text-gray-600 dark:text-gray-300 hover:text-emerald-600 dark:hover:text-emerald-400"
-            }`}
+            className={`relative flex flex-col items-center p-2 rounded-xl transition-all ${activeTab === tab.id
+              ? "text-white bg-gradient-to-r from-emerald-500 to-emerald-600 shadow-md"
+              : "text-gray-600 dark:text-gray-300 hover:text-emerald-600 dark:hover:text-emerald-400"
+              }`}
             aria-label={tab.label}
           >
             {tab.icon}
