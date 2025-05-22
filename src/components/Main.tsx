@@ -18,12 +18,12 @@ import HomeTab from "~/components/tabs/HomeTab";
 import TransactTab from "~/components/tabs/TransactTab";
 import SwapBridgeTab from "~/components/tabs/SwapBridgeTab";
 import { truncateAddress } from "~/lib/truncateAddress";
-import LeaderboardTab from "./tabs/LeaderboardTab";
 import { BANK_OF_CELO_CONTRACT_ABI, BANK_OF_CELO_CONTRACT_ADDRESS } from "~/lib/constants";
 import { celo } from "viem/chains";
 import { getDataSuffix, submitReferral } from '@divvi/referral-sdk';
 import { cubesImage } from "~/constants/images";
 import { cn } from "~/lib/utils";
+import Rewards from "./tabs/rewards";
 
 export default function BankOfCelo({ title = "Bank of Celo" }: { title?: string; }) {
   const { address, isConnected, chain } = useAccount();
@@ -403,7 +403,7 @@ export default function BankOfCelo({ title = "Bank of Celo" }: { title?: string;
               />
             )}
             {/* {activeTab === "swap" && <SwapBridgeTab isCorrectChain={isCorrectChain} />} */}
-            {activeTab === "leaderboard" && <LeaderboardTab />}
+            {activeTab === "rewards" && <Rewards  />}
           </motion.div>
         </AnimatePresence>
       </div>
@@ -419,7 +419,7 @@ export default function BankOfCelo({ title = "Bank of Celo" }: { title?: string;
           { id: "home", icon: <Home className="w-5 h-5" />, label: "Home" },
           { id: "transact", icon: <Send className="w-5 h-5" />, label: "Transact" },
           // { id: "swap", icon: <ArrowLeftRight className="w-5 h-5" />, label: "Swap" },
-          { id: "leaderboard", icon: <Trophy className="w-5 h-5" />, label: "Leaderboard" },
+          { id: "rewards", icon: <Trophy className="w-5 h-5" />, label: "Rewards" },
         ].map((tab) => (
           <button
             key={tab.id}
