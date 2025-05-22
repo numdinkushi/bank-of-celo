@@ -403,7 +403,7 @@ export default function BankOfCelo({ title = "Bank of Celo" }: { title?: string;
               />
             )}
             {/* {activeTab === "swap" && <SwapBridgeTab isCorrectChain={isCorrectChain} />} */}
-            {activeTab === "rewards" && <Rewards address />}
+            {activeTab === "rewards" && <Rewards  />}
           </motion.div>
         </AnimatePresence>
       </div>

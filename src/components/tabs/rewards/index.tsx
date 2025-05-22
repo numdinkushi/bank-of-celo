@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Zap, Trophy, Users, Gift, Star, Calendar, Coins, Target, Edit3, DollarSign, X, Shield, CheckCircle, Copy, ExternalLink } from 'lucide-react';
+import { Zap, Trophy, Users, Star, Calendar, Target, Edit3, DollarSign, X, Shield } from 'lucide-react';
 import SelfProtocolComponent from '~/app/services/self-protocol/self';
 import LeaderBoard from './leader-board/Leaderboard';
 import Image from 'next/image';
@@ -110,7 +110,7 @@ const EarnItem: React.FC<EarnItemProps> = ({ icon, title, description }) => (
     </div>
 );
 
-export default function WarpcastWalletApp({address}: {address: string}): JSX.Element {
+export default function WarpcastWalletApp(): JSX.Element {
     const [activeSheet, setActiveSheet] = useState<ActiveSheet>(null);
     const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -307,7 +307,7 @@ export default function WarpcastWalletApp({address}: {address: string}): JSX.Ele
                         </ul>
                     </div>
                 </div>
-                <SelfProtocolComponent address={address} onSuccess={handleVerificationSuccess} />
+                <SelfProtocolComponent  onSuccess={handleVerificationSuccess} />
                 {/* <SelfProtocolVerification onSuccess={handleVerificationSuccess} /> */}
             </BottomSheet>
 

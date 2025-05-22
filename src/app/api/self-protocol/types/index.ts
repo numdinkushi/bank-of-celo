@@ -1,4 +1,3 @@
-import { Groth16Proof, SelfBackendVerifier } from '@selfxyz/core';
 
 
 export interface SelfVerificationResult {
@@ -56,8 +55,6 @@ export interface SelfVerificationResult {
     proof: {
       // Proof that is used for this verification
       value: {
-        // proof: Groth16Proof;
-        // publicSignals: PublicSignals;
         proof: unknown;
         publicSignals: unknown;
       };

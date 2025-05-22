@@ -10,7 +10,6 @@ import SelfQRcodeWrapper, {
 import { Shield, Copy, ExternalLink, CheckCircle } from "lucide-react";
 import { useAccount } from "wagmi";
 import { APP_ICON_URL } from "~/lib/constants";
-import { v4 } from "uuid";
 
 interface SelfProtocolComponentProps {
     onSuccess?: () => void;
@@ -37,8 +36,6 @@ const SelfProtocolComponent: React.FC<SelfProtocolComponentProps> = ({ onSuccess
     // Use useEffect to ensure code only executes on the client side
     useEffect(() => {
         try {
-            // TODO: replace with wallet address to link to block chain
-            const userId = v4();
             if (!address) return;
 
             const app = new SelfAppBuilder({

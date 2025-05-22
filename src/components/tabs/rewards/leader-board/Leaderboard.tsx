@@ -11,7 +11,6 @@ import { toast } from "sonner";
 import { BANK_OF_CELO_CONTRACT_ABI, BANK_OF_CELO_CONTRACT_ADDRESS } from "~/lib/constants";
 import { celo } from "viem/chains";
 import { Trophy, Loader2, Award, ChevronDown, ChevronUp, RefreshCcw } from "lucide-react";
-import SelfProtocol from "~/app/services/self-protocol";
 
 
 interface Donor {
