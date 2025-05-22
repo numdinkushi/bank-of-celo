@@ -2,19 +2,22 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import {  getUniversalLink } from "@selfxyz/core";
+import { getUniversalLink } from "@selfxyz/core";
 import SelfQRcodeWrapper, {
     SelfAppBuilder,
     type SelfApp,
 } from "@selfxyz/qrcode";
 import { v4 } from "uuid";
 import { Shield, Copy, ExternalLink, CheckCircle } from "lucide-react";
+import { useAccount } from "wagmi";
+import { APP_ICON_URL } from "~/lib/constants";
 
 interface SelfProtocolComponentProps {
     onSuccess?: () => void;
 }
 
 const SelfProtocolComponent: React.FC<SelfProtocolComponentProps> = ({ onSuccess }) => {
+    const { address, isConnected, chain } = useAccount();
     const router = useRouter();
     const [linkCopied, setLinkCopied] = useState<boolean>(false);
     const [showToast, setShowToast] = useState<boolean>(false);
@@ -23,11 +26,12 @@ const SelfProtocolComponent: React.FC<SelfProtocolComponentProps> = ({ onSuccess
     const [universalLink, setUniversalLink] = useState<string>("");
 
     const minimumAge = 18;
+    const deployedContractAddress = '0x6DD5608Bf1F68C23Bf5D519161128240C7D764Fc';
     // Use useMemo to cache the array to avoid creating a new array on each render
     // const excludedCountries = useMemo(() => [countries.FRANCE], []);
     const requireName = true;
     const checkOFAC = true;
-
+    
     // Use useEffect to ensure code only executes on the client side
     useEffect(() => {
         try {
@@ -36,11 +40,11 @@ const SelfProtocolComponent: React.FC<SelfProtocolComponentProps> = ({ onSuccess
             const app = new SelfAppBuilder({
                 appName: process.env.NEXT_PUBLIC_SELF_APP_NAME || "Bank of Celo",
                 scope: process.env.NEXT_PUBLIC_SELF_SCOPE || "self-workshop",
-                endpoint: `${process.env.NEXT_PUBLIC_SELF_ENDPOINT}/api/self-protocol/verify`,
-                logoBase64:
-                    "https://pluspng.com/img-png/images-owls-png-hd-owl-free-download-png-png-image-485.png",
+                // endpoint: `${process.env.NEXT_PUBLIC_SELF_ENDPOINT}/api/self-protocol/verify`, //for web2
+                endpoint: deployedContractAddress,
+                logoBase64: APP_ICON_URL,
                 // note: userId here will be the connected wallet
-                userId: userId,
+                userId: address,
                 disclosures: {
                     minimumAge,
                     ofac: checkOFAC,
@@ -48,15 +52,16 @@ const SelfProtocolComponent: React.FC<SelfProtocolComponentProps> = ({ onSuccess
                     name: requireName,
                 },
             }).build();
-
-            console.log(234234, app);
+            
+            console.log(432423434, app)
+            console.log(234234, {address}, app);
 
             setSelfApp(app);
             setUniversalLink(getUniversalLink(app));
         } catch (error) {
             console.error("Failed to initialize Self app:", error);
         }
-    }, []);
+    }, [address, checkOFAC]);
 
     const displayToast = (message: string): void => {
         setToastMessage(message);
