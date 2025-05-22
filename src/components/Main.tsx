@@ -403,7 +403,7 @@ export default function BankOfCelo({ title = "Bank of Celo" }: { title?: string;
               />
             )}
             {/* {activeTab === "swap" && <SwapBridgeTab isCorrectChain={isCorrectChain} />} */}
-            {activeTab === "leaderboard" && <Rewards />}
+            {activeTab === "rewards" && <Rewards address />}
           </motion.div>
         </AnimatePresence>
       </div>
@@ -419,7 +419,7 @@ export default function BankOfCelo({ title = "Bank of Celo" }: { title?: string;
           { id: "home", icon: <Home className="w-5 h-5" />, label: "Home" },
           { id: "transact", icon: <Send className="w-5 h-5" />, label: "Transact" },
           // { id: "swap", icon: <ArrowLeftRight className="w-5 h-5" />, label: "Swap" },
-          { id: "leaderboard", icon: <Trophy className="w-5 h-5" />, label: "Leaderboard" },
+          { id: "rewards", icon: <Trophy className="w-5 h-5" />, label: "Rewards" },
         ].map((tab) => (
           <button
             key={tab.id}

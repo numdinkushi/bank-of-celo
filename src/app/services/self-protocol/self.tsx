@@ -7,17 +7,19 @@ import SelfQRcodeWrapper, {
     SelfAppBuilder,
     type SelfApp,
 } from "@selfxyz/qrcode";
-import { v4 } from "uuid";
 import { Shield, Copy, ExternalLink, CheckCircle } from "lucide-react";
 import { useAccount } from "wagmi";
 import { APP_ICON_URL } from "~/lib/constants";
+import { v4 } from "uuid";
 
 interface SelfProtocolComponentProps {
     onSuccess?: () => void;
 }
 
 const SelfProtocolComponent: React.FC<SelfProtocolComponentProps> = ({ onSuccess }) => {
-    const { address, isConnected, chain } = useAccount();
+    const { address } = useAccount();
+    console.log(234234, { address });
+
     const router = useRouter();
     const [linkCopied, setLinkCopied] = useState<boolean>(false);
     const [showToast, setShowToast] = useState<boolean>(false);
@@ -31,37 +33,40 @@ const SelfProtocolComponent: React.FC<SelfProtocolComponentProps> = ({ onSuccess
     // const excludedCountries = useMemo(() => [countries.FRANCE], []);
     const requireName = true;
     const checkOFAC = true;
-    
+
     // Use useEffect to ensure code only executes on the client side
     useEffect(() => {
         try {
             // TODO: replace with wallet address to link to block chain
             const userId = v4();
+            if (!address) return;
+
             const app = new SelfAppBuilder({
                 appName: process.env.NEXT_PUBLIC_SELF_APP_NAME || "Bank of Celo",
-                scope: process.env.NEXT_PUBLIC_SELF_SCOPE || "self-workshop",
+                scope: process.env.NEXT_PUBLIC_SELF_SCOPE || "bank-of-celo",
                 // endpoint: `${process.env.NEXT_PUBLIC_SELF_ENDPOINT}/api/self-protocol/verify`, //for web2
                 endpoint: deployedContractAddress,
                 logoBase64: APP_ICON_URL,
                 // note: userId here will be the connected wallet
                 userId: address,
+                userIdType: 'hex',
                 disclosures: {
                     minimumAge,
                     ofac: checkOFAC,
-                    // excludedCountries,
                     name: requireName,
                 },
             }).build();
-            
-            console.log(432423434, app)
-            console.log(234234, {address}, app);
+
+            console.log(432423434, app);
+            console.log(234234, { address }, app);
 
             setSelfApp(app);
             setUniversalLink(getUniversalLink(app));
+            
         } catch (error) {
-            console.error("Failed to initialize Self app:", error);
+            console.log("Failed to initialize Self app:", error);
         }
-    }, [address, checkOFAC]);
+    }, [address, checkOFAC, requireName]);
 
     const displayToast = (message: string): void => {
         setToastMessage(message);
@@ -80,7 +85,7 @@ const SelfProtocolComponent: React.FC<SelfProtocolComponentProps> = ({ onSuccess
                 setTimeout(() => setLinkCopied(false), 2000);
             })
             .catch((err) => {
-                console.error("Failed to copy text: ", err);
+                console.log("Failed to copy text: ", err);
                 displayToast("Failed to copy link");
             });
     };

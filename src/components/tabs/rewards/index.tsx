@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Zap, Trophy, Users, Gift, Star, Calendar, Coins, Target, Edit3, DollarSign, X, Shield, CheckCircle, Copy, ExternalLink } from 'lucide-react';
 import SelfProtocolComponent from '~/app/services/self-protocol/self';
 import LeaderBoard from './leader-board/Leaderboard';
+import Image from 'next/image';
 
 interface BottomSheetProps {
     isOpen: boolean;
@@ -109,7 +110,7 @@ const EarnItem: React.FC<EarnItemProps> = ({ icon, title, description }) => (
     </div>
 );
 
-export default function WarpcastWalletApp(): JSX.Element {
+export default function WarpcastWalletApp({address}: {address: string}): JSX.Element {
     const [activeSheet, setActiveSheet] = useState<ActiveSheet>(null);
     const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -251,9 +252,11 @@ export default function WarpcastWalletApp(): JSX.Element {
             >
                 <div className="text-center mb-8">
                     <div className="w-20 h-20 bg-gradient-to-br from-emerald-400 to-emerald-600 rounded-full mx-auto mb-6 flex items-center justify-center">
-                        <img
+                        <Image
                             src="/api/placeholder/60/60"
                             alt="Profile"
+                            width={20}
+                            height={20}
                             className="w-16 h-16 rounded-full object-cover border-2 border-white/20"
                         />
                     </div>
@@ -270,10 +273,6 @@ export default function WarpcastWalletApp(): JSX.Element {
                         <span className="text-white font-semibold">May 13 - 20</span>
                     </div>
                 </div>
-
-                <button className="w-full bg-gradient-to-r from-purple-600 to-purple-700 text-white font-semibold py-4 rounded-2xl mt-8 hover:from-purple-700 hover:to-purple-800 transition-all duration-300">
-                    Leaderboard
-                </button>
             </BottomSheet>
 
             {/* O.G Earning Sheet */}
@@ -308,7 +307,7 @@ export default function WarpcastWalletApp(): JSX.Element {
                         </ul>
                     </div>
                 </div>
-                <SelfProtocolComponent onSuccess={handleVerificationSuccess} />
+                <SelfProtocolComponent address={address} onSuccess={handleVerificationSuccess} />
                 {/* <SelfProtocolVerification onSuccess={handleVerificationSuccess} /> */}
             </BottomSheet>
 
