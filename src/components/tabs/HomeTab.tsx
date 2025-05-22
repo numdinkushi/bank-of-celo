@@ -1,5 +1,13 @@
 import { motion, Variants } from "framer-motion";
-import { Info, Gift, HandCoins, Clock, TrendingUp, ShieldCheck, Droplet } from "lucide-react";
+import {
+  Info,
+  Gift,
+  HandCoins,
+  Clock,
+  TrendingUp,
+  ShieldCheck,
+  Droplet,
+} from "lucide-react";
 import { Button } from "~/components/ui/Button";
 import { formatDistanceToNow } from "date-fns";
 
@@ -21,16 +29,16 @@ interface HomeTabProps {
 // Animation variants
 const cardVariants = {
   hidden: { opacity: 0, y: 20 },
-  visible: (custom:  number) => ({
+  visible: (custom: number) => ({
     opacity: 1,
     y: 0,
-    transition: { 
+    transition: {
       delay: custom * 0.1,
-      type: "spring", 
-      stiffness: 300, 
-      damping: 24 
-    }
-  })
+      type: "spring",
+      stiffness: 300,
+      damping: 24,
+    },
+  }),
 };
 
 const pulseVariants = {
@@ -40,9 +48,9 @@ const pulseVariants = {
     transition: {
       duration: 2,
       repeat: Infinity,
-      repeatType: "reverse"
-    }
-  }
+      repeatType: "reverse",
+    },
+  },
 };
 
 export default function HomeTab({
@@ -82,7 +90,7 @@ export default function HomeTab({
         className="relative overflow-hidden p-6 bg-gradient-to-br from-emerald-50 to-cyan-50 dark:from-gray-800 dark:to-gray-900 rounded-3xl shadow-lg border border-emerald-100/50 dark:border-emerald-800/30"
       >
         {/* Background decoration elements */}
-        <motion.div 
+        <motion.div
           className="absolute top-0 right-0 w-32 h-32 rounded-full bg-emerald-300/10 dark:bg-emerald-700/10"
           animate={{
             scale: [1, 1.2, 1],
@@ -91,7 +99,7 @@ export default function HomeTab({
           }}
           transition={{ duration: 8, repeat: Infinity }}
         />
-        <motion.div 
+        <motion.div
           className="absolute bottom-0 left-0 w-20 h-20 rounded-full bg-cyan-300/10 dark:bg-cyan-700/10"
           animate={{
             scale: [1, 1.3, 1],
@@ -104,14 +112,18 @@ export default function HomeTab({
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
             <Droplet className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
-            <p className="text-sm font-medium text-gray-600 dark:text-gray-300">Vault Balance</p>
+            <p className="text-sm font-medium text-gray-600 dark:text-gray-300">
+              Vault Balance
+            </p>
           </div>
-          <motion.div 
+          <motion.div
             className="flex items-center bg-emerald-100 dark:bg-emerald-800/60 px-2 py-1 rounded-full"
             whileHover={{ scale: 1.05 }}
           >
             <ShieldCheck className="w-3 h-3 text-emerald-600 dark:text-emerald-400 mr-1" />
-            <span className="text-xs font-medium text-emerald-700 dark:text-emerald-300">Secured</span>
+            <span className="text-xs font-medium text-emerald-700 dark:text-emerald-300">
+              Secured
+            </span>
           </motion.div>
         </div>
 
@@ -144,8 +156,10 @@ export default function HomeTab({
 
         <div className="mt-4 flex justify-between items-center px-2 py-3 bg-white/60 dark:bg-gray-800/40 rounded-xl backdrop-blur-sm">
           <div>
-            <p className="text-xs text-gray-500 dark:text-gray-400">Available for Claims</p>
-            <motion.p 
+            <p className="text-xs text-gray-500 dark:text-gray-400">
+              Available for Claims
+            </p>
+            <motion.p
               className="text-sm font-medium text-emerald-700 dark:text-emerald-300"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -154,12 +168,14 @@ export default function HomeTab({
               {parseFloat(vaultStatus.availableForClaims).toFixed(2)} CELO
             </motion.p>
           </div>
-          <motion.div 
+          <motion.div
             whileHover={{ rotate: 15 }}
             className="flex items-center gap-1"
           >
             <TrendingUp className="w-4 h-4 text-emerald-500 dark:text-emerald-400" />
-            <span className="text-xs font-medium text-emerald-600 dark:text-emerald-400">+2.5%</span>
+            <span className="text-xs font-medium text-emerald-600 dark:text-emerald-400">
+              +2.5%
+            </span>
           </motion.div>
         </div>
       </motion.div>
@@ -180,17 +196,21 @@ export default function HomeTab({
             disabled={!isCorrectChain}
             aria-label="Donate to the vault"
           >
-            <motion.div 
-              whileHover={{ 
+            <motion.div
+              whileHover={{
                 rotate: [0, -10, 10, -10, 0],
-                transition: { duration: 0.5 }
+                transition: { duration: 0.5 },
               }}
               className="mb-3 p-3 bg-white dark:bg-gray-800 rounded-full shadow-md"
             >
               <Gift className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
             </motion.div>
-            <span className="font-medium text-emerald-800 dark:text-emerald-200">Donate</span>
-            <span className="text-xs text-emerald-600/70 dark:text-emerald-400/70 mt-1">Support Ecosystem</span>
+            <span className="font-medium text-emerald-800 dark:text-emerald-200">
+              Donate
+            </span>
+            <span className="text-xs text-emerald-600/70 dark:text-emerald-400/70 mt-1">
+              Support Ecosystem
+            </span>
           </Button>
         </motion.div>
 
@@ -206,42 +226,51 @@ export default function HomeTab({
             onClick={() => onNavigate?.("transact")}
             disabled={!canClaim() || !isCorrectChain}
             className={`flex flex-col items-center justify-center p-5 h-full w-full bg-gradient-to-br ${
-              canClaim() 
-                ? "from-amber-50 to-orange-50 dark:from-amber-900/30 dark:to-amber-800/50 shadow-md shadow-amber-100/20 dark:shadow-amber-900/20" 
+              canClaim()
+                ? "from-amber-50 to-orange-50 dark:from-amber-900/30 dark:to-amber-800/50 shadow-md shadow-amber-100/20 dark:shadow-amber-900/20"
                 : "from-gray-50 to-gray-100 dark:from-gray-800/50 dark:to-gray-700/50"
             } rounded-2xl border ${
-              canClaim() 
-                ? "border-amber-100 dark:border-amber-800/50" 
+              canClaim()
+                ? "border-amber-100 dark:border-amber-800/50"
                 : "border-gray-200 dark:border-gray-700/50"
             }`}
             aria-label={`Claim ${maxClaim} CELO`}
           >
-            <motion.div 
-              whileHover={canClaim() ? { 
-                y: [0, -5, 0],
-                transition: { duration: 0.5 }
-              } : {}}
+            <motion.div
+              whileHover={
+                canClaim()
+                  ? {
+                      y: [0, -5, 0],
+                      transition: { duration: 0.5 },
+                    }
+                  : {}
+              }
               className={`mb-3 p-3 bg-white dark:bg-gray-800 rounded-full shadow-md ${
                 !canClaim() && "opacity-60"
               }`}
             >
-              <HandCoins className={`w-6 h-6 ${
-                canClaim() ? "text-amber-600 dark:text-amber-400" : "text-gray-400 dark:text-gray-500"
-              }`} />
+              <HandCoins
+                className={`w-6 h-6 ${
+                  canClaim()
+                    ? "text-amber-600 dark:text-amber-400"
+                    : "text-gray-400 dark:text-gray-500"
+                }`}
+              />
             </motion.div>
-            <span className={`font-medium ${
-              canClaim() ? "text-amber-800 dark:text-amber-200" : "text-gray-500 dark:text-gray-400"
-            }`}>
+            <span
+              className={`font-medium ${
+                canClaim()
+                  ? "text-amber-800 dark:text-amber-200"
+                  : "text-gray-500 dark:text-gray-400"
+              }`}
+            >
               Claim {maxClaim} CELO
             </span>
-            
+
             {!canClaim() && nextClaimTime && (
               <div className="text-xs text-gray-500 dark:text-gray-400 mt-1 flex items-center">
                 <Clock className="w-3 h-3 mr-1" />
-                <motion.span
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                >
+                <motion.span initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
                   {formatDistanceToNow(nextClaimTime, { addSuffix: true })}
                 </motion.span>
               </div>
@@ -260,7 +289,7 @@ export default function HomeTab({
         className="relative overflow-hidden p-5 bg-gradient-to-br from-white to-gray-50 dark:from-gray-800 dark:to-gray-900 rounded-3xl shadow-lg border border-gray-100 dark:border-gray-700/50"
       >
         {/* Background decoration */}
-        <motion.div 
+        <motion.div
           className="absolute -bottom-6 -right-6 w-32 h-32 rounded-full bg-emerald-100/30 dark:bg-emerald-900/20"
           animate={{
             scale: [1, 1.1, 1],
@@ -270,7 +299,7 @@ export default function HomeTab({
         />
 
         <div className="flex items-center gap-3 mb-4">
-          <motion.div 
+          <motion.div
             whileHover={{ rotate: 360 }}
             transition={{ duration: 0.5 }}
             className="bg-gradient-to-br from-emerald-400 to-teal-500 dark:from-emerald-500 dark:to-teal-600 p-2.5 rounded-xl shadow-md"
@@ -282,16 +311,17 @@ export default function HomeTab({
           </h2>
         </div>
 
-        <motion.p 
+        <motion.p
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.5 }}
           className="relative z-10 text-sm leading-relaxed text-gray-600 dark:text-gray-300"
         >
-          Support the Celo ecosystem by donating CELO or claim {maxClaim} CELO (once per day) 
-          to explore the blockchain. Swap tokens to Celo using our bridge and track top 
-          contributors on the leaderboard!
+          Support the Celo ecosystem by donating CELO or claim {maxClaim} CELO
+          (once per day) to explore the blockchain. Swap tokens to Celo using
+          our bridge and track top contributors on the leaderboard!
         </motion.p>
       </motion.div>
     </motion.div>
-  )}
+  );
+}
