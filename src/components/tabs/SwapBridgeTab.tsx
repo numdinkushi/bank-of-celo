@@ -33,7 +33,7 @@ export default function SwapBridgeTab({ isCorrectChain }: SwapBridgeTabProps) {
           toast.error(`Failed to switch to Celo: ${error.message}`);
           console.log("Switch chain error:", error);
         },
-      }
+      },
     );
   }, [switchChain]);
 
@@ -49,51 +49,51 @@ export default function SwapBridgeTab({ isCorrectChain }: SwapBridgeTabProps) {
       transition={{ duration: 0.5 }}
       className="space-y-6"
     >
- 
-
-  <div className="space-y-4">
-    {!isConnected ? (
-      <div className="p-4 text-center bg-gray-50 dark:bg-gray-700 rounded-lg">
-        <p className="text-gray-600 dark:text-gray-300">
-          Connect your wallet to swap or bridge tokens
-        </p>
-      </div>
-    ) : !isCorrectChain ? (
-      <Button
-        onClick={handleSwitchToCelo}
-        disabled={isSwitching}
-        className="w-full bg-blue-600 hover:bg-blue-700 text-white"
-        aria-label="Switch to Celo Network"
-      >
-        {isSwitching ? (
-          <Loader2 className="w-4 h-4 animate-spin mr-2" />
+      <div className="space-y-4">
+        {!isConnected ? (
+          <div className="p-4 text-center bg-gray-50 dark:bg-gray-700 rounded-lg">
+            <p className="text-gray-600 dark:text-gray-300">
+              Connect your wallet to swap or bridge tokens
+            </p>
+          </div>
+        ) : !isCorrectChain ? (
+          <Button
+            onClick={handleSwitchToCelo}
+            disabled={isSwitching}
+            className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+            aria-label="Switch to Celo Network"
+          >
+            {isSwitching ? (
+              <Loader2 className="w-4 h-4 animate-spin mr-2" />
+            ) : (
+              <ArrowLeftRight className="w-4 h-4 mr-2" />
+            )}
+            Switch to Celo Network
+          </Button>
+        ) : !isWidgetReady ? (
+          <div className="flex items-center justify-center p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+            <Loader2 className="w-5 h-5 animate-spin text-blue-500 mr-2" />
+            <span className="text-gray-600 dark:text-gray-300">
+              Loading widget...
+            </span>
+          </div>
         ) : (
-          <ArrowLeftRight className="w-4 h-4 mr-2" />
+          <div className="w-full max-w-3xl">
+            <SquidWidget
+              config={{
+                integratorId: "bankofcelo-752296ef-d9ff-4804-90a5-fab73df78117",
+                apiUrl: "https://v2.api.squidrouter.com",
+              }}
+            />
+          </div>
         )}
-        Switch to Celo Network
-      </Button>
-    ) : !isWidgetReady ? (
-      <div className="flex items-center justify-center p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
-        <Loader2 className="w-5 h-5 animate-spin text-blue-500 mr-2" />
-        <span className="text-gray-600 dark:text-gray-300">Loading widget...</span>
       </div>
-    ) : (
-        <div className="w-full max-w-3xl">
-          <SquidWidget
-            config={{
-              integratorId: "bankofcelo-752296ef-d9ff-4804-90a5-fab73df78117",
-              apiUrl: "https://v2.api.squidrouter.com",
-            }}
-          />
-        </div>
-
-    )}
-  </div>
-
 
       {/* Bridge Information */}
       <div className="p-5 bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700">
-        <h3 className="font-medium text-gray-900 dark:text-white mb-3">How to Bridge</h3>
+        <h3 className="font-medium text-gray-900 dark:text-white mb-3">
+          How to Bridge
+        </h3>
         <div className="space-y-3">
           {[
             "Connect your wallet and ensure you're on the Celo network",

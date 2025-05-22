@@ -19,16 +19,17 @@ export default function Image() {
         }}
       >
         {/* Subtle background pattern */}
-        <div tw="absolute inset-0 opacity-10"
+        <div
+          tw="absolute inset-0 opacity-10"
           style={{
-            backgroundImage: "radial-gradient(circle at 25% 25%, #35D07F 1px, transparent 1px)",
+            backgroundImage:
+              "radial-gradient(circle at 25% 25%, #35D07F 1px, transparent 1px)",
             backgroundSize: "30px 30px",
           }}
         />
-        
+
         {/* Main container */}
         <div tw="flex flex-col items-center justify-center w-full h-full px-4">
-
           {/* Compact Celo logo mark */}
           <div tw="flex mb-4">
             <div tw="flex bg-white/90 p-3 rounded-xl shadow-lg">
@@ -41,7 +42,8 @@ export default function Image() {
           </div>
 
           {/* Scaled-down title */}
-          <h1 tw="text-4xl font-bold text-center mb-1 leading-tight"
+          <h1
+            tw="text-4xl font-bold text-center mb-1 leading-tight"
             style={{
               background: "linear-gradient(90deg, #ffffff 30%, #FBCC5C 100%)",
               backgroundClip: "text",
@@ -54,7 +56,8 @@ export default function Image() {
           </h1>
 
           {/* Adjusted subtitle */}
-          <h2 tw="text-xl text-white/90 text-center mb-6 px-8 leading-tight"
+          <h2
+            tw="text-xl text-white/90 text-center mb-6 px-8 leading-tight"
             style={{
               textShadow: "0 1px 2px rgba(0,0,0,0.4)",
             }}
@@ -62,11 +65,12 @@ export default function Image() {
             The community-powered vault for Celo OGs
           </h2>
 
-
           {/* Compact footer */}
-          <div tw="absolute bottom-0 w-full flex flex-col items-center pb-3"
+          <div
+            tw="absolute bottom-0 w-full flex flex-col items-center pb-3"
             style={{
-              background: "linear-gradient(to top, rgba(0,0,0,0.3) 0%, transparent 70%)",
+              background:
+                "linear-gradient(to top, rgba(0,0,0,0.3) 0%, transparent 70%)",
             }}
           >
             <div tw="text-sm text-white/80 font-medium">Powered by</div>
@@ -77,6 +81,6 @@ export default function Image() {
     ),
     {
       ...size,
-    }
+    },
   );
 }

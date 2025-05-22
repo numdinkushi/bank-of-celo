@@ -1,6 +1,15 @@
 import { Metadata } from "next";
 import App from "./app";
-import { APP_URL, APP_NAME, APP_DESCRIPTION, APP_OG_IMAGE_URL, APP_ICON_URL, APP_SPLASH_URL, APP_SPLASH_BACKGROUND_COLOR, APP_BUTTON_TEXT } from "~/lib/constants";
+import {
+  APP_URL,
+  APP_NAME,
+  APP_DESCRIPTION,
+  APP_OG_IMAGE_URL,
+  APP_ICON_URL,
+  APP_SPLASH_URL,
+  APP_SPLASH_BACKGROUND_COLOR,
+  APP_BUTTON_TEXT,
+} from "~/lib/constants";
 
 const framePreviewMetadata = {
   version: "next",
@@ -34,5 +43,5 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default function Home() {
-  return (<App />);
+  return <App />;
 }
