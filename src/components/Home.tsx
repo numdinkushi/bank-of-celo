@@ -3,7 +3,16 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { useAccount, useDisconnect, useConnect, usePublicClient, useWriteContract, useSwitchChain, useChainId, useSendTransaction } from "wagmi";
+import {
+  useAccount,
+  useDisconnect,
+  useConnect,
+  usePublicClient,
+  useWriteContract,
+  useSwitchChain,
+  useChainId,
+  useSendTransaction,
+} from "wagmi";
 import { useSession } from "next-auth/react";
 import { signOut } from "next-auth/react";
 import sdk from "@farcaster/frame-sdk";
@@ -11,19 +20,42 @@ import { encodeFunctionData, formatEther, parseEther } from "viem";
 import { useFrame } from "~/components/providers/FrameProvider";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
-import { Wallet, Home, Send, ArrowLeftRight, Trophy, LogOut, ChevronRight, Clock, AlertCircle } from "lucide-react";
+import {
+  Wallet,
+  Home,
+  Send,
+  ArrowLeftRight,
+  Trophy,
+  LogOut,
+  ChevronRight,
+  Clock,
+  AlertCircle,
+} from "lucide-react";
 import { Button } from "~/components/ui/Button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "~/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "~/components/ui/dialog";
 import HomeTab from "~/components/tabs/HomeTab";
 import TransactTab from "~/components/tabs/TransactTab";
 import SwapBridgeTab from "~/components/tabs/SwapBridgeTab";
 import { truncateAddress } from "~/lib/truncateAddress";
 import LeaderboardTab from "./tabs/LeaderboardTab";
-import { BANK_OF_CELO_CONTRACT_ABI, BANK_OF_CELO_CONTRACT_ADDRESS } from "~/lib/constants";
+import {
+  BANK_OF_CELO_CONTRACT_ABI,
+  BANK_OF_CELO_CONTRACT_ADDRESS,
+} from "~/lib/constants";
 import { celo } from "viem/chains";
-import { getDataSuffix, submitReferral } from '@divvi/referral-sdk';
+import { getDataSuffix, submitReferral } from "@divvi/referral-sdk";
 
-export default function BankOfCelo({ title = "Bank of Celo" }: { title?: string }) {
+export default function BankOfCelo({
+  title = "Bank of Celo",
+}: {
+  title?: string;
+}) {
   const { address, isConnected, chain } = useAccount();
   const { disconnect } = useDisconnect();
   const { connect, connectors } = useConnect();
@@ -95,7 +127,11 @@ export default function BankOfCelo({ title = "Bank of Celo" }: { title?: string 
       ]);
 
       const [status, cooldown, lastClaim, maxClaimAmount] = data;
-      const [currentBalance, minReserve, availableForClaims] = status as [bigint, bigint, bigint];
+      const [currentBalance, minReserve, availableForClaims] = status as [
+        bigint,
+        bigint,
+        bigint,
+      ];
 
       const newVaultStatus = {
         currentBalance: formatEther(currentBalance),
@@ -114,10 +150,22 @@ export default function BankOfCelo({ title = "Bank of Celo" }: { title?: string 
         }
         return newVaultStatus;
       });
-      setVaultBalance((prev) => (prev === formatEther(currentBalance) ? prev : formatEther(currentBalance)));
-      setClaimCooldown((prev) => (prev === Number(cooldown) ? prev : Number(cooldown)));
-      setLastClaimAt((prev) => (prev === Number(lastClaim) ? prev : Number(lastClaim)));
-      setMaxClaim((prev) => (prev === formatEther(maxClaimAmount as bigint) ? prev : formatEther(maxClaimAmount as bigint)));
+      setVaultBalance((prev) =>
+        prev === formatEther(currentBalance)
+          ? prev
+          : formatEther(currentBalance),
+      );
+      setClaimCooldown((prev) =>
+        prev === Number(cooldown) ? prev : Number(cooldown),
+      );
+      setLastClaimAt((prev) =>
+        prev === Number(lastClaim) ? prev : Number(lastClaim),
+      );
+      setMaxClaim((prev) =>
+        prev === formatEther(maxClaimAmount as bigint)
+          ? prev
+          : formatEther(maxClaimAmount as bigint),
+      );
     } catch (error) {
       console.error("Failed to fetch contract data:", error);
       toast.error("Failed to fetch contract data. Please try again.");
@@ -146,28 +194,34 @@ export default function BankOfCelo({ title = "Bank of Celo" }: { title?: string 
       toast.error("Please switch to Celo Network");
       return;
     }
-  
+
     if (Number(amount) <= 0) {
       toast.error("Please enter a valid amount");
       return;
     }
-  
+
     try {
       // 1. Encode the donate function call
       const donateData = encodeFunctionData({
         abi: BANK_OF_CELO_CONTRACT_ABI,
         functionName: "donate",
       });
-  
+
       // 2. Get the referral data suffix
       const dataSuffix = getDataSuffix({
-        consumer: '0xC5337CeE97fF5B190F26C4A12341dd210f26e17c',
-        providers: ['0x5f0a55FaD9424ac99429f635dfb9bF20c3360Ab8', '0x6226ddE08402642964f9A6de844ea3116F0dFc7e'],
+        consumer: "0xC5337CeE97fF5B190F26C4A12341dd210f26e17c",
+        providers: [
+          "0x5f0a55FaD9424ac99429f635dfb9bF20c3360Ab8",
+          "0x6226ddE08402642964f9A6de844ea3116F0dFc7e",
+        ],
       });
-  
+
       // 3. Properly combine the data
-      const combinedData = dataSuffix ? donateData + (dataSuffix.startsWith("0x") ? dataSuffix.slice(2) : dataSuffix) : donateData;
-  
+      const combinedData = dataSuffix
+        ? donateData +
+          (dataSuffix.startsWith("0x") ? dataSuffix.slice(2) : dataSuffix)
+        : donateData;
+
       // 4. Send the transaction
       const hash = await sendTransactionAsync({
         to: BANK_OF_CELO_CONTRACT_ADDRESS as `0x${string}`,
@@ -175,14 +229,19 @@ export default function BankOfCelo({ title = "Bank of Celo" }: { title?: string 
         value: parseEther(amount),
         chainId: CELO_CHAIN_ID,
       });
-  
+
       // 5. Show success toast and update contract data immediately
-      toast.success(`Donation successful! Transaction hash: ${hash.slice(0, 6)}...`);
+      toast.success(
+        `Donation successful! Transaction hash: ${hash.slice(0, 6)}...`,
+      );
       fetchContractData();
-  
+
       // 6. Report to Divi in a separate try-catch
       try {
-        console.log("Submitting referral to Divi:", { txHash: hash, chainId: CELO_CHAIN_ID });
+        console.log("Submitting referral to Divi:", {
+          txHash: hash,
+          chainId: CELO_CHAIN_ID,
+        });
         await submitReferral({
           txHash: hash,
           chainId: CELO_CHAIN_ID,
@@ -191,16 +250,21 @@ export default function BankOfCelo({ title = "Bank of Celo" }: { title?: string 
       } catch (diviError) {
         console.error("Divi submitReferral error:", diviError);
         // Optionally show a warning toast, but don't mark donation as failed
-        toast.warning("Donation succeeded, but referral tracking failed. We're looking into it.");
+        toast.warning(
+          "Donation succeeded, but referral tracking failed. We're looking into it.",
+        );
       }
     } catch (error) {
       console.error("Donation error:", error);
-      toast.error(`Donation failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      toast.error(
+        `Donation failed: ${error instanceof Error ? error.message : "Unknown error"}`,
+      );
     }
   };
 
   const handleConnect = () => {
-    const connector = connectors.find((c) => c.id === "injected") || connectors[0]; // Prefer injected (MetaMask) or fallback
+    const connector =
+      connectors.find((c) => c.id === "injected") || connectors[0]; // Prefer injected (MetaMask) or fallback
     connect({
       connector,
       chainId: CELO_CHAIN_ID,
@@ -242,7 +306,7 @@ export default function BankOfCelo({ title = "Bank of Celo" }: { title?: string 
     >
       {/* Network Warning Banner */}
       {isConnected && !isCorrectChain && (
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           className="bg-amber-100 dark:bg-amber-900/50 border-l-4 border-amber-500 dark:border-amber-400 p-3 text-center flex flex-col sm:flex-row items-center justify-center gap-3"
@@ -285,9 +349,10 @@ export default function BankOfCelo({ title = "Bank of Celo" }: { title?: string 
               Welcome to Bank of Celo!
             </DialogTitle>
             <DialogDescription className="text-center text-gray-600 dark:text-gray-300 mt-2">
-              The decentralized vault supporting the Celo ecosystem. Donate to help grow the community
-              or claim {maxClaim} CELO to explore decentralized finance. Swap tokens seamlessly or
-              check the leaderboard to see top contributors!
+              The decentralized vault supporting the Celo ecosystem. Donate to
+              help grow the community or claim {maxClaim} CELO to explore
+              decentralized finance. Swap tokens seamlessly or check the
+              leaderboard to see top contributors!
             </DialogDescription>
           </DialogHeader>
           <div className="mt-6 flex flex-col gap-3">
@@ -402,9 +467,17 @@ export default function BankOfCelo({ title = "Bank of Celo" }: { title?: string 
       >
         {[
           { id: "home", icon: <Home className="w-5 h-5" />, label: "Home" },
-          { id: "transact", icon: <Send className="w-5 h-5" />, label: "Transact" },
+          {
+            id: "transact",
+            icon: <Send className="w-5 h-5" />,
+            label: "Transact",
+          },
           // { id: "swap", icon: <ArrowLeftRight className="w-5 h-5" />, label: "Swap" },
-          { id: "leaderboard", icon: <Trophy className="w-5 h-5" />, label: "Leaderboard" },
+          {
+            id: "leaderboard",
+            icon: <Trophy className="w-5 h-5" />,
+            label: "Leaderboard",
+          },
         ].map((tab) => (
           <button
             key={tab.id}

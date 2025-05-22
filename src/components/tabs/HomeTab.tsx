@@ -34,7 +34,9 @@ export default function HomeTab({
     return now >= lastClaimAt + claimCooldown;
   };
 
-  const nextClaimTime = lastClaimAt ? new Date((lastClaimAt + claimCooldown) * 1000) : null;
+  const nextClaimTime = lastClaimAt
+    ? new Date((lastClaimAt + claimCooldown) * 1000)
+    : null;
 
   return (
     <motion.div
@@ -45,7 +47,9 @@ export default function HomeTab({
     >
       {/* Vault Balance Card */}
       <div className="p-6 bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 text-center">
-        <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">Vault Balance</p>
+        <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">
+          Vault Balance
+        </p>
         {isLoading ? (
           <div className="h-10 flex items-center justify-center">
             <div className="w-8 h-8 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin" />
@@ -61,11 +65,14 @@ export default function HomeTab({
             <span className="text-3xl font-bold text-emerald-600 dark:text-emerald-400">
               {parseFloat(vaultBalance).toFixed(2)}
             </span>
-            <span className="text-lg text-gray-600 dark:text-gray-300">CELO</span>
+            <span className="text-lg text-gray-600 dark:text-gray-300">
+              CELO
+            </span>
           </motion.div>
         )}
         <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
-          Available for Claims: {parseFloat(vaultStatus.availableForClaims).toFixed(2)} CELO
+          Available for Claims:{" "}
+          {parseFloat(vaultStatus.availableForClaims).toFixed(2)} CELO
         </p>
       </div>
 
@@ -78,7 +85,9 @@ export default function HomeTab({
           aria-label="Donate to the vault"
         >
           <Gift className="w-6 h-6 text-emerald-600 dark:text-emerald-400 mb-2" />
-          <span className="font-medium text-emerald-700 dark:text-emerald-300">Donate</span>
+          <span className="font-medium text-emerald-700 dark:text-emerald-300">
+            Donate
+          </span>
         </Button>
         <Button
           onClick={() => onNavigate?.("transact")}
@@ -87,7 +96,9 @@ export default function HomeTab({
           aria-label={`Claim ${maxClaim} CELO`}
         >
           <HandCoins className="w-6 h-6 text-amber-600 dark:text-amber-400 mb-2" />
-          <span className="font-medium text-amber-700 dark:text-amber-300">{maxClaim} CELO</span>
+          <span className="font-medium text-amber-700 dark:text-amber-300">
+            {maxClaim} CELO
+          </span>
           {!canClaim() && nextClaimTime && (
             <span className="text-xs text-amber-600 dark:text-amber-400 mt-1 flex items-center">
               <Clock className="w-3 h-3 mr-1" />
@@ -103,11 +114,14 @@ export default function HomeTab({
           <div className="bg-emerald-100 dark:bg-emerald-900 p-2 rounded-lg">
             <Info className="w-5 h-5 text-emerald-600 dark:text-emerald-300" />
           </div>
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">About Bank of Celo</h2>
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+            About Bank of Celo
+          </h2>
         </div>
         <p className="text-sm text-gray-600 dark:text-gray-300">
-          Support the Celo ecosystem by donating CELO to the vault or claim {maxClaim} CELO to explore and support builders and OGs on the Celo blockchain.
-          Track top contributors on the leaderboard!
+          Support the Celo ecosystem by donating CELO to the vault or claim{" "}
+          {maxClaim} CELO to explore and support builders and OGs on the Celo
+          blockchain. Track top contributors on the leaderboard!
         </p>
       </div>
     </motion.div>

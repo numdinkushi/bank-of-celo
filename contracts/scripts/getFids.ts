@@ -11,28 +11,30 @@ async function main() {
   // Contract ABI (simplified to just the events we need)
   const abi = [
     {
-      "anonymous": false,
-      "inputs": [
-        { "indexed": true, "name": "recipient", "type": "address" },
-        { "indexed": false, "name": "fid", "type": "uint256" },
-        { "indexed": false, "name": "amount", "type": "uint256" }
+      anonymous: false,
+      inputs: [
+        { indexed: true, name: "recipient", type: "address" },
+        { indexed: false, name: "fid", type: "uint256" },
+        { indexed: false, name: "amount", type: "uint256" },
       ],
-      "name": "Claimed",
-      "type": "event"
+      name: "Claimed",
+      type: "event",
     },
     {
-      "anonymous": false,
-      "inputs": [
-        { "indexed": true, "name": "operator", "type": "address" },
-        { "indexed": true, "name": "claimer", "type": "address" },
-        { "indexed": false, "name": "fid", "type": "uint256" }
+      anonymous: false,
+      inputs: [
+        { indexed: true, name: "operator", type: "address" },
+        { indexed: true, name: "claimer", type: "address" },
+        { indexed: false, name: "fid", type: "uint256" },
       ],
-      "name": "GaslessClaimExecuted",
-      "type": "event"
-    }
+      name: "GaslessClaimExecuted",
+      type: "event",
+    },
   ];
 
-  console.log(`⏳ Fetching all claimed FIDs from block ${deploymentBlock} to ${currentBlock}...`);
+  console.log(
+    `⏳ Fetching all claimed FIDs from block ${deploymentBlock} to ${currentBlock}...`,
+  );
 
   // Get all Claimed events
   const claimedEvents = await publicClient.getContractEvents({
@@ -40,7 +42,7 @@ async function main() {
     abi,
     eventName: "Claimed",
     fromBlock: deploymentBlock,
-    toBlock: currentBlock
+    toBlock: currentBlock,
   });
 
   // Get all GaslessClaimExecuted events
@@ -49,10 +51,12 @@ async function main() {
     abi,
     eventName: "GaslessClaimExecuted",
     fromBlock: deploymentBlock,
-    toBlock: currentBlock
+    toBlock: currentBlock,
   });
 
-  console.log(`ℹ️ Found ${claimedEvents.length} Claimed events and ${gaslessEvents.length} GaslessClaimExecuted events`);
+  console.log(
+    `ℹ️ Found ${claimedEvents.length} Claimed events and ${gaslessEvents.length} GaslessClaimExecuted events`,
+  );
 
   // Combine and deduplicate FIDs
   const allFids = new Set<bigint>();
@@ -75,16 +79,16 @@ async function main() {
 
   // Convert to sorted array
   const sortedFids = Array.from(allFids)
-    .map(fid => fid.toString())
-    .sort((a, b) => BigInt(a) - BigInt(b) < 0n ? -1 : 1);
+    .map((fid) => fid.toString())
+    .sort((a, b) => (BigInt(a) - BigInt(b) < 0n ? -1 : 1));
 
   console.log(`\n✅ Found ${sortedFids.length} unique claimed FIDs:`);
   console.log(sortedFids.join(", "));
 
   // Save to a file
   if (sortedFids.length > 0) {
-    const fs = require('fs');
-    fs.writeFileSync('claimed-fids.json', JSON.stringify(sortedFids, null, 2));
+    const fs = require("fs");
+    fs.writeFileSync("claimed-fids.json", JSON.stringify(sortedFids, null, 2));
     console.log("\n📄 Saved to claimed-fids.json");
   } else {
     console.log("\n❌ No claimed FIDs found. Possible issues:");

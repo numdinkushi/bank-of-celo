@@ -9,7 +9,10 @@ import { Trophy, Loader2, Award, ChevronDown, ChevronUp } from "lucide-react";
 import { Button } from "~/components/ui/Button";
 import { truncateAddress } from "~/lib/truncateAddress";
 import { toast } from "sonner";
-import { BANK_OF_CELO_CONTRACT_ABI, BANK_OF_CELO_CONTRACT_ADDRESS } from "~/lib/constants";
+import {
+  BANK_OF_CELO_CONTRACT_ABI,
+  BANK_OF_CELO_CONTRACT_ADDRESS,
+} from "~/lib/constants";
 import { celo } from "viem/chains";
 
 interface Donor {
@@ -22,7 +25,9 @@ interface LeaderboardTabProps {
   isCorrectChain?: boolean;
 }
 
-export default function LeaderboardTab({ isCorrectChain = true }: LeaderboardTabProps) {
+export default function LeaderboardTab({
+  isCorrectChain = true,
+}: LeaderboardTabProps) {
   const publicClient = usePublicClient();
   const { address } = useAccount();
   const [donors, setDonors] = useState<Donor[]>([]);
@@ -39,19 +44,22 @@ export default function LeaderboardTab({ isCorrectChain = true }: LeaderboardTab
       }
 
       // Get top donors from contract
-      const leaderboard = await publicClient.readContract({
+      const leaderboard = (await publicClient.readContract({
         address: BANK_OF_CELO_CONTRACT_ADDRESS as `0x${string}`,
         abi: BANK_OF_CELO_CONTRACT_ABI,
         functionName: "getLeaderboard",
-      }) as any[];
+      })) as any[];
 
       // Format donor data
       const formattedDonors = leaderboard
-        .filter(entry => entry.donor !== "0x0000000000000000000000000000000000000000")
+        .filter(
+          (entry) =>
+            entry.donor !== "0x0000000000000000000000000000000000000000",
+        )
         .map((entry, index) => ({
           donor: entry.donor,
           amount: formatEther(entry.amount),
-          rank: index + 1
+          rank: index + 1,
         }));
 
       setDonors(formattedDonors);
@@ -67,14 +75,18 @@ export default function LeaderboardTab({ isCorrectChain = true }: LeaderboardTab
   // Check if current user is in the leaderboard
   const getUserRank = () => {
     if (!address) return null;
-    return donors.findIndex(donor => donor.donor.toLowerCase() === address.toLowerCase()) + 1;
+    return (
+      donors.findIndex(
+        (donor) => donor.donor.toLowerCase() === address.toLowerCase(),
+      ) + 1
+    );
   };
 
   const userRank = getUserRank();
 
   useEffect(() => {
     fetchLeaderboard();
-    
+
     // Watch for new donations
     const unwatch = publicClient?.watchContractEvent({
       address: BANK_OF_CELO_CONTRACT_ADDRESS as `0x${string}`,
@@ -106,7 +118,11 @@ export default function LeaderboardTab({ isCorrectChain = true }: LeaderboardTab
             disabled={isLoading || !isCorrectChain}
             className="text-xs font-medium bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 rounded-full px-3 py-1.5"
           >
-            {isLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : "Refresh"}
+            {isLoading ? (
+              <Loader2 className="w-3 h-3 animate-spin" />
+            ) : (
+              "Refresh"
+            )}
           </Button>
         </div>
 
@@ -137,22 +153,34 @@ export default function LeaderboardTab({ isCorrectChain = true }: LeaderboardTab
                   exit={{ opacity: 0, y: 10 }}
                   transition={{ delay: index * 0.05 }}
                   className={`overflow-hidden rounded-lg ${
-                    expandedDonor === donor.donor 
+                    expandedDonor === donor.donor
                       ? "bg-purple-50 dark:bg-purple-900/30 border border-purple-100 dark:border-purple-800"
                       : "bg-gray-50 dark:bg-gray-700"
-                  } ${donor.donor === address ? 'ring-2 ring-purple-500' : ''}`}
+                  } ${donor.donor === address ? "ring-2 ring-purple-500" : ""}`}
                 >
                   <button
-                    onClick={() => setExpandedDonor(expandedDonor === donor.donor ? null : donor.donor)}
+                    onClick={() =>
+                      setExpandedDonor(
+                        expandedDonor === donor.donor ? null : donor.donor,
+                      )
+                    }
                     className="w-full flex items-center p-3"
                   >
                     <div className="flex items-center w-full">
-                      <div className={`w-8 h-8 flex items-center justify-center rounded-full mr-3 ${
-                        index < 3 ? 'bg-gradient-to-br from-yellow-400 to-yellow-600' : 'bg-purple-100 dark:bg-purple-900'
-                      }`}>
-                        <span className={`text-sm font-bold ${
-                          index < 3 ? 'text-white' : 'text-purple-600 dark:text-purple-300'
-                        }`}>
+                      <div
+                        className={`w-8 h-8 flex items-center justify-center rounded-full mr-3 ${
+                          index < 3
+                            ? "bg-gradient-to-br from-yellow-400 to-yellow-600"
+                            : "bg-purple-100 dark:bg-purple-900"
+                        }`}
+                      >
+                        <span
+                          className={`text-sm font-bold ${
+                            index < 3
+                              ? "text-white"
+                              : "text-purple-600 dark:text-purple-300"
+                          }`}
+                        >
                           {index + 1}
                         </span>
                       </div>
@@ -176,7 +204,7 @@ export default function LeaderboardTab({ isCorrectChain = true }: LeaderboardTab
                       )}
                     </div>
                   </button>
-                  
+
                   {expandedDonor === donor.donor && (
                     <motion.div
                       initial={{ height: 0, opacity: 0 }}
@@ -215,7 +243,9 @@ export default function LeaderboardTab({ isCorrectChain = true }: LeaderboardTab
         <div className="p-5 bg-gradient-to-r from-purple-50 to-blue-50 dark:from-purple-900/30 dark:to-blue-900/30 rounded-2xl border border-purple-100 dark:border-purple-800">
           <div className="flex items-center gap-3 mb-3">
             <Award className="w-5 h-5 text-purple-600 dark:text-purple-300" />
-            <h3 className="font-medium text-gray-900 dark:text-white">Top Donor</h3>
+            <h3 className="font-medium text-gray-900 dark:text-white">
+              Top Donor
+            </h3>
           </div>
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 flex items-center justify-center bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-full">
@@ -237,7 +267,8 @@ export default function LeaderboardTab({ isCorrectChain = true }: LeaderboardTab
       {userRank !== null && userRank > donors.length && (
         <div className="p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
           <p className="text-sm text-center text-gray-600 dark:text-gray-300">
-            Your rank: #{userRank} with {donors[userRank - 1]?.amount || '0'} CELO donated
+            Your rank: #{userRank} with {donors[userRank - 1]?.amount || "0"}{" "}
+            CELO donated
           </p>
         </div>
       )}

@@ -13,10 +13,10 @@ export async function GET(req: NextRequest) {
       `https://api.neynar.com/v2/farcaster/user/bulk-by-address?addresses=${address}`,
       {
         headers: {
-          "accept": "application/json",
-          "api_key": process.env.NEYNAR_API_KEY || "",
+          accept: "application/json",
+          api_key: process.env.NEYNAR_API_KEY || "",
         },
-      }
+      },
     );
 
     if (!response.ok) {
@@ -28,15 +28,20 @@ export async function GET(req: NextRequest) {
     const fid = user?.[0]?.fid;
 
     if (!fid) {
-      return NextResponse.json({ fid: null, error: "No FID found for this address" }, { status: 404 });
+      return NextResponse.json(
+        { fid: null, error: "No FID found for this address" },
+        { status: 404 },
+      );
     }
 
     return NextResponse.json({ fid });
   } catch (error) {
     console.error("Neynar API error:", error);
     return NextResponse.json(
-      { error: `Failed to fetch FID: ${error instanceof Error ? error.message : "Unknown error"}` },
-      { status: 500 }
+      {
+        error: `Failed to fetch FID: ${error instanceof Error ? error.message : "Unknown error"}`,
+      },
+      { status: 500 },
     );
   }
 }

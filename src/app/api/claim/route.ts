@@ -3,16 +3,23 @@ import { NextRequest, NextResponse } from "next/server";
 import { createPublicClient, createWalletClient, http, parseEther } from "viem";
 import { celo } from "viem/chains";
 import { privateKeyToAccount } from "viem/accounts";
-import { BANK_OF_CELO_CONTRACT_ABI, BANK_OF_CELO_CONTRACT_ADDRESS } from "~/lib/constants";
+import {
+  BANK_OF_CELO_CONTRACT_ABI,
+  BANK_OF_CELO_CONTRACT_ADDRESS,
+} from "~/lib/constants";
 import { encodeFunctionData } from "viem";
 import { submitReferral } from "@divvi/referral-sdk";
 
 export async function POST(req: NextRequest) {
   try {
-    const { address, fid, deadline, signature, nonce, dataSuffix } = await req.json();
+    const { address, fid, deadline, signature, nonce, dataSuffix } =
+      await req.json();
 
     if (!address || !fid || !deadline || !signature || nonce === undefined) {
-      return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Missing required fields" },
+        { status: 400 },
+      );
     }
 
     // Initialize public client
@@ -22,7 +29,9 @@ export async function POST(req: NextRequest) {
     });
 
     // Check user's CELO balance
-    const balance = await publicClient.getBalance({ address: address as `0x${string}` });
+    const balance = await publicClient.getBalance({
+      address: address as `0x${string}`,
+    });
     const minBalance = parseEther("0.001"); // Minimum to cover gas (~0.001 CELO)
 
     if (balance > minBalance) {
@@ -41,7 +50,10 @@ export async function POST(req: NextRequest) {
         args: [BigInt(fid), BigInt(deadline), signature],
       });
 
-      const finalData = dataSuffix ? contractData + (dataSuffix.startsWith("0x") ? dataSuffix.slice(2) : dataSuffix) : contractData;
+      const finalData = dataSuffix
+        ? contractData +
+          (dataSuffix.startsWith("0x") ? dataSuffix.slice(2) : dataSuffix)
+        : contractData;
 
       const txRequest = {
         to: BANK_OF_CELO_CONTRACT_ADDRESS as `0x${string}`,
@@ -57,16 +69,18 @@ export async function POST(req: NextRequest) {
       });
     } else {
       // User has no CELO: Use private key to call executeGaslessClaim
-      const privateKey =process.env.SPONSOR_PRIVATE_KEY;
+      const privateKey = process.env.SPONSOR_PRIVATE_KEY;
       if (!privateKey) {
-        throw new Error("SPONSOR_PRIVATE_KEY not configured in environment variables");
+        throw new Error(
+          "SPONSOR_PRIVATE_KEY not configured in environment variables",
+        );
       }
 
       // Validate private key format
       const hexRegex = /^0x[0-9a-fA-F]{64}$/;
       if (!hexRegex.test(privateKey)) {
         throw new Error(
-          "Invalid SPONSOR_PRIVATE_KEY: must be a 64-character hex string starting with 0x"
+          "Invalid SPONSOR_PRIVATE_KEY: must be a 64-character hex string starting with 0x",
         );
       }
 
@@ -85,7 +99,10 @@ export async function POST(req: NextRequest) {
       });
 
       // Append dataSuffix if provided
-      const finalData = dataSuffix ? contractData + (dataSuffix.startsWith("0x") ? dataSuffix.slice(2) : dataSuffix) : contractData;
+      const finalData = dataSuffix
+        ? contractData +
+          (dataSuffix.startsWith("0x") ? dataSuffix.slice(2) : dataSuffix)
+        : contractData;
 
       // Call executeGaslessClaim
       const hash = await walletClient.sendTransaction({
@@ -116,8 +133,10 @@ export async function POST(req: NextRequest) {
   } catch (error) {
     console.error("Claim error:", error);
     return NextResponse.json(
-      { error: `Failed to process claim: ${error instanceof Error ? error.message : "Unknown error"}` },
-      { status: 500 }
+      {
+        error: `Failed to process claim: ${error instanceof Error ? error.message : "Unknown error"}`,
+      },
+      { status: 500 },
     );
   }
 }

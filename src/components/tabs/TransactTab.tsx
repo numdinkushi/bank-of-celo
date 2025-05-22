@@ -1,13 +1,28 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
-import { Loader2, Send, Gift, HandCoins, Clock, AlertCircle } from "lucide-react";
+import {
+  Loader2,
+  Send,
+  Gift,
+  HandCoins,
+  Clock,
+  AlertCircle,
+} from "lucide-react";
 import { Button } from "~/components/ui/Button";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
 import { Input } from "../ui/input";
-import { useAccount, usePublicClient, useSignTypedData, useSendTransaction } from "wagmi";
-import { BANK_OF_CELO_CONTRACT_ADDRESS, BANK_OF_CELO_CONTRACT_ABI } from "~/lib/constants";
+import {
+  useAccount,
+  usePublicClient,
+  useSignTypedData,
+  useSendTransaction,
+} from "wagmi";
+import {
+  BANK_OF_CELO_CONTRACT_ADDRESS,
+  BANK_OF_CELO_CONTRACT_ABI,
+} from "~/lib/constants";
 import { getDataSuffix, submitReferral } from "@divvi/referral-sdk";
 import { encodeFunctionData, parseEther } from "viem";
 
@@ -79,7 +94,9 @@ export default function TransactTab({
       }
     } catch (error) {
       console.log("Error fetching FID:", error);
-      setFidError(error instanceof Error ? error.message : "Failed to fetch FID");
+      setFidError(
+        error instanceof Error ? error.message : "Failed to fetch FID",
+      );
       setFid(null);
     } finally {
       setFidLoading(false);
@@ -114,7 +131,9 @@ export default function TransactTab({
     return now >= lastClaimAt + claimCooldown;
   };
 
-  const nextClaimTime = lastClaimAt ? new Date((lastClaimAt + claimCooldown) * 1000) : null;
+  const nextClaimTime = lastClaimAt
+    ? new Date((lastClaimAt + claimCooldown) * 1000)
+    : null;
 
   const handleClaim = async () => {
     if (!fid || !address || !publicClient) {
@@ -129,12 +148,12 @@ export default function TransactTab({
       const deadline = Math.floor(Date.now() / 1000) + 3600; // 1 hour from now
 
       // Get current nonce from contract
-      const nonce = await publicClient.readContract({
+      const nonce = (await publicClient.readContract({
         address: BANK_OF_CELO_CONTRACT_ADDRESS,
         abi: BANK_OF_CELO_CONTRACT_ABI,
         functionName: "nonces",
         args: [address],
-      }) as bigint;
+      })) as bigint;
 
       // EIP-712 typed data
       const domain = {
@@ -171,8 +190,11 @@ export default function TransactTab({
       let dataSuffix;
       try {
         dataSuffix = getDataSuffix({
-          consumer: '0xC5337CeE97fF5B190F26C4A12341dd210f26e17c',
-          providers: ['0x5f0a55FaD9424ac99429f635dfb9bF20c3360Ab8', '0x6226ddE08402642964f9A6de844ea3116F0dFc7e'],
+          consumer: "0xC5337CeE97fF5B190F26C4A12341dd210f26e17c",
+          providers: [
+            "0x5f0a55FaD9424ac99429f635dfb9bF20c3360Ab8",
+            "0x6226ddE08402642964f9A6de844ea3116F0dFc7e",
+          ],
         });
       } catch (diviError) {
         console.log("Divi getDataSuffix error:", diviError);
@@ -211,7 +233,9 @@ export default function TransactTab({
         }
 
         setTxHash(hash);
-        toast.success(`Claimed ${maxClaim} CELO! Transaction hash: ${hash.slice(0, 6)}...`);
+        toast.success(
+          `Claimed ${maxClaim} CELO! Transaction hash: ${hash.slice(0, 6)}...`,
+        );
       } else {
         // User has no CELO: Use API route for gasless claim
         const requestBody = {
@@ -248,11 +272,15 @@ export default function TransactTab({
           toast.warning("Claim succeeded, but referral tracking failed");
         }
 
-        toast.success(`Claimed ${maxClaim} CELO (gasless)! Transaction hash: ${result.transactionHash.slice(0, 6)}...`);
+        toast.success(
+          `Claimed ${maxClaim} CELO (gasless)! Transaction hash: ${result.transactionHash.slice(0, 6)}...`,
+        );
       }
     } catch (error) {
       console.log("Claim error:", error);
-      toast.error(error instanceof Error ? error.message : "Failed to process claim");
+      toast.error(
+        error instanceof Error ? error.message : "Failed to process claim",
+      );
     } finally {
       setClaimPending(false);
     }
@@ -274,8 +302,7 @@ export default function TransactTab({
     } else {
       handleClaim();
     }
-  };  
-  
+  };
 
   return (
     <motion.div
@@ -386,7 +413,8 @@ export default function TransactTab({
               <div className="p-3 bg-amber-50 dark:bg-amber-900/30 rounded-lg text-sm text-amber-800 dark:text-amber-200 flex items-center">
                 <Clock className="w-4 h-4 mr-2 flex-shrink-0" />
                 <span>
-                  You can claim again {formatDistanceToNow(nextClaimTime, { addSuffix: true })}
+                  You can claim again{" "}
+                  {formatDistanceToNow(nextClaimTime, { addSuffix: true })}
                 </span>
               </div>
             )}
@@ -410,13 +438,16 @@ export default function TransactTab({
             {fidLoading ? (
               <div className="p-4 text-center bg-gray-50 dark:bg-gray-700 rounded-lg">
                 <Loader2 className="w-5 h-5 animate-spin text-amber-500 mx-auto mb-2" />
-                <p className="text-gray-600 dark:text-gray-300">Fetching Farcaster ID...</p>
+                <p className="text-gray-600 dark:text-gray-300">
+                  Fetching Farcaster ID...
+                </p>
               </div>
             ) : fidError || !fid ? (
               <div className="p-4 text-center bg-red-50 dark:bg-red-900/30 rounded-lg">
                 <AlertCircle className="w-5 h-5 text-red-500 mx-auto mb-2" />
                 <p className="text-sm text-red-700 dark:text-red-300">
-                  {fidError || "No Farcaster ID found. Please link your address to Farcaster to claim."}
+                  {fidError ||
+                    "No Farcaster ID found. Please link your address to Farcaster to claim."}
                 </p>
                 <a
                   href="https://warpcast.com/~/settings"
@@ -448,7 +479,15 @@ export default function TransactTab({
 
             <Button
               onClick={handleSubmit}
-              disabled={isPending || claimPending || !fid || !canClaim() || !!fidError || !isCorrectChain || hasClaimed}
+              disabled={
+                isPending ||
+                claimPending ||
+                !fid ||
+                !canClaim() ||
+                !!fidError ||
+                !isCorrectChain ||
+                hasClaimed
+              }
               className="w-full py-3 bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-700 hover:to-amber-600 text-white"
               aria-label={`Claim ${maxClaim} CELO`}
             >

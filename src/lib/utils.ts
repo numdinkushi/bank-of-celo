@@ -1,9 +1,16 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { type ClassValue, clsx } from 'clsx';
-import { twMerge } from 'tailwind-merge';
-import { mnemonicToAccount } from 'viem/accounts';
-import { APP_BUTTON_TEXT, APP_ICON_URL, APP_NAME, APP_OG_IMAGE_URL, APP_SPLASH_BACKGROUND_COLOR, APP_URL } from './constants';
-import { APP_SPLASH_URL } from './constants';
+import { type ClassValue, clsx } from "clsx";
+import { twMerge } from "tailwind-merge";
+import { mnemonicToAccount } from "viem/accounts";
+import {
+  APP_BUTTON_TEXT,
+  APP_ICON_URL,
+  APP_NAME,
+  APP_OG_IMAGE_URL,
+  APP_SPLASH_BACKGROUND_COLOR,
+  APP_URL,
+} from "./constants";
+import { APP_SPLASH_URL } from "./constants";
 
 interface FrameMetadata {
   accountAssociation?: {
@@ -31,7 +38,7 @@ export function cn(...inputs: ClassValue[]) {
 export function getSecretEnvVars() {
   const seedPhrase = process.env.SEED_PHRASE;
   const fid = process.env.FID;
-  
+
   if (!seedPhrase || !fid) {
     return null;
   }
@@ -44,25 +51,27 @@ export async function getFarcasterMetadata(): Promise<FrameMetadata> {
   if (process.env.FRAME_METADATA) {
     try {
       const metadata = JSON.parse(process.env.FRAME_METADATA);
-      console.log('Using pre-signed frame metadata from environment');
+      console.log("Using pre-signed frame metadata from environment");
       return metadata;
     } catch (error) {
-      console.warn('Failed to parse FRAME_METADATA from environment:', error);
+      console.warn("Failed to parse FRAME_METADATA from environment:", error);
     }
   }
 
   // 2) APP_URL must be set
   if (!APP_URL) {
-    throw new Error('NEXT_PUBLIC_URL (APP_URL) not configured');
+    throw new Error("NEXT_PUBLIC_URL (APP_URL) not configured");
   }
 
   // 3) Hardcoded account association
   const accountAssociation = {
-    header: "eyJmaWQiOjQyMDU2NCwidHlwZSI6ImN1c3RvZHkiLCJrZXkiOiIweGREOGVFNTU1NTc0NGQ2ODQyZTNjNTcyZTQ2RjQyMDkyZWQ3MzI2YjYifQ",
+    header:
+      "eyJmaWQiOjQyMDU2NCwidHlwZSI6ImN1c3RvZHkiLCJrZXkiOiIweGREOGVFNTU1NTc0NGQ2ODQyZTNjNTcyZTQ2RjQyMDkyZWQ3MzI2YjYifQ",
     payload: "eyJkb21haW4iOiJiYW5rLW9mLWNlbG8udmVyY2VsLmFwcCJ9",
-    signature: "MHg0MTI0YWMzZDMwMGJjNWMwMGRhYjFhODgyNmQxYzIyYTk5NDM1OWRmYjA4NWQyNGYwZmQ0YzdmZjk1ZDM2MjcxN2VmZGY2MGU5NzFiNTQ4ODk2NzM2MzlmOWE4ZTVhMjI5N2Q0MGEwYzZkMGE1YjI5OGQwMzZhZWQ4YzYyN2VkMjFj"
+    signature:
+      "MHg0MTI0YWMzZDMwMGJjNWMwMGRhYjFhODgyNmQxYzIyYTk5NDM1OWRmYjA4NWQyNGYwZmQ0YzdmZjk1ZDM2MjcxN2VmZGY2MGU5NzFiNTQ4ODk2NzM2MzlmOWE4ZTVhMjI5N2Q0MGEwYzZkMGE1YjI5OGQwMzZhZWQ4YzYyN2VkMjFj",
   };
-  console.log('Using hardcoded account association');
+  console.log("Using hardcoded account association");
 
   // 4) Determine webhook URL
   const webhookUrl =
@@ -74,12 +83,12 @@ export async function getFarcasterMetadata(): Promise<FrameMetadata> {
   return {
     accountAssociation,
     frame: {
-      version: '1',
-      name: APP_NAME ?? 'Frames v2 Demo',
+      version: "1",
+      name: APP_NAME ?? "Frames v2 Demo",
       iconUrl: APP_ICON_URL,
       homeUrl: APP_URL,
       imageUrl: APP_OG_IMAGE_URL,
-      buttonTitle: APP_BUTTON_TEXT ?? 'Launch Frame',
+      buttonTitle: APP_BUTTON_TEXT ?? "Launch Frame",
       splashImageUrl: APP_SPLASH_URL,
       splashBackgroundColor: APP_SPLASH_BACKGROUND_COLOR,
       webhookUrl,

@@ -10,7 +10,7 @@ const Demo = dynamic(() => import("~/components/Home"), {
 });
 
 export default function App(
-  { title }: { title?: string; } = { title: APP_NAME }
+  { title }: { title?: string } = { title: APP_NAME },
 ) {
   return (
     <>

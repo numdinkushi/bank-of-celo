@@ -5,7 +5,7 @@
 export function truncateAddress(
   str: string,
   front: number = 4,
-  back: number = 3
+  back: number = 3,
 ): string {
   if (str.length <= front + back) {
     return str;

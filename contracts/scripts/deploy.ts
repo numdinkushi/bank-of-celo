@@ -10,7 +10,7 @@ async function main() {
 
   const BocContract = await hre.ethers.getContractFactory("BankOfCelo");
 
-   const factory = await BocContract.deploy(parseEther("5"));
+  const factory = await BocContract.deploy(parseEther("5"));
   await factory.waitForDeployment();
   console.log("Bank Of Celo deployed at:", factory.target);
 }

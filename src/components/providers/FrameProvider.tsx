@@ -1,7 +1,11 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import sdk, { type Context, type FrameNotificationDetails, AddFrame } from "@farcaster/frame-sdk";
+import sdk, {
+  type Context,
+  type FrameNotificationDetails,
+  AddFrame,
+} from "@farcaster/frame-sdk";
 import { createStore } from "mipd";
 import React from "react";
 
@@ -17,24 +21,30 @@ interface FrameContextType {
   addFrameResult: string;
 }
 
-const FrameContext = React.createContext<FrameContextType | undefined>(undefined);
+const FrameContext = React.createContext<FrameContextType | undefined>(
+  undefined,
+);
 
 export function useFrame() {
   const [isSDKLoaded, setIsSDKLoaded] = useState(false);
   const [context, setContext] = useState<Context.FrameContext>();
   const [added, setAdded] = useState(false);
-  const [notificationDetails, setNotificationDetails] = useState<FrameNotificationDetails | null>(null);
+  const [notificationDetails, setNotificationDetails] =
+    useState<FrameNotificationDetails | null>(null);
   const [lastEvent, setLastEvent] = useState("");
   const [addFrameResult, setAddFrameResult] = useState("");
 
   // SDK actions only work in mini app clients, so this pattern supports browser actions as well
-  const openUrl = useCallback(async (url: string) => {
-    if (context) {
-      await sdk.actions.openUrl(url);
-    } else {
-      window.open(url, '_blank');
-    }
-  }, [context]);
+  const openUrl = useCallback(
+    async (url: string) => {
+      if (context) {
+        await sdk.actions.openUrl(url);
+      } else {
+        window.open(url, "_blank");
+      }
+    },
+    [context],
+  );
 
   const close = useCallback(async () => {
     if (context) {
@@ -55,12 +65,15 @@ export function useFrame() {
       setAddFrameResult(
         result.notificationDetails
           ? `Added, got notificaton token ${result.notificationDetails.token} and url ${result.notificationDetails.url}`
-          : "Added, got no notification details"
+          : "Added, got no notification details",
       );
     } catch (error) {
-      if (error instanceof AddFrame.RejectedByUser || error instanceof AddFrame.InvalidDomainManifest) {
+      if (
+        error instanceof AddFrame.RejectedByUser ||
+        error instanceof AddFrame.InvalidDomainManifest
+      ) {
         setAddFrameResult(`Not added: ${error.message}`);
-      }else {
+      } else {
         setAddFrameResult(`Error: ${error}`);
       }
     }
@@ -155,4 +168,4 @@ export function FrameProvider({ children }: { children: React.ReactNode }) {
       {children}
     </FrameContext.Provider>
   );
-} 
+}
