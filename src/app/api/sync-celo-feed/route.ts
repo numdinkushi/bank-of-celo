@@ -1,8 +1,10 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 // app/api/sync-celo-feed/route.ts
 import { NextResponse } from "next/server";
 import { ConvexHttpClient } from "convex/browser";
 import { api } from "../../../../convex/_generated/api";
 
+// Environment variables
 const NEYNAR_API_KEY = process.env.NEYNAR_API_KEY || "";
 const CONVEX_URL = process.env.NEXT_PUBLIC_CONVEX_URL || "";
 
@@ -25,6 +27,7 @@ interface NeynarResponse {
   next?: { cursor: string };
 }
 
+// Initialize Convex client
 const convex = new ConvexHttpClient(CONVEX_URL);
 
 export async function POST() {
@@ -36,12 +39,20 @@ export async function POST() {
 
     // Fetch casts with pagination
     do {
-      const url = `https://api.neynar.com/v2/farcaster/feed/channels?with_recasts=true&members_only=true&limit=${limit}${cursor ? `&cursor=${cursor}` : ""}`;
+      const url = `https://api.neynar.com/v2/farcaster/feed/channels?with_recasts=true&members_only=true&limit=${limit}&channel_ids=celo${cursor ? `&cursor=${cursor}` : ""}`;
       const response = await fetch(url, {
-        headers: { api_key: NEYNAR_API_KEY },
+        method: "GET", // Use GET as per Neynar API documentation
+        headers: {
+          "x-api-key": NEYNAR_API_KEY, // Correct header key
+          "x-neynar-experimental": "false", // Required header
+        },
       });
-      if (!response.ok) throw new Error(`Neynar API error: ${response.status}`);
-      
+
+      if (!response.ok) {
+        const errorBody = await response.text();
+        throw new Error(`Neynar API error: ${response.status} - ${response.statusText} - ${errorBody}`);
+      }
+
       const data: NeynarResponse = await response.json();
       casts = casts.concat(data.casts.filter((cast) => cast.timestamp >= oneWeekAgo));
       cursor = data.next?.cursor || null;
@@ -80,8 +91,11 @@ export async function POST() {
     }
 
     return NextResponse.json({ success: true, castsProcessed: casts.length });
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error syncing Celo feed:", error);
-    return NextResponse.json({ error: "Failed to sync feed" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Failed to sync feed", details: error.message },
+      { status: 500 }
+    );
   }
 }
