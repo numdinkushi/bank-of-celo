@@ -10,10 +10,15 @@ import {
   DollarSign,
   X,
   Shield,
+  Flame,
+  TrendingUp,
+  Award,
+  Clock,
 } from "lucide-react";
 import SelfProtocolComponent from "~/app/services/self-protocol/self";
-import LeaderBoard from "./leader-board/Leaderboard";
+import DonorsLeaderBoard from "./leader-board/DonorsLeaderBoard";
 import Image from "next/image";
+import RewardsLeaderBoard from "./leader-board/RewardsLeaderBoard";
 
 interface BottomSheetProps {
   isOpen: boolean;
@@ -138,6 +143,7 @@ const EarnItem: React.FC<EarnItemProps> = ({ icon, title, description }) => (
 
 export default function WarpcastWalletApp(): JSX.Element {
   const [activeSheet, setActiveSheet] = useState<ActiveSheet>(null);
+  const [activeLeaderboardTab, setActiveLeaderboardTab] = useState<'donors' | 'rewards'>('donors');
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const miniCards: MiniCard[] = [
@@ -202,35 +208,81 @@ export default function WarpcastWalletApp(): JSX.Element {
       <div className="absolute top-0 left-0 w-full h-64 bg-gradient-to-b from-emerald-500/10 to-transparent" />
 
       <div className="relative z-1 p-6 pb-32">
-        {/* Boost Card */}
-        <div className="bg-gradient-to-r from-emerald-500/20 to-emerald-600/20 backdrop-blur-sm rounded-3xl p-6 mb-8 border border-emerald-500/30 shadow-lg">
-          <div className="flex items-start space-x-4">
-            <div className="bg-emerald-500/30 p-3 rounded-xl">
-              <Zap className="w-6 h-6 text-emerald-600" />
-            </div>
-            <div className="flex-1">
-              <h2 className="text-xl font-bold text-gray-900 mb-2">
-                Boost your score by funding your wallet!
-              </h2>
-              <p className="text-gray-700 text-sm leading-relaxed">
-                Users with $50 in their Warpcast Wallet will get a +500 point
-                boost this week.
-              </p>
-            </div>
-          </div>
-        </div>
 
         {/* Score Card */}
-        <div className="bg-gradient-to-r from-emerald-500/20 to-emerald-600/20  backdrop-blur-xl rounded-3xl p-8 mb-8 border border-gray-200/50 shadow-lg">
-          <div className="text-center">
-            <p className="text-gray-600 text-lg mb-4">Your score</p>
-            <div className="text-6xl font-bold text-gray-900 mb-6">
-              &lt; 500
+        <div className="relative bg-gradient-to-br from-emerald-500/20 via-emerald-400/15 to-teal-500/20 backdrop-blur-xl rounded-3xl p-8 mb-8 border border-emerald-200/50 shadow-xl overflow-hidden">
+          {/* Background decorative elements */}
+          <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-emerald-300/20 to-transparent rounded-full -translate-y-16 translate-x-16" />
+          <div className="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-teal-300/20 to-transparent rounded-full translate-y-12 -translate-x-12" />
+          
+          {/* Floating icons */}
+          <div className="absolute top-4 right-4 text-emerald-400/30">
+            <Zap className="w-6 h-6" />
+          </div>
+          <div className="absolute bottom-4 left-4 text-teal-400/30">
+            <Star className="w-5 h-5" />
+          </div>
+          
+          <div className="relative z-10">
+            {/* Header with icon */}
+            <div className="flex items-center justify-center mb-6">
+              <div className="bg-emerald-500/20 p-3 rounded-full mr-3">
+                <TrendingUp className="w-6 h-6 text-emerald-600" />
+              </div>
+              <p className="text-gray-600 text-lg font-medium">Your Score</p>
             </div>
-            <div className="h-px bg-gradient-to-r from-transparent via-gray-300 to-transparent mb-6" />
-            <div className="flex justify-between items-center text-sm">
-              <span className="text-gray-600">Round ends</span>
-              <span className="text-gray-900 font-semibold">5d 17h</span>
+            
+            {/* Main score with decorative elements */}
+            <div className="text-center mb-8">
+              <div className="relative inline-block">
+                <div className="text-7xl font-bold text-gray-900 mb-2 relative">
+                  &lt; 500
+                  <div className="absolute -top-2 -right-2">
+                    <div className="w-4 h-4 bg-emerald-500 rounded-full animate-pulse" />
+                  </div>
+                </div>
+                
+                {/* Score status indicator */}
+                <div className="flex items-center justify-center mt-3 mb-6">
+                  <div className="bg-emerald-100 text-emerald-700 px-4 py-2 rounded-full text-sm font-semibold flex items-center gap-2">
+                    <Flame className="w-4 h-4" />
+                    Growing
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Enhanced divider */}
+            <div className="relative mb-6">
+              <div className="h-px bg-gradient-to-r from-transparent via-emerald-300/50 to-transparent" />
+              <div className="absolute left-1/2 top-0 transform -translate-x-1/2 -translate-y-1/2">
+                <div className="w-2 h-2 bg-emerald-400 rounded-full" />
+              </div>
+            </div>
+            
+            {/* Bottom info with enhanced styling */}
+            <div className="flex justify-between items-center">
+              <div className="flex items-center gap-2 text-gray-600">
+                <Clock className="w-4 h-4 text-emerald-500" />
+                <span className="text-sm font-medium">Round ends</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="bg-orange-100 text-orange-700 px-3 py-1 rounded-full text-sm font-bold flex items-center gap-1">
+                  <div className="w-2 h-2 bg-orange-500 rounded-full animate-pulse" />
+                  5d 17h
+                </div>
+              </div>
+            </div>
+            
+            {/* Additional stats row */}
+            <div className="mt-6 pt-6 border-t border-emerald-200/30">
+              <div className="flex justify-between items-center text-sm">
+                <div className="flex items-center gap-2 text-gray-600">
+                  <Award className="w-4 h-4 text-purple-500" />
+                  <span>Current Rank</span>
+                </div>
+                <span className="text-gray-700 font-semibold">Unranked</span>
+              </div>
             </div>
           </div>
         </div>
@@ -249,17 +301,16 @@ export default function WarpcastWalletApp(): JSX.Element {
             >
               <div className="flex flex-col items-start">
                 <div
-                  className={`p-2 rounded-lg mb-2 ${
-                    card.iconColor === "purple"
-                      ? "bg-purple-100"
-                      : card.iconColor === "emerald"
-                        ? "bg-emerald-100"
-                        : card.iconColor === "blue"
-                          ? "bg-blue-100"
-                          : card.iconColor === "gold"
-                            ? "bg-yellow-100"
-                            : "bg-gray-200"
-                  }`}
+                  className={`p-2 rounded-lg mb-2 ${card.iconColor === "purple"
+                    ? "bg-purple-100"
+                    : card.iconColor === "emerald"
+                      ? "bg-emerald-100"
+                      : card.iconColor === "blue"
+                        ? "bg-blue-100"
+                        : card.iconColor === "gold"
+                          ? "bg-yellow-100"
+                          : "bg-gray-200"
+                    }`}
                 >
                   {card.icon}
                 </div>
@@ -405,9 +456,37 @@ export default function WarpcastWalletApp(): JSX.Element {
         onClose={closeSheet}
         title="Leaderboard"
       >
-        <div className="text-center py-12">
-          <Users className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-          <LeaderBoard />
+        <div>
+          {/* Tab Navigation */}
+          <div className="flex bg-gray-700/50 rounded-xl p-1 mb-6">
+            <button
+              onClick={() => setActiveLeaderboardTab('donors')}
+              className={`flex-1 py-3 px-4 rounded-lg font-medium text-sm transition-all duration-200 ${activeLeaderboardTab === 'donors'
+                ? 'bg-emerald-600 text-white shadow-lg'
+                : 'text-gray-300 hover:text-white hover:bg-gray-600/50'
+                }`}
+            >
+              Donors
+            </button>
+            <button
+              onClick={() => setActiveLeaderboardTab('rewards')}
+              className={`flex-1 py-3 px-4 rounded-lg font-medium text-sm transition-all duration-200 ${activeLeaderboardTab === 'rewards'
+                ? 'bg-emerald-600 text-white shadow-lg'
+                : 'text-gray-300 hover:text-white hover:bg-gray-600/50'
+                }`}
+            >
+              Rewards
+            </button>
+          </div>
+
+          {/* Tab Content */}
+          <div className="min-h-[400px]">
+            {activeLeaderboardTab === 'donors' ? (
+              <DonorsLeaderBoard />
+            ) : (
+              <RewardsLeaderBoard />
+            )}
+          </div>
         </div>
       </BottomSheet>
 
@@ -422,4 +501,4 @@ export default function WarpcastWalletApp(): JSX.Element {
       `}</style>
     </div>
   );
-}
+};;

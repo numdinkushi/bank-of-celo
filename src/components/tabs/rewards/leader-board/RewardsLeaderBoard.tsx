@@ -32,7 +32,7 @@ interface LeaderBoardProps {
   isCorrectChain?: boolean;
 }
 
-export default function LeaderBoard({
+export default function DonorsLeaderBoard({
   isCorrectChain = true,
 }: LeaderBoardProps) {
   const publicClient = usePublicClient();
@@ -119,7 +119,7 @@ export default function LeaderBoard({
               <div className="bg-purple-100 dark:bg-purple-900 p-2 rounded-lg">
                 <Trophy className="w-5 h-5 text-purple-600 dark:text-purple-300" />
               </div>
-              <span className="text-gray-900 dark:text-white">Top Donors</span>
+              <span className="text-gray-900 dark:text-white">Celo Rewards</span>
             </h2>
             <button
               onClick={fetchLeaderboard}
@@ -132,6 +132,10 @@ export default function LeaderBoard({
                 <RefreshCcw />
               )}
             </button>
+          </div>
+          <div className="p-5 mb-4 bg-gradient-to-r text-xs from-purple-50 to-blue-50 dark:from-purple-900/30 dark:to-blue-900/30 rounded-2xl border border-purple-100 dark:border-purple-800">
+            Welcome to the Celo Leaderboard where, we display our users who cast via the celo channel!!
+            In addition, users successfully verified using their passports through the Self Protocol will have a multiplier of x2!!
           </div>
 
           {!isCorrectChain ? (
@@ -160,11 +164,10 @@ export default function LeaderBoard({
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: 10 }}
                     transition={{ delay: index * 0.05 }}
-                    className={`overflow-hidden rounded-lg ${
-                      expandedDonor === donor.donor
-                        ? "bg-purple-50 dark:bg-purple-900/30 border border-purple-100 dark:border-purple-800"
-                        : "bg-gray-50 dark:bg-gray-700"
-                    } ${donor.donor === address ? "ring-2 ring-purple-500" : ""}`}
+                    className={`overflow-hidden rounded-lg ${expandedDonor === donor.donor
+                      ? "bg-purple-50 dark:bg-purple-900/30 border border-purple-100 dark:border-purple-800"
+                      : "bg-gray-50 dark:bg-gray-700"
+                      } ${donor.donor === address ? "ring-2 ring-purple-500" : ""}`}
                   >
                     <button
                       onClick={() =>
@@ -176,18 +179,16 @@ export default function LeaderBoard({
                     >
                       <div className="flex items-center w-full">
                         <div
-                          className={`w-8 h-8 flex items-center justify-center rounded-full mr-3 ${
-                            index < 3
-                              ? "bg-gradient-to-br from-yellow-400 to-yellow-600"
-                              : "bg-purple-100 dark:bg-purple-900"
-                          }`}
+                          className={`w-8 h-8 flex items-center justify-center rounded-full mr-3 ${index < 3
+                            ? "bg-gradient-to-br from-yellow-400 to-yellow-600"
+                            : "bg-purple-100 dark:bg-purple-900"
+                            }`}
                         >
                           <span
-                            className={`text-sm font-bold ${
-                              index < 3
-                                ? "text-white"
-                                : "text-purple-600 dark:text-purple-300"
-                            }`}
+                            className={`text-sm font-bold ${index < 3
+                              ? "text-white"
+                              : "text-purple-600 dark:text-purple-300"
+                              }`}
                           >
                             {index + 1}
                           </span>
