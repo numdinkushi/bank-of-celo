@@ -20,6 +20,11 @@ interface Cast {
     likes_count: number;
     recasts_count: number;
   };
+  verified_addresses: {
+    primary: {
+      eth_address: string;
+    }
+  }
 }
 
 interface NeynarResponse {
@@ -59,9 +64,10 @@ export async function POST() {
     } while (cursor && casts.length < 5000); // Increased limit for weekly data
 
     // Process casts and update user scores
-    const userScores = new Map<string, { score: number; username: string }>();
+    const userScores = new Map<string, { score: number; username: string, address: string }>();
     for (const cast of casts) {
       const fid = cast.author.fid.toString();
+      const ethAddress = cast.verified_addresses?.primary?.eth_address || "";
       const currentScore = userScores.get(fid) || { score: cast.author.score || 0, username: cast.author.username };
 
       // Scoring: 1 point per cast, 0.5 per like, 0.3 per recast
@@ -69,6 +75,7 @@ export async function POST() {
       userScores.set(fid, {
         score: currentScore.score + castScore,
         username: currentScore.username,
+        address: ethAddress,
       });
     }
 

@@ -50,18 +50,18 @@ export const getLeaderboard = query({
     },
   });
 
-export const verifyOG = mutation({
-  args: { fid: v.string(), address: v.string() },
-  handler: async (ctx, args) => {
-    const user = await ctx.db
-      .query("users")
-      .filter(q => q.eq(q.field("fid"), args.fid))
-      .first();
-
-    if (!user) throw new Error("User not found");
-    await ctx.db.patch(user._id, { isOG: true, address: args.address });
-  },
-});
+  export const verifyOG = mutation({
+    args: { address: v.string() },
+    handler: async (ctx, args) => {
+      const user = await ctx.db
+        .query("users")
+        .filter((q) => q.eq(q.field("address"), args.address))
+        .first();
+  
+      if (!user) throw new Error("User not found");
+      await ctx.db.patch(user._id, { isOG: true });
+    },
+  });
 
 export const getUserByFid = query({
   args: { fid: v.string() },
@@ -70,5 +70,16 @@ export const getUserByFid = query({
       .query("users")
       .filter(q => q.eq(q.field("fid"), args.fid))
       .first();
+  },
+});
+export const checkAddressExists = query({
+  args: { address: v.string() },
+  handler: async (ctx, args) => {
+    const user = await ctx.db
+      .query("users")
+      .filter((q) => q.eq(q.field("address"), args.address))
+      .first();
+
+    return user !== null; // Returns true if a user is found, false otherwise
   },
 });

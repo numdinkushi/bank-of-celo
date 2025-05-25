@@ -29,7 +29,7 @@ const SelfProtocolComponent: React.FC<SelfProtocolComponentProps> = ({
   const [universalLink, setUniversalLink] = useState<string>("");
 
   const minimumAge = 18;
-  const deployedContractAddress = "0x6DD5608Bf1F68C23Bf5D519161128240C7D764Fc";
+  // const deployedContractAddress = "0x6DD5608Bf1F68C23Bf5D519161128240C7D764Fc";
   // Use useMemo to cache the array to avoid creating a new array on each render
   // const excludedCountries = useMemo(() => [countries.FRANCE], []);
   const requireName = true;
@@ -43,11 +43,12 @@ const SelfProtocolComponent: React.FC<SelfProtocolComponentProps> = ({
       const app = new SelfAppBuilder({
         appName: process.env.NEXT_PUBLIC_SELF_APP_NAME || "Bank of Celo",
         scope: process.env.NEXT_PUBLIC_SELF_SCOPE || "bank-of-celo",
-        // endpoint: `${process.env.NEXT_PUBLIC_SELF_ENDPOINT}/api/self-protocol/verify`, //for web2
-        endpoint: deployedContractAddress,
+        endpoint: `${process.env.NEXT_PUBLIC_SELF_ENDPOINT}`, //for web2
+        // endpoint: deployedContractAddress,
         logoBase64: APP_ICON_URL,
         // note: userId here will be the connected wallet
         userId: address,
+        endpointType: "https",
         userIdType: "hex",
         disclosures: {
           minimumAge,
@@ -101,7 +102,7 @@ const SelfProtocolComponent: React.FC<SelfProtocolComponentProps> = ({
       onSuccess();
     } else {
       setTimeout(() => {
-        router.push("/verified");
+        router.push("/");
       }, 1500);
     }
   };
