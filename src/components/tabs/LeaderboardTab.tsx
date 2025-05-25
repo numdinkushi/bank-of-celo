@@ -34,7 +34,42 @@ export default function LeaderboardTab({
   const [donors, setDonors] = useState<Donor[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [expandedDonor, setExpandedDonor] = useState<string | null>(null);
+  const [username, setUsername] = useState<string | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
 
+  useEffect(() => {
+    async function fetchUsername() {
+      try {
+        const response = await fetch(`/api/farcaster/username?address=${address}`);
+        const data = await response.json();
+
+        if (response.ok && data.username) {
+          setUsername(data.username);
+          console.log('Fetched username:', data.username);
+        } else {
+          setUsername(null);
+          console.log('No username found for address:', address);
+        }
+      } catch (error) {
+        console.error('Error fetching Farcaster username:', error);
+        setUsername(null);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchUsername();
+  }, [address]);
+  const getUsername = async (donorAddress: string) => {
+    if (!donorAddress) return null;
+    try {
+      const response = await fetch(`/api/farcaster/username?address=${donorAddress}`);
+      const data = await response.json();
+      return data.username || null;
+    } catch (error) {
+      console.error("Error fetching username:", error);
+      return null;
+    }
+  };
   const fetchLeaderboard = async () => {
     setIsLoading(true);
     try {
