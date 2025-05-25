@@ -379,7 +379,7 @@ export default function WarpcastWalletApp(): JSX.Element {
                   Unlock Exceptional Earning
                 </h3>
                 <p className="text-gray-300 text-sm leading-relaxed">
-                  Verified O.G users receive up to 10x multiplier on their
+                  Verified O.G users receive up to 2x multiplier on their
                   weekly scores and exclusive access to premium reward tiers.
                 </p>
               </div>
@@ -391,7 +391,7 @@ export default function WarpcastWalletApp(): JSX.Element {
               O.G Benefits:
             </h4>
             <ul className="text-gray-300 text-sm space-y-1">
-              <li>• 10x score multiplier</li>
+              <li>• 2x score multiplier</li>
               <li>• Exclusive premium tiers</li>
               <li>• Priority reward distribution</li>
               <li>• Early access to new features</li>

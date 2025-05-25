@@ -1,5 +1,4 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-// app/api/sync-celo-feed/route.ts
 import { NextResponse } from "next/server";
 import { ConvexHttpClient } from "convex/browser";
 import { api } from "../../../../convex/_generated/api";
@@ -22,9 +21,27 @@ interface Cast {
   };
 }
 
+interface User {
+  fid: number;
+  username: string;
+  custody_address: string;
+  verified_addresses: {
+    eth_addresses?: string[];
+    sol_addresses?: string[];
+    primary?: {
+      eth_address?: string;
+      sol_address?: string;
+    };
+  };
+}
+
 interface NeynarResponse {
   casts: Cast[];
   next?: { cursor: string };
+}
+
+interface BulkUsersResponse {
+  users: User[];
 }
 
 // Initialize Convex client
@@ -37,14 +54,14 @@ export async function POST() {
     let cursor: string | null = null;
     const limit = 100;
 
-    // Fetch casts with pagination
+    // Step 1: Fetch all casts with pagination
     do {
       const url = `https://api.neynar.com/v2/farcaster/feed/channels?with_recasts=true&members_only=true&limit=${limit}&channel_ids=celo${cursor ? `&cursor=${cursor}` : ""}`;
       const response = await fetch(url, {
-        method: "GET", // Use GET as per Neynar API documentation
+        method: "GET",
         headers: {
-          "x-api-key": NEYNAR_API_KEY, // Correct header key
-          "x-neynar-experimental": "false", // Required header
+          "x-api-key": NEYNAR_API_KEY,
+          "x-neynar-experimental": "false",
         },
       });
 
@@ -56,27 +73,69 @@ export async function POST() {
       const data: NeynarResponse = await response.json();
       casts = casts.concat(data.casts.filter((cast) => cast.timestamp >= oneWeekAgo));
       cursor = data.next?.cursor || null;
-    } while (cursor && casts.length < 5000); // Increased limit for weekly data
+    } while (cursor && casts.length < 5000);
 
-    // Process casts and update user scores
-    const userScores = new Map<string, { score: number; username: string }>();
+    // Step 2: Get all unique FIDs from casts
+    const fids = casts.map(cast => cast.author.fid);
+    const uniqueFids = [...new Set(fids)];
+
+    // Step 3: Fetch user details in bulk to get addresses
+    let usersWithAddresses: User[] = [];
+    if (uniqueFids.length > 0) {
+      const usersResponse = await fetch(`https://api.neynar.com/v2/farcaster/user/bulk?fids=${uniqueFids.join(',')}`, {
+        method: "GET",
+        headers: {
+          "api_key": NEYNAR_API_KEY,
+        },
+      });
+
+      if (!usersResponse.ok) {
+        const errorBody = await usersResponse.text();
+        throw new Error(`Neynar Users API error: ${usersResponse.status} - ${usersResponse.statusText} - ${errorBody}`);
+      }
+
+      const usersData: BulkUsersResponse = await usersResponse.json();
+      usersWithAddresses = usersData.users;
+    }
+
+    // Create a map of FID to user details for quick lookup
+    const userDetailsMap = new Map<number, User>();
+    usersWithAddresses.forEach(user => {
+      userDetailsMap.set(user.fid, user);
+    });
+
+    // Step 4: Process casts and update user scores with address information
+    const userScores = new Map<string, { score: number; username: string, address: string }>();
     for (const cast of casts) {
       const fid = cast.author.fid.toString();
-      const currentScore = userScores.get(fid) || { score: cast.author.score || 0, username: cast.author.username };
+      const userDetails = userDetailsMap.get(cast.author.fid);
+      
+      // Get the primary ETH address or fallback to custody address
+      const ethAddress = userDetails?.verified_addresses?.primary?.eth_address?.toLowerCase() || 
+                         userDetails?.verified_addresses?.eth_addresses?.[0]?.toLowerCase() || 
+                         userDetails?.custody_address?.toLowerCase() || 
+                         "";
+
+      const currentScore = userScores.get(fid) || {
+        score: cast.author.score || 0,
+        username: cast.author.username,
+        address: ethAddress,
+      };
 
       // Scoring: 1 point per cast, 0.5 per like, 0.3 per recast
       const castScore = 1 + cast.reactions.likes_count * 0.5 + cast.reactions.recasts_count * 0.3;
       userScores.set(fid, {
         score: currentScore.score + castScore,
         username: currentScore.username,
+        address: ethAddress || currentScore.address,
       });
     }
 
-    // Update users in Convex
-    for (const [fid, { score, username }] of userScores) {
+    // Step 5: Update users in Convex
+    for (const [fid, { score, username, address }] of userScores) {
       const existingUser = await convex.query(api.users.getUserByFid, { fid });
 
-      // Skip if user’s score was updated recently (optional: adjust as needed)
+      // Skip if user's score was updated recently (optional: adjust as needed)
       if (existingUser && Date.now() - existingUser.lastUpdated < 7 * 24 * 60 * 60 * 1000) {
         continue;
       }
@@ -85,12 +144,16 @@ export async function POST() {
         fid,
         username,
         score,
-        address: existingUser?.address,
+        address: address || existingUser?.address || "",
         isOG: existingUser?.isOG || false,
       });
     }
 
-    return NextResponse.json({ success: true, castsProcessed: casts.length });
+    return NextResponse.json({ 
+      success: true, 
+      castsProcessed: casts.length,
+      usersProcessed: userScores.size
+    });
   } catch (error: any) {
     console.error("Error syncing Celo feed:", error);
     return NextResponse.json(

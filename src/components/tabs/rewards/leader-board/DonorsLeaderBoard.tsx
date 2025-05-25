@@ -25,7 +25,8 @@ import {
 interface Donor {
   donor: string;
   amount: string;
-  tier?: number;
+  username: string | null; // Added to store username
+  rank: number;
 }
 
 interface LeaderBoardProps {
@@ -40,6 +41,50 @@ export default function DonorsLeaderBoard({
   const [donors, setDonors] = useState<Donor[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [expandedDonor, setExpandedDonor] = useState<string | null>(null);
+  const [username, setUsername] = useState<string | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
+
+  // Fetch current user's username
+  useEffect(() => {
+    async function fetchUsername() {
+      try {
+        if (!address) {
+          setUsername(null);
+          setLoading(false);
+          return;
+        }
+        const response = await fetch(`/api/farcaster/username?address=${address}`);
+        const data = await response.json();
+
+        if (response.ok && data.username) {
+          setUsername(data.username);
+          console.log("Fetched username:", data.username);
+        } else {
+          setUsername(null);
+          console.log("No username found for address:", address);
+        }
+      } catch (error) {
+        console.error("Error fetching Farcaster username:", error);
+        setUsername(null);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchUsername();
+  }, [address]);
+
+  // Fetch username for a given address
+  const getUsername = async (donorAddress: string): Promise<string | null> => {
+    if (!donorAddress) return null;
+    try {
+      const response = await fetch(`/api/farcaster/username?address=${donorAddress}`);
+      const data = await response.json();
+      return data.username || null;
+    } catch (error) {
+      console.error("Error fetching username:", error);
+      return null;
+    }
+  };
 
   const fetchLeaderboard = async () => {
     setIsLoading(true);
@@ -57,22 +102,25 @@ export default function DonorsLeaderBoard({
         functionName: "getLeaderboard",
       })) as any[];
 
-      // Format donor data
-      const formattedDonors = leaderboard
-        .filter(
-          (entry) =>
-            entry.donor !== "0x0000000000000000000000000000000000000000",
-        )
-        .map((entry, index) => ({
-          donor: entry.donor,
-          amount: formatEther(entry.amount),
-          rank: index + 1,
-        }));
+      // Format donor data with usernames
+      const formattedDonors = await Promise.all(
+        leaderboard
+          .filter(
+            (entry) =>
+              entry.donor !== "0x0000000000000000000000000000000000000000",
+          )
+          .map(async (entry, index) => ({
+            donor: entry.donor,
+            amount: formatEther(entry.amount),
+            username: await getUsername(entry.donor), // Fetch username
+            rank: index + 1,
+          })),
+      );
 
       setDonors(formattedDonors);
       toast.success("Leaderboard updated");
     } catch (error) {
-      console.log("Failed to fetch leaderboard:", error);
+      console.error("Failed to fetch leaderboard:", error);
       toast.error("Failed to load leaderboard");
     } finally {
       setIsLoading(false);
@@ -124,7 +172,7 @@ export default function DonorsLeaderBoard({
             <button
               onClick={fetchLeaderboard}
               disabled={isLoading || !isCorrectChain}
-              className="text-xs text-center flex items-center justify-center w-10 h-10  font-medium bg-gradient-to-br from-emerald-400 to-emerald-600 dark:bg-gray-700 dark:hover:bg-gray-600 rounded-full  py-1.5"
+              className="text-xs text-center flex items-center justify-center w-10 h-10 font-medium bg-gradient-to-br from-emerald-400 to-emerald-600 dark:bg-gray-700 dark:hover:bg-gray-600 rounded-full py-1.5"
             >
               {isLoading ? (
                 <Loader2 className="w-3 h-3 animate-spin" />
@@ -134,7 +182,7 @@ export default function DonorsLeaderBoard({
             </button>
           </div>
           <div className="p-5 mb-4 bg-gradient-to-r text-xs from-purple-50 to-blue-50 dark:from-purple-900/30 dark:to-blue-900/30 rounded-2xl border border-purple-100 dark:border-purple-800">
-            Welcome to the Donors&apos; Leaderboard where, a list of our top donors are acknowledged!!
+            Welcome to the Donors Leaderboard where, a list of our top donors are acknowledged!!
           </div>
 
           {!isCorrectChain ? (
@@ -158,15 +206,16 @@ export default function DonorsLeaderBoard({
               <AnimatePresence>
                 {donors.map((donor, index) => (
                   <motion.div
-                    key={`${donor}-${index}`}
+                    key={`${donor.donor}-${index}`}
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: 10 }}
                     transition={{ delay: index * 0.05 }}
-                    className={`overflow-hidden rounded-lg ${expandedDonor === donor.donor
-                      ? "bg-purple-50 dark:bg-purple-900/30 border border-purple-100 dark:border-purple-800"
-                      : "bg-gray-50 dark:bg-gray-700"
-                      } ${donor.donor === address ? "ring-2 ring-purple-500" : ""}`}
+                    className={`overflow-hidden rounded-lg ${
+                      expandedDonor === donor.donor
+                        ? "bg-purple-50 dark:bg-purple-900/30 border border-purple-100 dark:border-purple-800"
+                        : "bg-gray-50 dark:bg-gray-700"
+                    } ${donor.donor === address ? "ring-2 ring-purple-500" : ""}`}
                   >
                     <button
                       onClick={() =>
@@ -178,23 +227,25 @@ export default function DonorsLeaderBoard({
                     >
                       <div className="flex items-center w-full">
                         <div
-                          className={`w-8 h-8 flex items-center justify-center rounded-full mr-3 ${index < 3
-                            ? "bg-gradient-to-br from-yellow-400 to-yellow-600"
-                            : "bg-purple-100 dark:bg-purple-900"
-                            }`}
+                          className={`w-8 h-8 flex items-center justify-center rounded-full mr-3 ${
+                            index < 3
+                              ? "bg-gradient-to-br from-yellow-400 to-yellow-600"
+                              : "bg-purple-100 dark:bg-purple-900"
+                          }`}
                         >
                           <span
-                            className={`text-sm font-bold ${index < 3
-                              ? "text-white"
-                              : "text-purple-600 dark:text-purple-300"
-                              }`}
+                            className={`text-sm font-bold ${
+                              index < 3
+                                ? "text-white"
+                                : "text-purple-600 dark:text-purple-300"
+                            }`}
                           >
                             {index + 1}
                           </span>
                         </div>
                         <div className="text-left flex-1">
                           <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
-                            {truncateAddress(donor.donor)}
+                            {donor.username || truncateAddress(donor.donor)}
                             {donor.donor === address && (
                               <span className="ml-2 text-xs bg-purple-100 dark:bg-purple-900 text-purple-600 dark:text-purple-300 px-2 py-0.5 rounded-full">
                                 You
@@ -236,6 +287,12 @@ export default function DonorsLeaderBoard({
                             <span>Rank:</span>
                             <span className="font-medium">#{index + 1}</span>
                           </div>
+                          {donor.username && (
+                            <div className="flex justify-between text-xs text-gray-600 dark:text-gray-300 mt-1">
+                              <span>Username:</span>
+                              <span className="font-medium">{donor.username}</span>
+                            </div>
+                          )}
                         </div>
                       </motion.div>
                     )}
@@ -261,7 +318,7 @@ export default function DonorsLeaderBoard({
               </div>
               <div>
                 <p className="text-sm font-medium text-gray-900 dark:text-white">
-                  {truncateAddress(donors[0].donor)}
+                  {donors[0].username || truncateAddress(donors[0].donor)}
                 </p>
                 <p className="text-xs text-gray-600 dark:text-gray-300">
                   {parseFloat(donors[0].amount).toFixed(2)} CELO donated

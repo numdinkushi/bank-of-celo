@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 
 import { useState, useEffect } from "react";
@@ -7,9 +8,11 @@ import SelfQRcodeWrapper, {
   SelfAppBuilder,
   type SelfApp,
 } from "@selfxyz/qrcode";
-import { Shield, Copy, ExternalLink, CheckCircle } from "lucide-react";
+import { Shield, Copy, ExternalLink, CheckCircle, Verified } from "lucide-react";
 import { useAccount } from "wagmi";
 import { APP_ICON_URL } from "~/lib/constants";
+import { useQuery } from "convex/react";
+import { api } from "../../../../convex/_generated/api";
 
 interface SelfProtocolComponentProps {
   onSuccess?: () => void;
@@ -19,8 +22,6 @@ const SelfProtocolComponent: React.FC<SelfProtocolComponentProps> = ({
   onSuccess,
 }) => {
   const { address } = useAccount();
-  console.log(234234, { address });
-
   const router = useRouter();
   const [linkCopied, setLinkCopied] = useState<boolean>(false);
   const [showToast, setShowToast] = useState<boolean>(false);
@@ -28,26 +29,29 @@ const SelfProtocolComponent: React.FC<SelfProtocolComponentProps> = ({
   const [selfApp, setSelfApp] = useState<SelfApp | null>(null);
   const [universalLink, setUniversalLink] = useState<string>("");
 
+  // Check if user is already verified OG
+  const userData = useQuery(api.users.checkAddressExists, {
+    address: address || "",
+  });
+  const isVerifiedOG = useQuery(api.users.getUserByFid, {
+    fid: address || "",
+  })?.isOG;
+
   const minimumAge = 18;
-  const deployedContractAddress = "0x6DD5608Bf1F68C23Bf5D519161128240C7D764Fc";
-  // Use useMemo to cache the array to avoid creating a new array on each render
-  // const excludedCountries = useMemo(() => [countries.FRANCE], []);
   const requireName = true;
   const checkOFAC = true;
 
-  // Use useEffect to ensure code only executes on the client side
   useEffect(() => {
-    try {
-      if (!address) return;
+    if (!address || isVerifiedOG) return;
 
+    try {
       const app = new SelfAppBuilder({
         appName: process.env.NEXT_PUBLIC_SELF_APP_NAME || "Bank of Celo",
         scope: process.env.NEXT_PUBLIC_SELF_SCOPE || "bank-of-celo",
-        // endpoint: `${process.env.NEXT_PUBLIC_SELF_ENDPOINT}/api/self-protocol/verify`, //for web2
-        endpoint: deployedContractAddress,
+        endpoint: `${process.env.NEXT_PUBLIC_SELF_ENDPOINT}`,
         logoBase64: APP_ICON_URL,
-        // note: userId here will be the connected wallet
         userId: address,
+        endpointType: "https",
         userIdType: "hex",
         disclosures: {
           minimumAge,
@@ -56,15 +60,12 @@ const SelfProtocolComponent: React.FC<SelfProtocolComponentProps> = ({
         },
       }).build();
 
-      console.log(432423434, app);
-      console.log(234234, { address }, app);
-
       setSelfApp(app);
       setUniversalLink(getUniversalLink(app));
     } catch (error) {
       console.log("Failed to initialize Self app:", error);
     }
-  }, [address, checkOFAC, requireName]);
+  }, [address, checkOFAC, requireName, isVerifiedOG]);
 
   const displayToast = (message: string): void => {
     setToastMessage(message);
@@ -101,10 +102,54 @@ const SelfProtocolComponent: React.FC<SelfProtocolComponentProps> = ({
       onSuccess();
     } else {
       setTimeout(() => {
-        router.push("/verified");
+        router.push("/");
       }, 1500);
     }
   };
+
+  if (isVerifiedOG) {
+    return (
+      <div className="min-h-screen w-full bg-gradient-to-br from-gray-900 via-gray-900 to-emerald-900 flex flex-col items-center justify-center p-4 sm:p-6 md:p-8">
+        <div className="text-center max-w-md mx-auto">
+          {/* Verified OG Status */}
+          <div className="mb-6">
+            <div className="w-16 h-16 bg-gradient-to-br from-emerald-400 to-emerald-600 rounded-full mx-auto mb-4 flex items-center justify-center">
+              <Verified className="w-8 h-8 text-white" />
+            </div>
+            <h3 className="text-xl font-bold text-white mb-2">
+              You are Verified!
+            </h3>
+            <p className="text-gray-300 text-sm leading-relaxed">
+              Your identity has been successfully verified. You now have access to
+              O.G benefits including 2x rewards!
+            </p>
+          </div>
+
+          {/* Celebration Card */}
+          <div className="bg-emerald-500/10 rounded-xl p-6 border border-emerald-500/20 mb-6">
+            <div className="flex flex-col items-center">
+              <div className="w-12 h-12 bg-emerald-500 rounded-full flex items-center justify-center mb-3">
+                <Verified className="w-6 h-6 text-white" />
+              </div>
+              <h4 className="text-emerald-400 font-medium text-sm mb-2">
+                O.G Status Active
+              </h4>
+              <p className="text-gray-300 text-xs">
+                Enjoy your exclusive benefits across the platform
+              </p>
+            </div>
+          </div>
+
+          <button
+            onClick={() => router.push("/")}
+            className="flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 transition-colors text-white py-3 px-6 rounded-xl font-medium w-full"
+          >
+            Continue to App
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen w-full bg-gradient-to-br from-gray-900 via-gray-900 to-emerald-900 flex flex-col items-center justify-center p-4 sm:p-6 md:p-8">
