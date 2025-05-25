@@ -60,6 +60,19 @@ export default function TransactTab({
   const [claimPending, setClaimPending] = useState(false);
   const [txHash, setTxHash] = useState<string | null>(null);
   const [hasClaimed, setHasClaimed] = useState(false);
+  const [username, setUsername] = useState<string | null>(null);
+
+  const getUsername = async (userAddress: string): Promise<string | null> => {
+    if (!userAddress) return null;
+    try {
+      const response = await fetch(`/api/farcaster/username?address=${userAddress}`);
+      const data = await response.json();
+      return data.username || null;
+    } catch (error) {
+      console.error("Error fetching username:", error);
+      return null;
+    }
+  };
 
   const fetchFid = useCallback(async () => {
     if (!address) return;
@@ -75,6 +88,8 @@ export default function TransactTab({
       }
 
       setFid(data.fid);
+      const username = await getUsername(address)
+      setUsername(username);
       if (!data.fid) {
         setFidError("No Farcaster ID associated with this address");
       } else {
@@ -462,12 +477,12 @@ export default function TransactTab({
                   htmlFor="farcaster-id"
                   className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
                 >
-                  Your Farcaster ID
+                  Your Farcaster username/ ID
                 </label>
                 <Input
                   id="farcaster-id"
                   type="number"
-                  value={fid}
+                  value={username || fid}
                   disabled
                   className="w-full py-3 text-black bg-gray-100 dark:bg-gray-700"
                   aria-readonly="true"
