@@ -26,8 +26,8 @@ export async function POST(req: NextRequest) {
 
     // Initialize and configure the verifier
     const selfBackendVerifier = new SelfBackendVerifier(
-      `${process.env.NEXT_PUBLIC_SELF_SCOPE || 'bank-of-celo'}`, // scope
-      `${process.env.NEXTAUTH_URL}/api/self-protocol`, // endpoint
+      `bank-of-celo`, // scope
+      `https://bank-of-celo.vercel.app/api/self-protocol`, // endpoint
       "hex", // user_identifier_type
       true // mockPassport
     );

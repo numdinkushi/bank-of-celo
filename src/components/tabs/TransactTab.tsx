@@ -482,7 +482,7 @@ export default function TransactTab({
                 <Input
                   id="farcaster-id"
                   type="number"
-                  value={username || fid}
+                  value={fid || username || ""}
                   disabled
                   className="w-full py-3 text-black bg-gray-100 dark:bg-gray-700"
                   aria-readonly="true"
