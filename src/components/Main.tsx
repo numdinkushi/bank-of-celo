@@ -53,7 +53,7 @@ import { cubesImage } from "~/constants/images";
 import { cn } from "~/lib/utils";
 import Rewards from "./tabs/rewards";
 
-export default function BankOfCelo({
+export default function Main({
   title = "Bank of Celo",
 }: {
   title?: string;
@@ -183,6 +183,21 @@ export default function BankOfCelo({
     const interval = setInterval(fetchContractData, 3000);
     return () => clearInterval(interval);
   }, [fetchContractData]);
+
+
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const tabParam = urlParams.get('tab');
+    
+    if (tabParam === 'rewards') {
+      // Close welcome modal and navigate to rewards tab
+      setShowWelcome(false);
+      setActiveTab('rewards');
+      // Also set the welcome localStorage to prevent it from showing
+      localStorage.setItem("hasSeenWelcome", "true");
+    }
+  }, []);
+
   useEffect(() => {
     const load = async () => {
       if (!sdk || !sdk?.actions?.addFrame) return;
@@ -283,8 +298,18 @@ export default function BankOfCelo({
   const handleCloseWelcome = () => {
     setShowWelcome(false);
     localStorage.setItem("hasSeenWelcome", "true");
+    
+    // Check if we should navigate to rewards tab after closing welcome
+    const urlParams = new URLSearchParams(window.location.search);
+    const tabParam = urlParams.get('tab');
+    
+    if (tabParam === 'rewards') {
+      setActiveTab('rewards');
+      // Optionally clean up the URL
+      window.history.replaceState({}, '', window.location.pathname);
+    }
   };
-
+  
   if (!isSDKLoaded) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-emerald-100 to-amber-100 dark:from-emerald-950 dark:to-amber-950">
@@ -297,6 +322,8 @@ export default function BankOfCelo({
       </div>
     );
   }
+
+  
 
   return (
     <div
