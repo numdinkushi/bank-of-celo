@@ -10,6 +10,8 @@ import {
   TrendingUp,
   Coins,
   Crown,
+  Gift,
+  CheckCircle2,
 } from "lucide-react";
 import { RewardItemProps } from "./bottom-sheets/reward-tiers-sheet/reward-item/RewardItem";
 import ScoreCard from "./components/score-card";
@@ -19,6 +21,8 @@ import OGearningSheet from "./bottom-sheets/og-earning";
 import RewardTiersSheet from "./bottom-sheets/reward-tiers-sheet";
 import HowToEarnSheet from "./bottom-sheets/how-to-earn";
 import LeaderboardSheet from "./bottom-sheets/leader-board";
+import { ClaimsSheet } from "./bottom-sheets/claims";
+import { DailyCheckinSheet } from "./bottom-sheets/daily-check-ins";
 
 interface MiniCard {
   id: "scored" | "rewards" | "earn" | "leaderboard" | "og-earning";
@@ -35,10 +39,16 @@ type ActiveSheet =
   | "earn"
   | "leaderboard"
   | "og-earning"
+  | "claims"
+  | "daily-checkin"
   | null;
 
-export default function WarpcastWalletApp(): JSX.Element {
+export default function Rewards(): JSX.Element {
   const [activeSheet, setActiveSheet] = useState<ActiveSheet>(null);
+  const [dailyPoints, setDailyPoints] = useState(1850); // Current points towards 2000
+  const [lastCheckinDate, setLastCheckinDate] = useState<string | null>(null);
+  const [checkinStreak, setCheckinStreak] = useState(18);
+
   const [rewardItems, setRewardItems] = useState<RewardItemProps[]>([
     {
       id: '1',
@@ -154,6 +164,25 @@ export default function WarpcastWalletApp(): JSX.Element {
     );
   };
 
+  const handleDailyCheckin = (): void => {
+    const today = new Date().toDateString();
+    if (lastCheckinDate !== today) {
+      setDailyPoints(prev => Math.min(prev + 10, 2000));
+      setLastCheckinDate(today);
+      setCheckinStreak(prev => prev + 1);
+    }
+  };
+
+  const handleClaimDailyReward = (): void => {
+    if (dailyPoints >= 2000) {
+      setDailyPoints(0);
+      // Add the reward to user's account or handle claim logic
+    }
+  };
+
+  const canCheckinToday = lastCheckinDate !== new Date().toDateString();
+  const canClaimDailyReward = dailyPoints >= 2000;
+
   return (
     <div className="min-h-screen bg-white text-gray-900 rounded-md relative overflow-hidden">
       {/* Background gradient */}
@@ -162,6 +191,25 @@ export default function WarpcastWalletApp(): JSX.Element {
       <div className="relative z-1 p-6 pb-32">
         {/* Score Card */}
         <ScoreCard />
+
+        {/* Action Buttons */}
+        <div className="flex gap-4 mb-6">
+          <button
+            onClick={() => openSheet("claims")}
+            className="flex-1 bg-gradient-to-r from-emerald-500/20 to-emerald-600/20 border border-emerald-500/30 rounded-2xl p-4 flex items-center justify-center gap-3 hover:scale-[1.02] transition-all duration-300 hover:shadow-lg hover:shadow-emerald-500/20"
+          >
+            <Gift className="w-5 h-5 text-emerald-600" />
+            <span className="font-semibold text-emerald-700">Claims</span>
+          </button>
+
+          <button
+            onClick={() => openSheet("daily-checkin")}
+            className="flex-1 bg-gradient-to-r from-blue-500/20 to-blue-600/20 border border-blue-500/30 rounded-2xl p-4 flex items-center justify-center gap-3 hover:scale-[1.02] transition-all duration-300 hover:shadow-lg hover:shadow-blue-500/20"
+          >
+            <CheckCircle2 className="w-5 h-5 text-blue-600" />
+            <span className="font-semibold text-blue-700">Check In</span>
+          </button>
+        </div>
 
         {/* Mini Cards */}
         <MiniCards
@@ -189,8 +237,6 @@ export default function WarpcastWalletApp(): JSX.Element {
       <RewardTiersSheet
         isOpen={activeSheet === "rewards"}
         onClose={closeSheet}
-        rewardItems={rewardItems}
-        onRedeem={handleRewardRedeem}
       />
 
       {/* How to Earn Sheet */}
@@ -205,6 +251,26 @@ export default function WarpcastWalletApp(): JSX.Element {
         onClose={closeSheet}
       />
 
+      {/* Claims Sheet */}
+      <ClaimsSheet
+        isOpen={activeSheet === "claims"}
+        onClose={closeSheet}
+        rewardItems={rewardItems}
+        onRedeem={handleRewardRedeem}
+      />
+
+      {/* Daily Check-in Sheet */}
+      <DailyCheckinSheet
+        isOpen={activeSheet === "daily-checkin"}
+        onClose={closeSheet}
+        dailyPoints={dailyPoints}
+        checkinStreak={checkinStreak}
+        canCheckinToday={canCheckinToday}
+        canClaimReward={canClaimDailyReward}
+        onCheckin={handleDailyCheckin}
+        onClaimReward={handleClaimDailyReward}
+      />
+
       <style jsx>{`
         .scrollbar-hide {
           -ms-overflow-style: none;
@@ -217,3 +283,6 @@ export default function WarpcastWalletApp(): JSX.Element {
     </div>
   );
 }
+
+
+
