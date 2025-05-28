@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import React, { useState, useEffect } from "react";
 import {
     Zap,
@@ -19,7 +20,11 @@ import {
 import Image from "next/image";
 
 // Enhanced ScoreCard with Share functionality
-const ScoreCard = ({ onShare }) => {
+type ScoreCardProps = {
+    onShare: () => void;
+};
+
+const ScoreCard = ({ onShare }: ScoreCardProps) => {
     return (
         <div className="relative bg-gradient-to-br from-emerald-500/20 via-emerald-400/15 to-teal-500/20 backdrop-blur-xl rounded-3xl p-8 mb-8 border border-emerald-200/50 shadow-xl overflow-hidden">
             {/* Background decorative elements */}
@@ -110,7 +115,16 @@ const ScoreCard = ({ onShare }) => {
 };
 
 // Share Modal/Drawer Component
-const ShareDrawer = ({ isOpen, onClose, userProfile }) => {
+type ShareDrawerProps = {
+    isOpen: boolean;
+    onClose: () => void;
+    userProfile: {
+        username?: string;
+        profileImage?: string | null;
+    };
+};
+
+const ShareDrawer = ({ isOpen, onClose, userProfile }: ShareDrawerProps) => {
     const [copied, setCopied] = useState(false);
     const shareUrl = "https://bank-of-celo.vercel.app/?tab=rewards";
     const shareText = `Check out my progress on Bank of Celo! Join me in exploring DeFi on Celo 🌱`;
