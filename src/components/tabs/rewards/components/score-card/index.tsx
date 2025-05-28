@@ -1,23 +1,19 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, } from "react";
 import {
     Zap,
     Star,
     Flame,
-    TrendingUp,
     Award,
     Clock,
     Share2,
     Copy,
     X,
-    ExternalLink,
     MessageCircle,
     Send,
-    Mail,
-    Facebook,
     Twitter,
 } from "lucide-react";
 import Image from "next/image";
+import { farcasterIcon } from "~/constants/images";
 
 // Enhanced ScoreCard with Share functionality
 type ScoreCardProps = {
@@ -26,7 +22,7 @@ type ScoreCardProps = {
 
 const ScoreCard = ({ onShare }: ScoreCardProps) => {
     return (
-        <div className="relative bg-gradient-to-br from-emerald-500/20 via-emerald-400/15 to-teal-500/20 backdrop-blur-xl rounded-3xl p-8 mb-8 border border-emerald-200/50 shadow-xl overflow-hidden">
+        <div className="relative bg-gradient-to-br from-emerald-500/20 via-emerald-400/15 to-teal-500/20 rounded-3xl p-8 mb-8 border border-emerald-200/50 shadow-xl overflow-hidden">
             {/* Background decorative elements */}
             <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-emerald-300/20 to-transparent rounded-full -translate-y-16 translate-x-16" />
             <div className="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-teal-300/20 to-transparent rounded-full translate-y-12 -translate-x-12" />
@@ -40,7 +36,6 @@ const ScoreCard = ({ onShare }: ScoreCardProps) => {
             </div>
 
             {/* Share Button */}
-
             <div className="relative z-10">
                 <button
                     onClick={onShare}
@@ -49,13 +44,6 @@ const ScoreCard = ({ onShare }: ScoreCardProps) => {
                 >
                     <Share2 className="w-7 h-7 text-amber-600" />
                 </button>
-                {/* Header with icon */}
-                {/* <div className="flex items-center justify-center mb-6">
-          <div className="bg-emerald-500/20 p-3 rounded-full mr-3">
-            <TrendingUp className="w-6 h-6 text-emerald-600" />
-          </div>
-          <p className="text-gray-600 text-lg font-medium">Your Score</p>
-        </div> */}
 
                 {/* Main score with decorative elements */}
                 <div className="text-center mb-8">
@@ -141,6 +129,17 @@ const ShareDrawer = ({ isOpen, onClose, userProfile }: ShareDrawerProps) => {
 
     const shareOptions = [
         {
+            name: "Farcaster",
+            image: farcasterIcon,
+            color: "bg-purple-600",
+            action: () => {
+                // Farcaster cast intent URL
+                const castText = `${shareText}\n\n${shareUrl}`;
+                const farcasterUrl = `https://warpcast.com/~/compose?text=${encodeURIComponent(castText)}`;
+                window.open(farcasterUrl, '_blank');
+            }
+        },
+        {
             name: "WhatsApp",
             icon: MessageCircle,
             color: "bg-green-500",
@@ -164,35 +163,13 @@ const ShareDrawer = ({ isOpen, onClose, userProfile }: ShareDrawerProps) => {
                 window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(shareUrl)}`, '_blank');
             }
         },
-        {
-            name: "Email",
-            icon: Mail,
-            color: "bg-gray-600",
-            action: () => {
-                window.open(`mailto:?subject=${encodeURIComponent("Bank of Celo")}&body=${encodeURIComponent(shareText + "\n\n" + shareUrl)}`, '_blank');
-            }
-        }
     ];
-
-    const handleNativeShare = async () => {
-        if (navigator.share) {
-            try {
-                await navigator.share({
-                    title: "Bank of Celo",
-                    text: shareText,
-                    url: shareUrl,
-                });
-            } catch (err) {
-                console.error('Error sharing: ', err);
-            }
-        }
-    };
 
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-end justify-center">
-            <div className="bg-white rounded-t-3xl w-full max-w-md max-h-[80vh] overflow-y-auto shadow-2xl animate-in slide-in-from-bottom duration-300">
+        <div className="fixed inset-0 bg-black/50 z-10 flex items-end justify-center">
+            <div className="bg-white rounded-t-3xl w-full max-w-md max-h-[80vh] overflow-y-auto shadow-2xl">
                 {/* Header */}
                 <div className="flex items-center justify-between p-6 border-b border-gray-100">
                     <h2 className="text-xl font-bold text-gray-900">Share Your Progress</h2>
@@ -210,8 +187,6 @@ const ShareDrawer = ({ isOpen, onClose, userProfile }: ShareDrawerProps) => {
                         <div className="w-16 h-16 bg-gradient-to-br from-emerald-400 to-teal-500 rounded-full flex items-center justify-center">
                             {userProfile?.profileImage ? (
                                 <Image
-                                    height={20}
-                                    width={20}
                                     src={userProfile.profileImage}
                                     alt="Profile"
                                     className="w-full h-full rounded-full object-cover"
@@ -267,12 +242,22 @@ const ShareDrawer = ({ isOpen, onClose, userProfile }: ShareDrawerProps) => {
                                 onClick={option.action}
                                 className="flex items-center gap-3 p-4 bg-gray-50 hover:bg-gray-100 rounded-xl transition-colors"
                             >
-                                <div
-                                    className={`w-10 h-10 ${option.color} rounded-full flex items-center justify-center`}
-                                >
-                                    <option.icon className="w-5 h-5 text-white" />
-                                </div>
-                                <span className="font-medium text-gray-700">{option.name}</span>
+                                {option.image ? (
+                                    <Image
+                                        src={option.image}
+                                        alt={option.name}
+                                        width={40}
+                                        height={40}
+                                        className="rounded-full w-10 h-10 object-cover"
+                                    />
+                                ) : (
+                                    <div
+                                        className={`w-10 h-10 ${option.color} rounded-full flex items-center justify-center`}
+                                    >
+                                        {option.icon && <option.icon className="w-5 h-5 text-white" />}
+                                    </div>
+                                )}
+                                <span className="text-gray-800 text-sm font-medium">{option.name}</span>
                             </button>
                         ))}
                     </div>
@@ -290,10 +275,10 @@ const ShareDrawer = ({ isOpen, onClose, userProfile }: ShareDrawerProps) => {
 };
 
 // Main App Component with URL handling
-const SocreCardsComponent = () => {
+const ScoreCardsComponent = () => {
     const [showShareDrawer, setShowShareDrawer] = useState(false);
-    const [activeTab, setActiveTab] = useState("home");
-    const [showWelcome, setShowWelcome] = useState(true);
+    const [, setActiveTab] = useState("rewards")
+    const [, setShowWelcome] = useState(true);
 
     // Mock user profile - replace with actual user data
     const userProfile = {
@@ -318,7 +303,7 @@ const SocreCardsComponent = () => {
     };
 
     return (
-        <div className=" bg-white text-gray-900">
+        <div className="bg-white text-gray-900">
             <ScoreCard onShare={handleShare} />
 
             {/* Share Drawer */}
@@ -331,4 +316,4 @@ const SocreCardsComponent = () => {
     );
 };
 
-export default SocreCardsComponent;
+export default ScoreCardsComponent;
