@@ -188,7 +188,7 @@ export default function Main({
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const tabParam = urlParams.get('tab');
-    
+
     if (tabParam === 'rewards') {
       // Close welcome modal and navigate to rewards tab
       setShowWelcome(false);
@@ -238,7 +238,7 @@ export default function Main({
       // 3. Properly combine the data
       const combinedData = dataSuffix
         ? donateData +
-          (dataSuffix.startsWith("0x") ? dataSuffix.slice(2) : dataSuffix)
+        (dataSuffix.startsWith("0x") ? dataSuffix.slice(2) : dataSuffix)
         : donateData;
 
       // 4. Send the transaction
@@ -298,18 +298,18 @@ export default function Main({
   const handleCloseWelcome = () => {
     setShowWelcome(false);
     localStorage.setItem("hasSeenWelcome", "true");
-    
+
     // Check if we should navigate to rewards tab after closing welcome
     const urlParams = new URLSearchParams(window.location.search);
     const tabParam = urlParams.get('tab');
-    
+
     if (tabParam === 'rewards') {
       setActiveTab('rewards');
       // Optionally clean up the URL
       window.history.replaceState({}, '', window.location.pathname);
     }
   };
-  
+
   if (!isSDKLoaded) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-emerald-100 to-amber-100 dark:from-emerald-950 dark:to-amber-950">
@@ -323,7 +323,7 @@ export default function Main({
     );
   }
 
-  
+
 
   return (
     <div
@@ -380,7 +380,7 @@ export default function Main({
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
         className={cn(
-          "sticky top-0 z-10 bg-white/90  dark:bg-gray-900/90 backdrop-blur-md border-b border-gray-200 dark:border-gray-700",
+          "sticky top-0 z-50 bg-white/90  dark:bg-gray-900/90 backdrop-blur-md border-b border-gray-200 dark:border-gray-700",
           showSwitchNetworkBanner ? "pt-7" : "p-4",
         )}
       >
@@ -525,11 +525,10 @@ export default function Main({
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
-            className={`relative flex flex-col items-center p-2 rounded-xl transition-all ${
-              activeTab === tab.id
+            className={`relative flex flex-col items-center p-2 rounded-xl transition-all ${activeTab === tab.id
                 ? "text-white bg-gradient-to-r from-emerald-500 to-emerald-600 shadow-md"
                 : "text-gray-600 dark:text-gray-300 hover:text-emerald-600 dark:hover:text-emerald-400"
-            }`}
+              }`}
             aria-label={tab.label}
           >
             {tab.icon}
