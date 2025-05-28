@@ -19,7 +19,7 @@ const MiniCards: React.FC<MiniCardsProps> = ({ miniCards, openSheet, scrollRef }
   return (
     <div
       ref={scrollRef}
-      className="flex space-x-3 overflow-x-auto pb-4 scrollbar-hide"
+      className="flex space-x-3 z-0 overflow-x-auto pb-4 scrollbar-hide"
       style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
     >
       {miniCards.map((card) => (
