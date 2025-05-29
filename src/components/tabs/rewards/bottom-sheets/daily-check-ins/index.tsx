@@ -200,7 +200,7 @@ const handleCheckin = async () => {
               "Donation succeeded, but referral tracking failed. We're looking into it.",
             );
           }
-    
+    await fetchUserStatus(); // Refresh status after check-in
     setTxHash(hash);
     toast.success(`Checked in successfully! Tx: ${hash.slice(0, 6)}...`);
     await fetchUserStatus(); // Refresh status
