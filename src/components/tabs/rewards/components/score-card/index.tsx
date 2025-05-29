@@ -48,7 +48,7 @@ const ScoreCard = ({ onShare }: ScoreCardProps) => {
                 {/* Main score with decorative elements */}
                 <div className="text-center mb-8">
                     <div className="relative inline-block">
-                        <div className="text-7xl font-bold text-gray-900 mb-2 relative">
+                        <div className="text-5xl font-bold text-gray-900 mb-2 relative">
                             &lt; 500
                             <div className="absolute -top-2 -right-2">
                                 <div className="w-4 h-4 bg-emerald-500 rounded-full animate-pulse" />

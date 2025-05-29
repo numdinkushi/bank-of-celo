@@ -45,9 +45,6 @@ type ActiveSheet =
 
 export default function Rewards(): JSX.Element {
   const [activeSheet, setActiveSheet] = useState<ActiveSheet>(null);
-  const [dailyPoints, setDailyPoints] = useState(1850); // Current points towards 2000
-  const [lastCheckinDate, setLastCheckinDate] = useState<string | null>(null);
-  const [checkinStreak, setCheckinStreak] = useState(18);
 
   const [rewardItems, setRewardItems] = useState<RewardItemProps[]>([
     {
@@ -164,24 +161,6 @@ export default function Rewards(): JSX.Element {
     );
   };
 
-  const handleDailyCheckin = (): void => {
-    const today = new Date().toDateString();
-    if (lastCheckinDate !== today) {
-      setDailyPoints(prev => Math.min(prev + 10, 2000));
-      setLastCheckinDate(today);
-      setCheckinStreak(prev => prev + 1);
-    }
-  };
-
-  const handleClaimDailyReward = (): void => {
-    if (dailyPoints >= 2000) {
-      setDailyPoints(0);
-      // Add the reward to user's account or handle claim logic
-    }
-  };
-
-  const canCheckinToday = lastCheckinDate !== new Date().toDateString();
-  const canClaimDailyReward = dailyPoints >= 2000;
 
   return (
     <div className="min-h-screen bg-white text-gray-900 rounded-md relative overflow-hidden">
@@ -263,12 +242,6 @@ export default function Rewards(): JSX.Element {
       <DailyCheckinSheet
         isOpen={activeSheet === "daily-checkin"}
         onClose={closeSheet}
-        dailyPoints={dailyPoints}
-        checkinStreak={checkinStreak}
-        canCheckinToday={canCheckinToday}
-        canClaimReward={canClaimDailyReward}
-        onCheckin={handleDailyCheckin}
-        onClaimReward={handleClaimDailyReward}
       />
 
       <style jsx>{`
