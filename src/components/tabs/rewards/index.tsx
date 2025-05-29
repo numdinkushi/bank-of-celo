@@ -174,22 +174,22 @@ export default function Rewards(): JSX.Element {
         <ScoreCard />
 
         {/* Action Buttons */}
-        <div className="flex gap-4 mb-6">
+        <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 mb-6">
           <button
-            disabled={!isReady} //TODO: Enable when ready
+            disabled={!isReady}
             onClick={() => openSheet("claims")}
-            className="flex-1 bg-gradient-to-r from-emerald-500/20 to-emerald-600/20 border border-emerald-500/30 rounded-2xl p-4 flex items-center justify-center gap-3 hover:scale-[1.02] transition-all duration-300 hover:shadow-lg hover:shadow-emerald-500/20 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex-1 bg-gradient-to-r from-emerald-500/20 to-emerald-600/20 border border-emerald-500/30 rounded-xl sm:rounded-2xl p-3 sm:p-4 flex items-center justify-center gap-2 sm:gap-3 hover:scale-[1.02] transition-all duration-300 hover:shadow-lg hover:shadow-emerald-500/20 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            <Gift className="w-5 h-5 text-emerald-600" />
-            <span className="font-semibold text-emerald-700"> Claim </span>
+            <Gift className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-600" />
+            <span className="font-semibold text-sm sm:text-base text-emerald-700">Claim</span>
           </button>
 
           <button
             onClick={() => openSheet("daily-checkin")}
-            className="flex-1 bg-gradient-to-r from-blue-500/20 to-blue-600/20 border border-blue-500/30 rounded-2xl p-4 flex items-center justify-center gap-3 hover:scale-[1.02] transition-all duration-300 hover:shadow-lg hover:shadow-blue-500/20"
+            className="flex-1 bg-gradient-to-r from-blue-500/20 to-blue-600/20 border border-blue-500/30 rounded-xl sm:rounded-2xl p-3 sm:p-4 flex items-center justify-center gap-2 sm:gap-3 hover:scale-[1.02] transition-all duration-300 hover:shadow-lg hover:shadow-blue-500/20"
           >
-            <CheckCircle2 className="w-5 h-5 text-blue-600" />
-            <span className="font-semibold text-blue-700">Check In</span>
+            <CheckCircle2 className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600" />
+            <span className="font-semibold text-sm sm:text-base text-blue-700">Check In</span>
           </button>
         </div>
 
@@ -259,6 +259,3 @@ export default function Rewards(): JSX.Element {
     </div>
   );
 }
-
-
-
