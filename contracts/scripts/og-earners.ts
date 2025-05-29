@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-require-imports */
 // scripts/deploy.js
 const hre = require("hardhat");
 
