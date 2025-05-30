@@ -1,3 +1,5 @@
+
+
 import React, { useState, useEffect, } from "react";
 import {
     Zap,
@@ -22,43 +24,43 @@ type ScoreCardProps = {
 
 const ScoreCard = ({ onShare }: ScoreCardProps) => {
     return (
-        <div className="relative bg-gradient-to-br from-emerald-500/20 via-emerald-400/15 to-teal-500/20 rounded-3xl p-8 mb-8 border border-emerald-200/50 shadow-xl overflow-hidden">
+        <div className="relative bg-gradient-to-br from-emerald-500/20 via-emerald-400/15 to-teal-500/20 rounded-3xl p-4 sm:p-6 lg:p-8 mb-8 border border-emerald-200/50 shadow-xl overflow-hidden">
             {/* Background decorative elements */}
-            <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-emerald-300/20 to-transparent rounded-full -translate-y-16 translate-x-16" />
-            <div className="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-teal-300/20 to-transparent rounded-full translate-y-12 -translate-x-12" />
+            <div className="absolute top-0 right-0 w-24 h-24 sm:w-32 sm:h-32 bg-gradient-to-bl from-emerald-300/20 to-transparent rounded-full -translate-y-12 sm:-translate-y-16 translate-x-12 sm:translate-x-16" />
+            <div className="absolute bottom-0 left-0 w-16 h-16 sm:w-24 sm:h-24 bg-gradient-to-tr from-teal-300/20 to-transparent rounded-full translate-y-8 sm:translate-y-12 -translate-x-8 sm:-translate-x-12" />
 
             {/* Floating icons */}
-            <div className="absolute top-4 right-4 text-emerald-400/30">
-                <Zap className="w-6 h-6" />
+            <div className="absolute top-3 right-3 sm:top-4 sm:right-4 text-emerald-400/30">
+                <Zap className="w-4 h-4 sm:w-6 sm:h-6" />
             </div>
-            <div className="absolute bottom-4 left-4 text-teal-400/30">
-                <Star className="w-5 h-5" />
+            <div className="absolute bottom-3 left-3 sm:bottom-4 sm:left-4 text-teal-400/30">
+                <Star className="w-4 h-4 sm:w-5 sm:h-5" />
             </div>
 
-            {/* Share Button */}
+            {/* Share Button - Responsive positioning and sizing */}
             <div className="relative z-10">
                 <button
                     onClick={onShare}
-                    className="absolute top-4 left-0 bg-amber-500/20 hover:bg-amber-500/30 p-2 rounded-full transition-all duration-200 hover:scale-110 border border-amber-300/30"
+                    className="absolute top-0 right-0 sm:top-4 sm:left-0 bg-amber-500/20 hover:bg-amber-500/30 p-1.5 sm:p-2 rounded-full transition-all duration-200 hover:scale-110 border border-amber-300/30 w-8 h-8 sm:w-11 sm:h-11 flex items-center justify-center"
                     aria-label="Share your score"
                 >
-                    <Share2 className="w-7 h-7 text-amber-600" />
+                    <Share2 className="w-5 h-5 sm:w-7 sm:h-7 text-amber-600" />
                 </button>
 
-                {/* Main score with decorative elements */}
-                <div className="text-center mb-8">
+                {/* Main score with decorative elements - Responsive spacing */}
+                <div className="text-center mb-6 sm:mb-8 pt-12 sm:pt-0">
                     <div className="relative inline-block">
-                        <div className="text-5xl font-bold text-gray-900 mb-2 relative">
+                        <div className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 mb-2 relative">
                             &lt; 500
-                            <div className="absolute -top-2 -right-2">
-                                <div className="w-4 h-4 bg-emerald-500 rounded-full animate-pulse" />
+                            <div className="absolute -top-1 -right-1 sm:-top-2 sm:-right-2">
+                                <div className="w-3 h-3 sm:w-4 sm:h-4 bg-emerald-500 rounded-full animate-pulse" />
                             </div>
                         </div>
 
                         {/* Score status indicator */}
-                        <div className="flex items-center justify-center mt-3 mb-6">
-                            <div className="bg-emerald-100 text-emerald-700 px-4 py-2 rounded-full text-sm font-semibold flex items-center gap-2">
-                                <Flame className="w-4 h-4" />
+                        <div className="flex items-center justify-center mt-2 sm:mt-3 mb-4 sm:mb-6">
+                            <div className="bg-emerald-100 text-emerald-700 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-semibold flex items-center gap-1.5 sm:gap-2">
+                                <Flame className="w-3 h-3 sm:w-4 sm:h-4" />
                                 Growing
                             </div>
                         </div>
@@ -66,32 +68,32 @@ const ScoreCard = ({ onShare }: ScoreCardProps) => {
                 </div>
 
                 {/* Enhanced divider */}
-                <div className="relative mb-6">
+                <div className="relative mb-4 sm:mb-6">
                     <div className="h-px bg-gradient-to-r from-transparent via-emerald-300/50 to-transparent" />
                     <div className="absolute left-1/2 top-0 transform -translate-x-1/2 -translate-y-1/2">
-                        <div className="w-2 h-2 bg-emerald-400 rounded-full" />
+                        <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-emerald-400 rounded-full" />
                     </div>
                 </div>
 
                 {/* Bottom info with enhanced styling */}
                 <div className="flex justify-between items-center">
-                    <div className="flex items-center gap-2 text-gray-600">
-                        <Clock className="w-4 h-4 text-emerald-500" />
-                        <span className="text-sm font-medium">Round ends</span>
+                    <div className="flex items-center gap-1.5 sm:gap-2 text-gray-600">
+                        <Clock className="w-3 h-3 sm:w-4 sm:h-4 text-emerald-500" />
+                        <span className="text-xs sm:text-sm font-medium">Round ends</span>
                     </div>
-                    <div className="flex items-center gap-2">
-                        <div className="bg-orange-100 text-orange-700 px-3 py-1 rounded-full text-sm font-bold flex items-center gap-1">
-                            <div className="w-2 h-2 bg-orange-500 rounded-full animate-pulse" />
+                    <div className="flex items-center gap-1.5 sm:gap-2">
+                        <div className="bg-orange-100 text-orange-700 px-2 sm:px-3 py-0.5 sm:py-1 rounded-full text-xs sm:text-sm font-bold flex items-center gap-1">
+                            <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-orange-500 rounded-full animate-pulse" />
                             5d 17h
                         </div>
                     </div>
                 </div>
 
                 {/* Additional stats row */}
-                <div className="mt-6 pt-6 border-t border-emerald-200/30">
-                    <div className="flex justify-between items-center text-sm">
-                        <div className="flex items-center gap-2 text-gray-600">
-                            <Award className="w-4 h-4 text-purple-500" />
+                <div className="mt-4 sm:mt-6 pt-4 sm:pt-6 border-t border-emerald-200/30">
+                    <div className="flex justify-between items-center text-xs sm:text-sm">
+                        <div className="flex items-center gap-1.5 sm:gap-2 text-gray-600">
+                            <Award className="w-3 h-3 sm:w-4 sm:h-4 text-purple-500" />
                             <span>Current Rank</span>
                         </div>
                         <span className="text-gray-700 font-semibold">Unranked</span>
@@ -277,7 +279,7 @@ const ShareDrawer = ({ isOpen, onClose, userProfile }: ShareDrawerProps) => {
 // Main App Component with URL handling
 const ScoreCardsComponent = () => {
     const [showShareDrawer, setShowShareDrawer] = useState(false);
-    const [, setActiveTab] = useState("rewards")
+    const [, setActiveTab] = useState("rewards");
     const [, setShowWelcome] = useState(true);
 
     // Mock user profile - replace with actual user data
