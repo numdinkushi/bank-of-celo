@@ -31,6 +31,8 @@ interface TransactTabProps {
   maxClaim?: string;
   claimCooldown?: number;
   lastClaimAt?: number;
+  vaultBalance?: string;
+  availableForClaim: string;
   isCorrectChain: boolean;
   isPending: boolean;
 }
@@ -47,6 +49,8 @@ export default function TransactTab({
   lastClaimAt = 0,
   isCorrectChain,
   isPending,
+  availableForClaim,
+  vaultBalance,
 }: TransactTabProps) {
   const { address } = useAccount();
   const publicClient = usePublicClient();
@@ -155,6 +159,11 @@ export default function TransactTab({
       toast.error("Farcaster ID or address missing");
       return;
     }
+    if(availableForClaim  < maxClaim) {
+      toast.error("Insufficient vault balance to claim");
+      return;
+    }
+
 
     setClaimPending(true);
     setTxHash(null);
@@ -331,7 +340,7 @@ export default function TransactTab({
           <div className="bg-blue-100 dark:bg-blue-900 p-2 rounded-lg">
             <Gift className="w-5 h-5 text-blue-600 dark:text-blue-300" />
           </div>
-          <h2 className="text-3xl font-semibold text-white">Vault</h2>
+          <h2 className="text-3xl font-semibold text-white">BOC</h2>
         </div>
         <div className="flex bg-gray-100 dark:bg-gray-800 rounded-xl p-1">
           <button

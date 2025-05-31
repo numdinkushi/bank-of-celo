@@ -487,8 +487,10 @@ export default function Main({
             )}
             {activeTab === "transact" && (
               <TransactTab
+                vaultBalance={vaultBalance}
                 onDonate={handleDonate}
                 maxClaim={maxClaim}
+                availableForClaim={vaultStatus.availableForClaims}
                 claimCooldown={claimCooldown}
                 lastClaimAt={lastClaimAt}
                 isCorrectChain={isCorrectChain}
