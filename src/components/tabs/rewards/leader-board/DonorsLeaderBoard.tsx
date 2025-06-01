@@ -120,7 +120,7 @@ export default function DonorsLeaderBoard({
       setDonors(formattedDonors);
       toast.success("Leaderboard updated");
     } catch (error) {
-      console.log("Failed to fetch leaderboard:", error);
+      console.error("Failed to fetch leaderboard:", error);
       toast.error("Failed to load leaderboard");
     } finally {
       setIsLoading(false);
