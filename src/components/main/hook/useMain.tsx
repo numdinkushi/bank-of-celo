@@ -107,7 +107,7 @@ export function useContractData(
                     : formatEther(maxClaimAmount as bigint),
             );
         } catch (error) {
-            console.error("Failed to fetch contract data:", error);
+            console.log("Failed to fetch contract data:", error);
             toast.error("Failed to fetch contract data. Please try again.");
         } finally {
             setIsLoading(false);

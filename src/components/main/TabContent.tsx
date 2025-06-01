@@ -2,6 +2,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import HomeTab from "~/components/tabs/HomeTab";
 import TransactTab from "~/components/tabs/TransactTab";
 import Rewards from "~/components/tabs/rewards";
+import ServicesTab from "../tabs/services";
 
 interface VaultStatus {
     currentBalance: string;
@@ -67,6 +68,12 @@ export default function TabContent({
                         lastClaimAt={lastClaimAt}
                         isCorrectChain={isCorrectChain}
                         isPending={isPending}
+                    />
+                )}
+                {activeTab === "services" && (
+                    <ServicesTab
+                        vaultBalance={vaultBalance}
+                        isCorrectChain={isCorrectChain}
                     />
                 )}
                 {activeTab === "rewards" && <Rewards />}
