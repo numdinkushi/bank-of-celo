@@ -45,7 +45,7 @@ export default function RewardsLeaderBoard({
       }
       toast.success("Leaderboard refreshed");
     } catch (error) {
-      console.error("Failed to refresh leaderboard:", error);
+      console.log("Failed to refresh leaderboard:", error);
       toast.error("Failed to refresh leaderboard");
     } finally {
       setLoading(false);
