@@ -34,6 +34,7 @@ export const DailyCheckinSheet: React.FC<DailyCheckinSheetProps> = ({ isOpen, on
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [txHash, setTxHash] = useState<string | null>(null);
+  const [currentDay, setCurrentDay] = useState(1);
   const CELO_CHAIN_ID = 42220; // Celo mainnet
   const isCorrectChain = chainId === CELO_CHAIN_ID;
   const CHECK_IN_FEE = parseEther("0.001"); // From contract
@@ -41,49 +42,64 @@ export const DailyCheckinSheet: React.FC<DailyCheckinSheetProps> = ({ isOpen, on
   const POINTS_FOR_REWARD = 70; // Adjusted to match 7 check-ins (7 * 10 = 70)
 
   // Fetch user status from contract
-  const fetchUserStatus = useCallback(async () => {
-    if (!address || !publicClient || !isCorrectChain) return;
-    setIsLoading(true);
-    setError(null);
+const fetchUserStatus = useCallback(async () => {
+  if (!address || !publicClient || !isCorrectChain) return;
+  setIsLoading(true);
+  setError(null);
 
-    try {
-      const [checkInCount, eligibleForReward, hasClaimed] = (await publicClient.readContract({
+  try {
+    // Fetch user status
+    const [checkInCount, eligibleForReward, hasClaimed] = (await publicClient.readContract({
+      address: CELO_CHECK_IN_CONTRACT_ADDRESS,
+      abi: CELO_CHECK_IN_ABI,
+      functionName: "getUserStatus",
+      args: [address],
+    })) as [bigint, boolean, boolean];
+
+    const points = Number(checkInCount) * POINTS_PER_CHECKIN;
+    setDailyPoints(points);
+    setCanClaimReward(eligibleForReward && !hasClaimed);
+    setCheckinStreak(Number(checkInCount));
+
+    // Fetch current round data
+    const roundData = (await publicClient.readContract({
+      address: CELO_CHECK_IN_CONTRACT_ADDRESS,
+      abi: CELO_CHECK_IN_ABI,
+      functionName: "getActiveRound",
+    })) as { startTime: bigint; isActive: boolean; participantCount: bigint; totalCheckIns: bigint };
+
+    const currentRound = Number(
+      await publicClient.readContract({
         address: CELO_CHECK_IN_CONTRACT_ADDRESS,
         abi: CELO_CHECK_IN_ABI,
-        functionName: "getUserStatus",
-        args: [address],
-      })) as [bigint, boolean, boolean];
+        functionName: "currentRound",
+      })
+    );
 
-      const points = Number(checkInCount) * POINTS_PER_CHECKIN;
-      setDailyPoints(points);
-      setCanClaimReward(eligibleForReward && !hasClaimed);
+    // Calculate current day of the round (1–7)
+    const secondsPerDay = 24 * 60 * 60; // 86400 seconds
+    const now = Math.floor(Date.now() / 1000); // Current timestamp in seconds
+    const startTime = Number(roundData.startTime);
+    const elapsedDays = Math.floor((now - startTime) / secondsPerDay) + 1; // Days since round started
+    const currentDay = elapsedDays % 7 === 0 ? 7 : elapsedDays % 7; // Map to days 1–7
 
-      // Check if user has checked in today (simplified, assumes 1 check-in per day per round)
-      const currentRound = Number(
-        await publicClient.readContract({
-          address: CELO_CHECK_IN_CONTRACT_ADDRESS,
-          abi: CELO_CHECK_IN_ABI,
-          functionName: "currentRound",
-        })
-      );
-      const hasCheckedInToday = await publicClient.readContract({
-        address: CELO_CHECK_IN_CONTRACT_ADDRESS,
-        abi: CELO_CHECK_IN_ABI,
-        functionName: "dailyCheckIns",
-        args: [BigInt(currentRound), address, BigInt(1)], // Check day 1 as proxy
-      });
-      setCanCheckinToday(!hasCheckedInToday);
-
-      // Simplified streak calculation (could be enhanced with contract storage)
-      setCheckinStreak(Number(checkInCount));
-    } catch (err) {
-      console.error("Error fetching user status:", err);
-      setError("Failed to load check-in status. Please try again.");
-      toast.error("Failed to load check-in status.");
-    } finally {
-      setIsLoading(false);
-    }
-  }, [address, publicClient, isCorrectChain]);
+    // Check if user has checked in for the current day
+    const hasCheckedInToday = await publicClient.readContract({
+      address: CELO_CHECK_IN_CONTRACT_ADDRESS,
+      abi: CELO_CHECK_IN_ABI,
+      functionName: "dailyCheckIns",
+      args: [BigInt(currentRound), address, BigInt(currentDay)],
+    });
+    setCurrentDay(currentDay);
+    setCanCheckinToday(!hasCheckedInToday);
+  } catch (err) {
+    console.error("Error fetching user status:", err);
+    setError("Failed to load check-in status. Please try again.");
+    toast.error("Failed to load check-in status.");
+  } finally {
+    setIsLoading(false);
+  }
+}, [address, publicClient, isCorrectChain]);
 
   useEffect(() => {
     fetchUserStatus();
@@ -137,11 +153,23 @@ const handleCheckin = async () => {
       })
     );
 
-    // Get signature for check-in (day 1-7, cycling based on check-in count)
-    const day = ((dailyPoints / POINTS_PER_CHECKIN) % 7) + 1;
+    // Calculate current day of the round
+    const roundData = (await publicClient.readContract({
+      address: CELO_CHECK_IN_CONTRACT_ADDRESS,
+      abi: CELO_CHECK_IN_ABI,
+      functionName: "getActiveRound",
+    })) as { startTime: bigint; isActive: boolean; participantCount: bigint; totalCheckIns: bigint };
+
+    const secondsPerDay = 24 * 60 * 60; // 86400 seconds
+    const now = Math.floor(Date.now() / 1000); // Current timestamp in seconds
+    const startTime = Number(roundData.startTime);
+    const elapsedDays = Math.floor((now - startTime) / secondsPerDay) + 1;
+    const currentDay = elapsedDays % 7 === 0 ? 7 : elapsedDays % 7;
+
+    // Get signature for check-in
     const signature = await fetchSignature("checkIn", {
       userAddress: address,
-      day,
+      day: currentDay,
       round: currentRound,
     });
 
@@ -155,10 +183,10 @@ const handleCheckin = async () => {
     const checkInData = encodeFunctionData({
       abi: CELO_CHECK_IN_ABI,
       functionName: "checkIn",
-      args: [BigInt(day), signature],
+      args: [BigInt(currentDay), signature],
     });
 
-    // Try to get Divi referral data (but don't fail if it doesn't work)
+    // Try to get Divi referral data
     let dataSuffix = "";
     try {
       const suffix = await getDataSuffix({
@@ -168,13 +196,12 @@ const handleCheckin = async () => {
           "0x6226ddE08402642964f9A6de844ea3116F0dFc7e",
         ],
       });
-      // Ensure the suffix is properly formatted (starts with 0x)
       dataSuffix = suffix.startsWith("0x") ? suffix.slice(2) : suffix;
     } catch (diviError) {
       console.warn("Divi referral tracking failed, proceeding without it:", diviError);
     }
 
-    // Combine the data (contract call + referral suffix if available)
+    // Combine the data
     const combinedData = (checkInData + dataSuffix) as `0x${string}`;
 
     // Call checkIn
@@ -183,27 +210,27 @@ const handleCheckin = async () => {
       data: combinedData,
       value: CHECK_IN_FEE,
     });
+
     try {
-            console.log("Submitting referral to Divi:", {
-              txHash: hash,
-              chainId: CELO_CHAIN_ID,
-            });
-            await submitReferral({
-              txHash: hash,
-              chainId: CELO_CHAIN_ID,
-            });
-            console.log("Referral submitted successfully");
-          } catch (diviError) {
-            console.error("Divi submitReferral error:", diviError);
-            // Optionally show a warning toast, but don't mark donation as failed
-            toast.warning(
-              "Donation succeeded, but referral tracking failed. We're looking into it.",
-            );
-          }
-    await fetchUserStatus(); // Refresh status after check-in
+      console.log("Submitting referral to Divi:", {
+        txHash: hash,
+        chainId: CELO_CHAIN_ID,
+      });
+      await submitReferral({
+        txHash: hash,
+        chainId: CELO_CHAIN_ID,
+      });
+      console.log("Referral submitted successfully");
+    } catch (diviError) {
+      console.error("Divi submitReferral error:", diviError);
+      toast.warning(
+        "Check-in succeeded, but referral tracking failed. We're looking into it."
+      );
+    }
+
+    await fetchUserStatus(); // Refresh status
     setTxHash(hash);
     toast.success(`Checked in successfully! Tx: ${hash.slice(0, 6)}...`);
-    await fetchUserStatus(); // Refresh status
   } catch (err) {
     console.error("Check-in error:", err);
     const errorMsg = err instanceof Error ? err.message : "Failed to check in";
@@ -338,32 +365,32 @@ const handleCheckin = async () => {
 
         {/* Check-in Button */}
         {!isCorrectChain ? (
-          <Button
-            onClick={() => switchChainAsync({ chainId: CELO_CHAIN_ID })}
-            className="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white font-semibold py-4 px-6 rounded-xl"
-          >
-            Switch to Celo Network
-          </Button>
-        ) : isLoading ? (
-          <div className="w-full bg-gray-500/20 text-gray-400 font-semibold py-4 px-6 rounded-xl flex items-center justify-center gap-3">
-            <Loader2 className="w-5 h-5 animate-spin" />
-            Processing...
-          </div>
-        ) : canCheckinToday ? (
-          <Button
-            onClick={handleCheckin}
-            disabled={isTxPending || !address}
-            className="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white font-semibold py-4 px-6 rounded-xl hover:scale-[1.02] transition-all duration-300 flex items-center justify-center gap-3 shadow-lg"
-          >
-            <CheckCircle2 className="w-5 h-5" />
-            Check In Today (+{POINTS_PER_CHECKIN} points)
-          </Button>
-        ) : (
-          <div className="w-full bg-gray-500/20 text-gray-400 font-semibold py-4 px-6 rounded-xl flex items-center justify-center gap-3">
-            <CheckCircle2 className="w-5 h-5" />
-            Already checked in today
-          </div>
-        )}
+  <Button
+    onClick={() => switchChainAsync({ chainId: CELO_CHAIN_ID })}
+    className="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white font-semibold py-4 px-6 rounded-xl"
+  >
+    Switch to Celo Network
+  </Button>
+) : isLoading ? (
+  <div className="w-full bg-gray-500/20 text-gray-400 font-semibold py-4 px-6 rounded-xl flex items-center justify-center gap-3">
+    <Loader2 className="w-5 h-5 animate-spin" />
+    Processing...
+  </div>
+) : canCheckinToday ? (
+  <Button
+    onClick={handleCheckin}
+    disabled={isTxPending || !address}
+    className="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white font-semibold py-4 px-6 rounded-xl hover:scale-[1.02] transition-all duration-300 flex items-center justify-center gap-3 shadow-lg"
+  >
+    <CheckCircle2 className="w-5 h-5" />
+    Check In for Day {currentDay} (+{POINTS_PER_CHECKIN} points)
+  </Button>
+) : (
+  <div className="w-full bg-gray-500/20 text-gray-400 font-semibold py-4 px-6 rounded-xl flex items-center justify-center gap-3">
+    <CheckCircle2 className="w-5 h-5" />
+    Already checked in for Day {currentDay}
+  </div>
+)}
 
         {/* Claim Reward Button */}
         {canClaimReward ? (

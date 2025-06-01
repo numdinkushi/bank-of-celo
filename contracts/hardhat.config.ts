@@ -13,11 +13,23 @@ const config: HardhatUserConfig = {
       accounts: [process.env.PRIVATE_KEY ?? "0x0"],
       url: "https://forno.celo.org",
     },
+    base: {
+      accounts: [process.env.PRIVATE_KEY ?? "0x0"],
+      url: "https://mainnet.base.org",
+      chainId: 8453,
+    },
+    baseSepolia: {
+      accounts: [process.env.PRIVATE_KEY ?? "0x0"],
+      url: "https://sepolia.base.org",
+      chainId: 84532,
+    }
   },
   etherscan: {
     apiKey: {
       alfajores: process.env.CELOSCAN_API_KEY ?? "",
       celo: process.env.CELOSCAN_API_KEY ?? "",
+      base: process.env.BASESCAN_API_KEY ?? "", // Add your BaseScan API key to .env
+      baseSepolia: process.env.BASESCAN_API_KEY ?? "", // Can use same API key for both
     },
     customChains: [
       {
@@ -36,6 +48,22 @@ const config: HardhatUserConfig = {
           browserURL: "https://celoscan.io/",
         },
       },
+      {
+        chainId: 8453,
+        network: "base",
+        urls: {
+          apiURL: "https://api.basescan.org/api",
+          browserURL: "https://basescan.org"
+        }
+      },
+      {
+        chainId: 84532,
+        network: "baseSepolia",
+        urls: {
+          apiURL: "https://api-sepolia.basescan.org/api",
+          browserURL: "https://sepolia.basescan.org"
+        }
+      }
     ],
   },
   sourcify: {
