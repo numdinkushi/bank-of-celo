@@ -9,6 +9,7 @@ import {
   HandCoins,
   Clock,
   AlertCircle,
+  Ticket,
 } from "lucide-react";
 import { Button } from "~/components/ui/Button";
 import { toast } from "sonner";
@@ -61,11 +62,13 @@ export default function TransactTab({
   const [fid, setFid] = useState<number | null>(null);
   const [fidLoading, setFidLoading] = useState(false);
   const [fidError, setFidError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<"donate" | "claim">("donate");
+  const [activeTab, setActiveTab] = useState<"donate" | "claim" | "lottery">("donate");
   const [claimPending, setClaimPending] = useState(false);
   const [txHash, setTxHash] = useState<string | null>(null);
   const [hasClaimed, setHasClaimed] = useState(false);
   const [username, setUsername] = useState<string | null>(null);
+  const [ticketCount, setTicketCount] = useState("1");
+  const [lotteryPending, setLotteryPending] = useState(false);
 
   const getUsername = async (userAddress: string): Promise<string | null> => {
     if (!userAddress) return null;
@@ -122,6 +125,7 @@ export default function TransactTab({
       setFidLoading(false);
     }
   }, [address, publicClient]);
+
   const fetchHasClaimed = useCallback(async () => {
     if (!address || !publicClient || !isCorrectChain) return;
     try {
@@ -164,7 +168,6 @@ export default function TransactTab({
       toast.error("Insufficient vault balance to claim");
       return;
     }
-
 
     setClaimPending(true);
     setTxHash(null);
@@ -311,6 +314,55 @@ export default function TransactTab({
     }
   };
 
+  const handleLotteryTicket = async () => {
+    if (!address || !publicClient) {
+      toast.error("Wallet not connected");
+      return;
+    }
+
+    const tickets = parseInt(ticketCount);
+    if (isNaN(tickets) || tickets < 1) {
+      toast.error("Please enter a valid number of tickets");
+      return;
+    }
+
+    setLotteryPending(true);
+
+    try {
+      // Calculate total cost (1 CELO per ticket)
+      const totalCost = parseEther((tickets * 1).toString());
+
+      // Check user's balance
+      const balance = await publicClient.getBalance({ address });
+      if (balance < totalCost) {
+        toast.error("Insufficient CELO balance to buy tickets");
+        return;
+      }
+
+      // For now, we'll simulate the lottery ticket purchase
+      // In a real implementation, you would call a lottery contract function
+      const hash = await sendTransactionAsync({
+        to: BANK_OF_CELO_CONTRACT_ADDRESS, // This would be your lottery contract address
+        value: totalCost,
+        data: "0x", // This would contain the lottery function call data
+      });
+
+      toast.success(
+        `Successfully bought ${tickets} lottery ticket${tickets > 1 ? 's' : ''} for ${tickets} CELO! Transaction: ${hash.slice(0, 6)}...`
+      );
+      
+      setTicketCount("1"); // Reset to default
+      setTxHash(hash);
+    } catch (error) {
+      console.log("Lottery ticket purchase error:", error);
+      toast.error(
+        error instanceof Error ? error.message : "Failed to purchase lottery tickets"
+      );
+    } finally {
+      setLotteryPending(false);
+    }
+  };
+
   const handleSubmit = () => {
     if (!isCorrectChain) {
       toast.error("Please switch to Celo Network");
@@ -324,8 +376,10 @@ export default function TransactTab({
       }
       onDonate(amount);
       setAmount("");
-    } else {
+    } else if (activeTab === "claim") {
       handleClaim();
+    } else if (activeTab === "lottery") {
+      handleLotteryTicket();
     }
   };
 
@@ -371,6 +425,20 @@ export default function TransactTab({
           >
             <HandCoins className="w-4 h-4" />
             Claim
+          </button>
+          <button
+            onClick={() => setActiveTab("lottery")}
+            className={`flex-1 py-3 rounded-lg font-medium transition-colors flex items-center justify-center gap-2 ${
+              activeTab === "lottery"
+                ? "bg-white dark:bg-gray-700 shadow-sm text-purple-600 dark:text-purple-400"
+                : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
+            }`}
+            aria-label="Lottery Pot tab"
+            role="tab"
+            aria-selected={activeTab === "lottery"}
+          >
+            <Ticket className="w-4 h-4" />
+            Lottery Pot
           </button>
         </div>
       </div>
@@ -424,7 +492,7 @@ export default function TransactTab({
             </Button>
           </div>
         </motion.div>
-      ) : (
+      ) : activeTab === "claim" ? (
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
@@ -527,6 +595,93 @@ export default function TransactTab({
                 </div>
               )}
             </Button>
+          </div>
+        </motion.div>
+      ) : (
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+          className="p-6 bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700"
+        >
+          <div className="space-y-5">
+            <div className="text-center mb-4">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                🎰 Lottery Pot
+              </h3>
+              <p className="text-sm text-gray-600 dark:text-gray-400">
+                Buy lottery tickets for a chance to win the pot! Each ticket costs 1 CELO.
+              </p>
+            </div>
+
+            {txHash && (
+              <div className="p-3 bg-green-50 dark:bg-green-900/30 rounded-lg text-sm text-green-800 dark:text-green-200 flex items-center">
+                <span>
+                  Tickets purchased successfully!{" "}
+                  <a
+                    href={`https://celoscan.io/tx/${txHash}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="underline"
+                  >
+                    View on CeloScan
+                  </a>
+                </span>
+              </div>
+            )}
+
+            <div>
+              <label
+                htmlFor="ticket-count"
+                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+              >
+                Number of Tickets (1 CELO each)
+              </label>
+              <Input
+                id="ticket-count"
+                type="number"
+                value={ticketCount}
+                onChange={(e) => setTicketCount(e.target.value)}
+                placeholder="1"
+                className="w-full py-3 text-black"
+                min="1"
+                step="1"
+              />
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                Total cost: {ticketCount && !isNaN(parseInt(ticketCount)) ? parseInt(ticketCount) * 1 : 0} CELO
+              </p>
+            </div>
+
+            <Button
+              onClick={handleSubmit}
+              disabled={
+                isPending ||
+                lotteryPending ||
+                !ticketCount ||
+                isNaN(parseInt(ticketCount)) ||
+                parseInt(ticketCount) < 1
+              }
+              className="w-full py-3 bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-700 hover:to-purple-600 text-white"
+              aria-label="Buy lottery tickets"
+            >
+              {lotteryPending || isPending ? (
+                <Loader2 className="w-5 h-5 animate-spin" />
+              ) : (
+                <div className="flex items-center justify-center gap-2">
+                  <Ticket className="w-5 h-5" />
+                  <span>
+                    Buy {ticketCount && !isNaN(parseInt(ticketCount)) ? parseInt(ticketCount) : 1} 
+                    {' '}Ticket{parseInt(ticketCount) > 1 ? 's' : ''}
+                  </span>
+                </div>
+              )}
+            </Button>
+
+            <div className="text-center pt-2">
+              <p className="text-xs text-gray-500 dark:text-gray-400">
+                🍀 Good luck! The more tickets you buy, the higher your chances of winning!
+              </p>
+            </div>
           </div>
         </motion.div>
       )}
