@@ -13,388 +13,388 @@ async function main() {
   // Paste your ABI here (without getRewardTokensLength)
   const abi = [
     {
-      "inputs": [
+      inputs: [
         {
-          "internalType": "address",
-          "name": "initialOwner",
-          "type": "address"
-        }
+          internalType: "address",
+          name: "initialOwner",
+          type: "address",
+        },
       ],
-      "stateMutability": "nonpayable",
-      "type": "constructor"
+      stateMutability: "nonpayable",
+      type: "constructor",
     },
     {
-      "inputs": [
+      inputs: [
         {
-          "internalType": "address",
-          "name": "owner",
-          "type": "address"
-        }
+          internalType: "address",
+          name: "owner",
+          type: "address",
+        },
       ],
-      "name": "OwnableInvalidOwner",
-      "type": "error"
+      name: "OwnableInvalidOwner",
+      type: "error",
     },
     {
-      "inputs": [
+      inputs: [
         {
-          "internalType": "address",
-          "name": "account",
-          "type": "address"
-        }
+          internalType: "address",
+          name: "account",
+          type: "address",
+        },
       ],
-      "name": "OwnableUnauthorizedAccount",
-      "type": "error"
+      name: "OwnableUnauthorizedAccount",
+      type: "error",
     },
     {
-      "anonymous": false,
-      "inputs": [
+      anonymous: false,
+      inputs: [
         {
-          "indexed": true,
-          "internalType": "address",
-          "name": "user",
-          "type": "address"
+          indexed: true,
+          internalType: "address",
+          name: "user",
+          type: "address",
         },
         {
-          "indexed": false,
-          "internalType": "uint256",
-          "name": "pointsEarned",
-          "type": "uint256"
-        }
+          indexed: false,
+          internalType: "uint256",
+          name: "pointsEarned",
+          type: "uint256",
+        },
       ],
-      "name": "InteractionRecorded",
-      "type": "event"
+      name: "InteractionRecorded",
+      type: "event",
     },
     {
-      "anonymous": false,
-      "inputs": [
+      anonymous: false,
+      inputs: [
         {
-          "indexed": true,
-          "internalType": "address",
-          "name": "previousOwner",
-          "type": "address"
+          indexed: true,
+          internalType: "address",
+          name: "previousOwner",
+          type: "address",
         },
         {
-          "indexed": true,
-          "internalType": "address",
-          "name": "newOwner",
-          "type": "address"
-        }
+          indexed: true,
+          internalType: "address",
+          name: "newOwner",
+          type: "address",
+        },
       ],
-      "name": "OwnershipTransferred",
-      "type": "event"
+      name: "OwnershipTransferred",
+      type: "event",
     },
     {
-      "anonymous": false,
-      "inputs": [
+      anonymous: false,
+      inputs: [
         {
-          "indexed": true,
-          "internalType": "address",
-          "name": "user",
-          "type": "address"
+          indexed: true,
+          internalType: "address",
+          name: "user",
+          type: "address",
         },
         {
-          "indexed": false,
-          "internalType": "uint256",
-          "name": "points",
-          "type": "uint256"
-        }
+          indexed: false,
+          internalType: "uint256",
+          name: "points",
+          type: "uint256",
+        },
       ],
-      "name": "PointsRedeemed",
-      "type": "event"
+      name: "PointsRedeemed",
+      type: "event",
     },
     {
-      "anonymous": false,
-      "inputs": [
+      anonymous: false,
+      inputs: [
         {
-          "indexed": true,
-          "internalType": "address",
-          "name": "rewardToken",
-          "type": "address"
+          indexed: true,
+          internalType: "address",
+          name: "rewardToken",
+          type: "address",
         },
         {
-          "indexed": false,
-          "internalType": "uint256",
-          "name": "pointsRequired",
-          "type": "uint256"
-        }
+          indexed: false,
+          internalType: "uint256",
+          name: "pointsRequired",
+          type: "uint256",
+        },
       ],
-      "name": "RewardAdded",
-      "type": "event"
+      name: "RewardAdded",
+      type: "event",
     },
     {
-      "anonymous": false,
-      "inputs": [
+      anonymous: false,
+      inputs: [
         {
-          "indexed": true,
-          "internalType": "address",
-          "name": "user",
-          "type": "address"
-        }
+          indexed: true,
+          internalType: "address",
+          name: "user",
+          type: "address",
+        },
       ],
-      "name": "UserRegistered",
-      "type": "event"
+      name: "UserRegistered",
+      type: "event",
     },
     {
-      "inputs": [
+      inputs: [
         {
-          "internalType": "address",
-          "name": "token",
-          "type": "address"
+          internalType: "address",
+          name: "token",
+          type: "address",
         },
         {
-          "internalType": "uint256",
-          "name": "pointsRequired",
-          "type": "uint256"
-        }
+          internalType: "uint256",
+          name: "pointsRequired",
+          type: "uint256",
+        },
       ],
-      "name": "addRewardToken",
-      "outputs": [],
-      "stateMutability": "nonpayable",
-      "type": "function"
+      name: "addRewardToken",
+      outputs: [],
+      stateMutability: "nonpayable",
+      type: "function",
     },
     {
-      "inputs": [],
-      "name": "bonusMultiplier",
-      "outputs": [
+      inputs: [],
+      name: "bonusMultiplier",
+      outputs: [
         {
-          "internalType": "uint256",
-          "name": "",
-          "type": "uint256"
-        }
+          internalType: "uint256",
+          name: "",
+          type: "uint256",
+        },
       ],
-      "stateMutability": "view",
-      "type": "function"
+      stateMutability: "view",
+      type: "function",
     },
     {
-      "inputs": [],
-      "name": "cooldownPeriod",
-      "outputs": [
+      inputs: [],
+      name: "cooldownPeriod",
+      outputs: [
         {
-          "internalType": "uint256",
-          "name": "",
-          "type": "uint256"
-        }
+          internalType: "uint256",
+          name: "",
+          type: "uint256",
+        },
       ],
-      "stateMutability": "view",
-      "type": "function"
+      stateMutability: "view",
+      type: "function",
     },
     {
-      "inputs": [],
-      "name": "getActiveUsersCount",
-      "outputs": [
+      inputs: [],
+      name: "getActiveUsersCount",
+      outputs: [
         {
-          "internalType": "uint256",
-          "name": "",
-          "type": "uint256"
-        }
+          internalType: "uint256",
+          name: "",
+          type: "uint256",
+        },
       ],
-      "stateMutability": "view",
-      "type": "function"
+      stateMutability: "view",
+      type: "function",
     },
     {
-      "inputs": [
+      inputs: [
         {
-          "internalType": "address",
-          "name": "user",
-          "type": "address"
-        }
+          internalType: "address",
+          name: "user",
+          type: "address",
+        },
       ],
-      "name": "isActiveUser",
-      "outputs": [
+      name: "isActiveUser",
+      outputs: [
         {
-          "internalType": "bool",
-          "name": "",
-          "type": "bool"
-        }
+          internalType: "bool",
+          name: "",
+          type: "bool",
+        },
       ],
-      "stateMutability": "view",
-      "type": "function"
+      stateMutability: "view",
+      type: "function",
     },
     {
-      "inputs": [],
-      "name": "minInteractionsForBonus",
-      "outputs": [
+      inputs: [],
+      name: "minInteractionsForBonus",
+      outputs: [
         {
-          "internalType": "uint256",
-          "name": "",
-          "type": "uint256"
-        }
+          internalType: "uint256",
+          name: "",
+          type: "uint256",
+        },
       ],
-      "stateMutability": "view",
-      "type": "function"
+      stateMutability: "view",
+      type: "function",
     },
     {
-      "inputs": [],
-      "name": "owner",
-      "outputs": [
+      inputs: [],
+      name: "owner",
+      outputs: [
         {
-          "internalType": "address",
-          "name": "",
-          "type": "address"
-        }
+          internalType: "address",
+          name: "",
+          type: "address",
+        },
       ],
-      "stateMutability": "view",
-      "type": "function"
+      stateMutability: "view",
+      type: "function",
     },
     {
-      "inputs": [],
-      "name": "pointsPerInteraction",
-      "outputs": [
+      inputs: [],
+      name: "pointsPerInteraction",
+      outputs: [
         {
-          "internalType": "uint256",
-          "name": "",
-          "type": "uint256"
-        }
+          internalType: "uint256",
+          name: "",
+          type: "uint256",
+        },
       ],
-      "stateMutability": "view",
-      "type": "function"
+      stateMutability: "view",
+      type: "function",
     },
     {
-      "inputs": [],
-      "name": "recordInteraction",
-      "outputs": [],
-      "stateMutability": "nonpayable",
-      "type": "function"
+      inputs: [],
+      name: "recordInteraction",
+      outputs: [],
+      stateMutability: "nonpayable",
+      type: "function",
     },
     {
-      "inputs": [
+      inputs: [
         {
-          "internalType": "address",
-          "name": "rewardToken",
-          "type": "address"
-        }
+          internalType: "address",
+          name: "rewardToken",
+          type: "address",
+        },
       ],
-      "name": "redeemPoints",
-      "outputs": [],
-      "stateMutability": "nonpayable",
-      "type": "function"
+      name: "redeemPoints",
+      outputs: [],
+      stateMutability: "nonpayable",
+      type: "function",
     },
     {
-      "inputs": [],
-      "name": "register",
-      "outputs": [],
-      "stateMutability": "nonpayable",
-      "type": "function"
+      inputs: [],
+      name: "register",
+      outputs: [],
+      stateMutability: "nonpayable",
+      type: "function",
     },
     {
-      "inputs": [],
-      "name": "renounceOwnership",
-      "outputs": [],
-      "stateMutability": "nonpayable",
-      "type": "function"
+      inputs: [],
+      name: "renounceOwnership",
+      outputs: [],
+      stateMutability: "nonpayable",
+      type: "function",
     },
     {
-      "inputs": [
+      inputs: [
         {
-          "internalType": "address",
-          "name": "",
-          "type": "address"
-        }
+          internalType: "address",
+          name: "",
+          type: "address",
+        },
       ],
-      "name": "rewardPointsRequired",
-      "outputs": [
+      name: "rewardPointsRequired",
+      outputs: [
         {
-          "internalType": "uint256",
-          "name": "",
-          "type": "uint256"
-        }
+          internalType: "uint256",
+          name: "",
+          type: "uint256",
+        },
       ],
-      "stateMutability": "view",
-      "type": "function"
+      stateMutability: "view",
+      type: "function",
     },
     {
-      "inputs": [
+      inputs: [
         {
-          "internalType": "uint256",
-          "name": "",
-          "type": "uint256"
-        }
+          internalType: "uint256",
+          name: "",
+          type: "uint256",
+        },
       ],
-      "name": "rewardTokens",
-      "outputs": [
+      name: "rewardTokens",
+      outputs: [
         {
-          "internalType": "address",
-          "name": "",
-          "type": "address"
-        }
+          internalType: "address",
+          name: "",
+          type: "address",
+        },
       ],
-      "stateMutability": "view",
-      "type": "function"
+      stateMutability: "view",
+      type: "function",
     },
     {
-      "inputs": [
+      inputs: [
         {
-          "internalType": "uint256",
-          "name": "newCooldown",
-          "type": "uint256"
-        }
+          internalType: "uint256",
+          name: "newCooldown",
+          type: "uint256",
+        },
       ],
-      "name": "setCooldownPeriod",
-      "outputs": [],
-      "stateMutability": "nonpayable",
-      "type": "function"
+      name: "setCooldownPeriod",
+      outputs: [],
+      stateMutability: "nonpayable",
+      type: "function",
     },
     {
-      "inputs": [
+      inputs: [
         {
-          "internalType": "uint256",
-          "name": "newPoints",
-          "type": "uint256"
-        }
+          internalType: "uint256",
+          name: "newPoints",
+          type: "uint256",
+        },
       ],
-      "name": "setPointsPerInteraction",
-      "outputs": [],
-      "stateMutability": "nonpayable",
-      "type": "function"
+      name: "setPointsPerInteraction",
+      outputs: [],
+      stateMutability: "nonpayable",
+      type: "function",
     },
     {
-      "inputs": [
+      inputs: [
         {
-          "internalType": "address",
-          "name": "newOwner",
-          "type": "address"
-        }
+          internalType: "address",
+          name: "newOwner",
+          type: "address",
+        },
       ],
-      "name": "transferOwnership",
-      "outputs": [],
-      "stateMutability": "nonpayable",
-      "type": "function"
+      name: "transferOwnership",
+      outputs: [],
+      stateMutability: "nonpayable",
+      type: "function",
     },
     {
-      "inputs": [
+      inputs: [
         {
-          "internalType": "address",
-          "name": "",
-          "type": "address"
-        }
+          internalType: "address",
+          name: "",
+          type: "address",
+        },
       ],
-      "name": "userActivities",
-      "outputs": [
+      name: "userActivities",
+      outputs: [
         {
-          "internalType": "uint256",
-          "name": "interactionCount",
-          "type": "uint256"
+          internalType: "uint256",
+          name: "interactionCount",
+          type: "uint256",
         },
         {
-          "internalType": "uint256",
-          "name": "lastInteractionTimestamp",
-          "type": "uint256"
+          internalType: "uint256",
+          name: "lastInteractionTimestamp",
+          type: "uint256",
         },
         {
-          "internalType": "uint256",
-          "name": "totalPoints",
-          "type": "uint256"
+          internalType: "uint256",
+          name: "totalPoints",
+          type: "uint256",
         },
         {
-          "internalType": "bool",
-          "name": "isActive",
-          "type": "bool"
-        }
+          internalType: "bool",
+          name: "isActive",
+          type: "bool",
+        },
       ],
-      "stateMutability": "view",
-      "type": "function"
-    }
-  ]
+      stateMutability: "view",
+      type: "function",
+    },
+  ];
 
   const loyaltyContract = new ethers.Contract(contractAddress, abi, userWallet);
 
@@ -418,7 +418,10 @@ async function main() {
     await txInteract.wait();
     console.log("Interaction recorded.");
   } catch (err: any) {
-    console.error("Failed to record interaction. Maybe cooldown not passed?", err.reason || err.message);
+    console.error(
+      "Failed to record interaction. Maybe cooldown not passed?",
+      err.reason || err.message,
+    );
   }
 
   // 3. Read rewardTokens length from storage slot 1
@@ -429,7 +432,7 @@ async function main() {
 
   // 4. Calculate base slot for array elements
   const baseSlot = ethers.utils.keccak256(
-    ethers.utils.defaultAbiCoder.encode(["uint256"], [slotIndex])
+    ethers.utils.defaultAbiCoder.encode(["uint256"], [slotIndex]),
   );
   const baseSlotBN = ethers.BigNumber.from(baseSlot);
 
@@ -438,7 +441,10 @@ async function main() {
 
   for (let i = 0; i < rewardTokensLength; i++) {
     const elementSlot = baseSlotBN.add(i);
-    const rawAddress = await provider.getStorageAt(contractAddress, elementSlot);
+    const rawAddress = await provider.getStorageAt(
+      contractAddress,
+      elementSlot,
+    );
     // Addresses are stored as right-padded 32 bytes, last 20 bytes are address
     const tokenAddress = ethers.utils.getAddress("0x" + rawAddress.slice(26));
     rewardTokens.push(tokenAddress);
@@ -448,23 +454,34 @@ async function main() {
 
   // 6. For each reward token, get points required and check if user has enough points
   const userActivity = await loyaltyContract.userActivities(userWallet.address);
-  const userPoints = userActivity.totalPoints.toNumber ? userActivity.totalPoints.toNumber() : userActivity.totalPoints;
+  const userPoints = userActivity.totalPoints.toNumber
+    ? userActivity.totalPoints.toNumber()
+    : userActivity.totalPoints;
 
   for (const token of rewardTokens) {
     const pointsRequired = await loyaltyContract.rewardPointsRequired(token);
-    console.log(`Token: ${token}, Points Required: ${pointsRequired.toString()}`);
+    console.log(
+      `Token: ${token}, Points Required: ${pointsRequired.toString()}`,
+    );
 
     if (userPoints >= pointsRequired) {
       console.log(`Attempting to redeem points for token ${token}...`);
       try {
         const txRedeem = await loyaltyContract.redeemPoints(token);
         const receipt = await txRedeem.wait();
-        console.log(`Redeemed points for ${token}. Tx: ${receipt.transactionHash}`);
+        console.log(
+          `Redeemed points for ${token}. Tx: ${receipt.transactionHash}`,
+        );
       } catch (err: any) {
-        console.error(`Redeem failed for token ${token}:`, err.reason || err.message);
+        console.error(
+          `Redeem failed for token ${token}:`,
+          err.reason || err.message,
+        );
       }
     } else {
-      console.log(`Not enough points to redeem token ${token}. User points: ${userPoints}`);
+      console.log(
+        `Not enough points to redeem token ${token}. User points: ${userPoints}`,
+      );
     }
   }
 }

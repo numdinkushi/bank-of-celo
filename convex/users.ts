@@ -39,36 +39,36 @@ export const addOrUpdateUser = mutation({
 });
 
 export const getLeaderboard = query({
-    args: { limit: v.optional(v.number()) },
-    handler: async (ctx, args) => {
-      const users = await ctx.db
-        .query("users")
-        .order("desc")
-        .take(args.limit || 50);
-      
-      return users;
-    },
-  });
+  args: { limit: v.optional(v.number()) },
+  handler: async (ctx, args) => {
+    const users = await ctx.db
+      .query("users")
+      .order("desc")
+      .take(args.limit || 50);
 
-  export const verifyOG = mutation({
-    args: { address: v.string() },
-    handler: async (ctx, args) => {
-      const user = await ctx.db
-        .query("users")
-        .filter((q) => q.eq(q.field("address"), args.address))
-        .first();
-  
-      if (!user) throw new Error("User not found");
-      await ctx.db.patch(user._id, { isOG: true });
-    },
-  });
+    return users;
+  },
+});
+
+export const verifyOG = mutation({
+  args: { address: v.string() },
+  handler: async (ctx, args) => {
+    const user = await ctx.db
+      .query("users")
+      .filter((q) => q.eq(q.field("address"), args.address))
+      .first();
+
+    if (!user) throw new Error("User not found");
+    await ctx.db.patch(user._id, { isOG: true });
+  },
+});
 
 export const getUserByFid = query({
   args: { fid: v.string() },
   handler: async (ctx, args) => {
     return await ctx.db
       .query("users")
-      .filter(q => q.eq(q.field("fid"), args.fid))
+      .filter((q) => q.eq(q.field("fid"), args.fid))
       .first();
   },
 });

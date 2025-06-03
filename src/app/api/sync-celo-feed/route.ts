@@ -49,7 +49,9 @@ const convex = new ConvexHttpClient(CONVEX_URL);
 
 export async function POST() {
   try {
-    const oneWeekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+    const oneWeekAgo = new Date(
+      Date.now() - 7 * 24 * 60 * 60 * 1000,
+    ).toISOString();
     let casts: Cast[] = [];
     let cursor: string | null = null;
     const limit = 100;
@@ -67,31 +69,40 @@ export async function POST() {
 
       if (!response.ok) {
         const errorBody = await response.text();
-        throw new Error(`Neynar API error: ${response.status} - ${response.statusText} - ${errorBody}`);
+        throw new Error(
+          `Neynar API error: ${response.status} - ${response.statusText} - ${errorBody}`,
+        );
       }
 
       const data: NeynarResponse = await response.json();
-      casts = casts.concat(data.casts.filter((cast) => cast.timestamp >= oneWeekAgo));
+      casts = casts.concat(
+        data.casts.filter((cast) => cast.timestamp >= oneWeekAgo),
+      );
       cursor = data.next?.cursor || null;
     } while (cursor && casts.length < 5000);
 
     // Step 2: Get all unique FIDs from casts
-    const fids = casts.map(cast => cast.author.fid);
+    const fids = casts.map((cast) => cast.author.fid);
     const uniqueFids = [...new Set(fids)];
 
     // Step 3: Fetch user details in bulk to get addresses
     let usersWithAddresses: User[] = [];
     if (uniqueFids.length > 0) {
-      const usersResponse = await fetch(`https://api.neynar.com/v2/farcaster/user/bulk?fids=${uniqueFids.join(',')}`, {
-        method: "GET",
-        headers: {
-          "api_key": NEYNAR_API_KEY,
+      const usersResponse = await fetch(
+        `https://api.neynar.com/v2/farcaster/user/bulk?fids=${uniqueFids.join(",")}`,
+        {
+          method: "GET",
+          headers: {
+            api_key: NEYNAR_API_KEY,
+          },
         },
-      });
+      );
 
       if (!usersResponse.ok) {
         const errorBody = await usersResponse.text();
-        throw new Error(`Neynar Users API error: ${usersResponse.status} - ${usersResponse.statusText} - ${errorBody}`);
+        throw new Error(
+          `Neynar Users API error: ${usersResponse.status} - ${usersResponse.statusText} - ${errorBody}`,
+        );
       }
 
       const usersData: BulkUsersResponse = await usersResponse.json();
@@ -100,21 +111,25 @@ export async function POST() {
 
     // Create a map of FID to user details for quick lookup
     const userDetailsMap = new Map<number, User>();
-    usersWithAddresses.forEach(user => {
+    usersWithAddresses.forEach((user) => {
       userDetailsMap.set(user.fid, user);
     });
 
     // Step 4: Process casts and update user scores with address information
-    const userScores = new Map<string, { score: number; username: string, address: string }>();
+    const userScores = new Map<
+      string,
+      { score: number; username: string; address: string }
+    >();
     for (const cast of casts) {
       const fid = cast.author.fid.toString();
       const userDetails = userDetailsMap.get(cast.author.fid);
-      
+
       // Get the primary ETH address or fallback to custody address
-      const ethAddress = userDetails?.verified_addresses?.primary?.eth_address?.toLowerCase() || 
-                         userDetails?.verified_addresses?.eth_addresses?.[0]?.toLowerCase() || 
-                         userDetails?.custody_address?.toLowerCase() || 
-                         "";
+      const ethAddress =
+        userDetails?.verified_addresses?.primary?.eth_address?.toLowerCase() ||
+        userDetails?.verified_addresses?.eth_addresses?.[0]?.toLowerCase() ||
+        userDetails?.custody_address?.toLowerCase() ||
+        "";
 
       const currentScore = userScores.get(fid) || {
         score: cast.author.score || 0,
@@ -123,7 +138,10 @@ export async function POST() {
       };
 
       // Scoring: 1 point per cast, 0.5 per like, 0.3 per recast
-      const castScore = 1 + cast.reactions.likes_count * 0.5 + cast.reactions.recasts_count * 0.3;
+      const castScore =
+        1 +
+        cast.reactions.likes_count * 0.5 +
+        cast.reactions.recasts_count * 0.3;
       userScores.set(fid, {
         score: currentScore.score + castScore,
         username: currentScore.username,
@@ -136,7 +154,10 @@ export async function POST() {
       const existingUser = await convex.query(api.users.getUserByFid, { fid });
 
       // Skip if user's score was updated recently (optional: adjust as needed)
-      if (existingUser && Date.now() - existingUser.lastUpdated < 7 * 24 * 60 * 60 * 1000) {
+      if (
+        existingUser &&
+        Date.now() - existingUser.lastUpdated < 7 * 24 * 60 * 60 * 1000
+      ) {
         continue;
       }
 
@@ -149,16 +170,16 @@ export async function POST() {
       });
     }
 
-    return NextResponse.json({ 
-      success: true, 
+    return NextResponse.json({
+      success: true,
       castsProcessed: casts.length,
-      usersProcessed: userScores.size
+      usersProcessed: userScores.size,
     });
   } catch (error: any) {
     console.error("Error syncing Celo feed:", error);
     return NextResponse.json(
       { error: "Failed to sync feed", details: error.message },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

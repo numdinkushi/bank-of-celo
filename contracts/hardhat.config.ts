@@ -22,7 +22,7 @@ const config: HardhatUserConfig = {
       accounts: [process.env.PRIVATE_KEY ?? "0x0"],
       url: "https://sepolia.base.org",
       chainId: 84532,
-    }
+    },
   },
   etherscan: {
     apiKey: {
@@ -53,17 +53,17 @@ const config: HardhatUserConfig = {
         network: "base",
         urls: {
           apiURL: "https://api.basescan.org/api",
-          browserURL: "https://basescan.org"
-        }
+          browserURL: "https://basescan.org",
+        },
       },
       {
         chainId: 84532,
         network: "baseSepolia",
         urls: {
           apiURL: "https://api-sepolia.basescan.org/api",
-          browserURL: "https://sepolia.basescan.org"
-        }
-      }
+          browserURL: "https://sepolia.basescan.org",
+        },
+      },
     ],
   },
   sourcify: {
