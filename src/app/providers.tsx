@@ -24,10 +24,8 @@ export function Providers({
     <SessionProvider session={session}>
       <WagmiProvider>
         <FrameProvider>
-          <ConvexClientProvider>
-          {children}
-          </ConvexClientProvider>
-          </FrameProvider>
+          <ConvexClientProvider>{children}</ConvexClientProvider>
+        </FrameProvider>
       </WagmiProvider>
     </SessionProvider>
   );

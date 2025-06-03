@@ -4,10 +4,7 @@ import { v } from "convex/values";
 
 export const distributeRewards = mutation({
   handler: async (ctx) => {
-    const users = await ctx.db
-      .query("users")
-      .order("desc")
-      .take(50);
+    const users = await ctx.db.query("users").order("desc").take(50);
 
     const celoPriceUSD = 0.5; // Assume 1 CELO = $0.5 (fetch from an oracle in production)
     const period = new Date().toISOString().split("T")[0]; // Daily period (e.g., "2025-05-22")
@@ -33,32 +30,35 @@ export const claimReward = mutation({
   handler: async (ctx, args) => {
     const reward = await ctx.db
       .query("rewards")
-      .filter(q => q.eq(q.field("fid"), args.fid))
-      .filter(q => q.eq(q.field("period"), args.period))
+      .filter((q) => q.eq(q.field("fid"), args.fid))
+      .filter((q) => q.eq(q.field("period"), args.period))
       .first();
 
     if (!reward || reward.claimed) throw new Error("No unclaimed reward found");
-    
+
     await ctx.db.patch(reward._id, { claimed: true });
-    const user = await ctx.db.query("users").filter(q => q.eq(q.field("fid"), args.fid)).first();
+    const user = await ctx.db
+      .query("users")
+      .filter((q) => q.eq(q.field("fid"), args.fid))
+      .first();
     if (!user) throw new Error("User not found");
     return { amount: reward.amount, address: user.address };
   },
 });
 export const getReward = query({
-    args: { fid: v.string(), period: v.string() },
-    handler: async (ctx, args) => {
-      return await ctx.db
-        .query("rewards")
-        .filter((q) => q.eq(q.field("fid"), args.fid))
-        .filter((q) => q.eq(q.field("period"), args.period))
-        .first();
-    },
-  });
-  
-  export const markClaimed = mutation({
-    args: { rewardId: v.id("rewards") },
-    handler: async (ctx, args) => {
-      await ctx.db.patch(args.rewardId, { claimed: true });
-    },
-  });
+  args: { fid: v.string(), period: v.string() },
+  handler: async (ctx, args) => {
+    return await ctx.db
+      .query("rewards")
+      .filter((q) => q.eq(q.field("fid"), args.fid))
+      .filter((q) => q.eq(q.field("period"), args.period))
+      .first();
+  },
+});
+
+export const markClaimed = mutation({
+  args: { rewardId: v.id("rewards") },
+  handler: async (ctx, args) => {
+    await ctx.db.patch(args.rewardId, { claimed: true });
+  },
+});

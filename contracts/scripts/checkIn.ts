@@ -15,7 +15,8 @@ async function main() {
 
   // Contract details
   const contractAddress = "0x3d08dA4DcFB48488C421214330657De1dF77BB3b";
-  const trustedSignerPrivateKey: string = process.env.TRUSTED_SIGNER_PRIVATE_KEY || "";
+  const trustedSignerPrivateKey: string =
+    process.env.TRUSTED_SIGNER_PRIVATE_KEY || "";
   if (!trustedSignerPrivateKey) {
     throw new Error("TRUSTED_SIGNER_PRIVATE_KEY not set in .env");
   }
@@ -24,494 +25,515 @@ async function main() {
   // Contract ABI
   const abi = [
     {
-      "inputs": [
+      inputs: [
         {
-          "internalType": "address",
-          "name": "_trustedSigner",
-          "type": "address"
-        }
+          internalType: "address",
+          name: "_trustedSigner",
+          type: "address",
+        },
       ],
-      "stateMutability": "nonpayable",
-      "type": "constructor"
+      stateMutability: "nonpayable",
+      type: "constructor",
     },
     {
-      "anonymous": false,
-      "inputs": [
+      anonymous: false,
+      inputs: [
         {
-          "indexed": true,
-          "internalType": "address",
-          "name": "user",
-          "type": "address"
+          indexed: true,
+          internalType: "address",
+          name: "user",
+          type: "address",
         },
         {
-          "indexed": true,
-          "internalType": "uint256",
-          "name": "day",
-          "type": "uint256"
+          indexed: true,
+          internalType: "uint256",
+          name: "day",
+          type: "uint256",
         },
         {
-          "indexed": false,
-          "internalType": "uint256",
-          "name": "round",
-          "type": "uint256"
-        }
+          indexed: false,
+          internalType: "uint256",
+          name: "round",
+          type: "uint256",
+        },
       ],
-      "name": "CheckedIn",
-      "type": "event"
+      name: "CheckedIn",
+      type: "event",
     },
     {
-      "anonymous": false,
-      "inputs": [
+      anonymous: false,
+      inputs: [
         {
-          "indexed": true,
-          "internalType": "address",
-          "name": "depositor",
-          "type": "address"
+          indexed: true,
+          internalType: "address",
+          name: "depositor",
+          type: "address",
         },
         {
-          "indexed": false,
-          "internalType": "uint256",
-          "name": "amount",
-          "type": "uint256"
-        }
+          indexed: false,
+          internalType: "uint256",
+          name: "amount",
+          type: "uint256",
+        },
       ],
-      "name": "FundsDeposited",
-      "type": "event"
+      name: "FundsDeposited",
+      type: "event",
     },
     {
-      "anonymous": false,
-      "inputs": [
+      anonymous: false,
+      inputs: [
         {
-          "indexed": true,
-          "internalType": "address",
-          "name": "user",
-          "type": "address"
+          indexed: true,
+          internalType: "address",
+          name: "user",
+          type: "address",
         },
         {
-          "indexed": false,
-          "internalType": "uint256",
-          "name": "round",
-          "type": "uint256"
-        }
+          indexed: false,
+          internalType: "uint256",
+          name: "round",
+          type: "uint256",
+        },
       ],
-      "name": "RewardClaimed",
-      "type": "event"
+      name: "RewardClaimed",
+      type: "event",
     },
     {
-      "anonymous": false,
-      "inputs": [
+      anonymous: false,
+      inputs: [
         {
-          "indexed": true,
-          "internalType": "uint256",
-          "name": "round",
-          "type": "uint256"
-        }
+          indexed: true,
+          internalType: "uint256",
+          name: "round",
+          type: "uint256",
+        },
       ],
-      "name": "RoundEnded",
-      "type": "event"
+      name: "RoundEnded",
+      type: "event",
     },
     {
-      "anonymous": false,
-      "inputs": [
+      anonymous: false,
+      inputs: [
         {
-          "indexed": true,
-          "internalType": "uint256",
-          "name": "round",
-          "type": "uint256"
-        }
+          indexed: true,
+          internalType: "uint256",
+          name: "round",
+          type: "uint256",
+        },
       ],
-      "name": "RoundStarted",
-      "type": "event"
+      name: "RoundStarted",
+      type: "event",
     },
     {
-      "inputs": [],
-      "name": "admin",
-      "outputs": [
+      inputs: [],
+      name: "admin",
+      outputs: [
         {
-          "internalType": "address",
-          "name": "",
-          "type": "address"
-        }
+          internalType: "address",
+          name: "",
+          type: "address",
+        },
       ],
-      "stateMutability": "view",
-      "type": "function"
+      stateMutability: "view",
+      type: "function",
     },
     {
-      "inputs": [
+      inputs: [
         {
-          "internalType": "uint256",
-          "name": "day",
-          "type": "uint256"
+          internalType: "uint256",
+          name: "day",
+          type: "uint256",
         },
         {
-          "internalType": "bytes",
-          "name": "signature",
-          "type": "bytes"
-        }
+          internalType: "bytes",
+          name: "signature",
+          type: "bytes",
+        },
       ],
-      "name": "checkIn",
-      "outputs": [],
-      "stateMutability": "payable",
-      "type": "function"
+      name: "checkIn",
+      outputs: [],
+      stateMutability: "payable",
+      type: "function",
     },
     {
-      "inputs": [],
-      "name": "checkInFee",
-      "outputs": [
+      inputs: [],
+      name: "checkInFee",
+      outputs: [
         {
-          "internalType": "uint256",
-          "name": "",
-          "type": "uint256"
-        }
+          internalType: "uint256",
+          name: "",
+          type: "uint256",
+        },
       ],
-      "stateMutability": "view",
-      "type": "function"
+      stateMutability: "view",
+      type: "function",
     },
     {
-      "inputs": [
+      inputs: [
         {
-          "internalType": "uint256",
-          "name": "fid",
-          "type": "uint256"
+          internalType: "uint256",
+          name: "fid",
+          type: "uint256",
         },
         {
-          "internalType": "bytes",
-          "name": "signature",
-          "type": "bytes"
-        }
+          internalType: "bytes",
+          name: "signature",
+          type: "bytes",
+        },
       ],
-      "name": "claimReward",
-      "outputs": [],
-      "stateMutability": "nonpayable",
-      "type": "function"
+      name: "claimReward",
+      outputs: [],
+      stateMutability: "nonpayable",
+      type: "function",
     },
     {
-      "inputs": [],
-      "name": "currentRound",
-      "outputs": [
+      inputs: [],
+      name: "currentRound",
+      outputs: [
         {
-          "internalType": "uint256",
-          "name": "",
-          "type": "uint256"
-        }
+          internalType: "uint256",
+          name: "",
+          type: "uint256",
+        },
       ],
-      "stateMutability": "view",
-      "type": "function"
+      stateMutability: "view",
+      type: "function",
     },
     {
-      "inputs": [
+      inputs: [
         {
-          "internalType": "uint256",
-          "name": "",
-          "type": "uint256"
+          internalType: "uint256",
+          name: "",
+          type: "uint256",
         },
         {
-          "internalType": "address",
-          "name": "",
-          "type": "address"
+          internalType: "address",
+          name: "",
+          type: "address",
         },
         {
-          "internalType": "uint256",
-          "name": "",
-          "type": "uint256"
-        }
+          internalType: "uint256",
+          name: "",
+          type: "uint256",
+        },
       ],
-      "name": "dailyCheckIns",
-      "outputs": [
+      name: "dailyCheckIns",
+      outputs: [
         {
-          "internalType": "bool",
-          "name": "",
-          "type": "bool"
-        }
+          internalType: "bool",
+          name: "",
+          type: "bool",
+        },
       ],
-      "stateMutability": "view",
-      "type": "function"
+      stateMutability: "view",
+      type: "function",
     },
     {
-      "inputs": [],
-      "name": "deposit",
-      "outputs": [],
-      "stateMutability": "payable",
-      "type": "function"
+      inputs: [],
+      name: "deposit",
+      outputs: [],
+      stateMutability: "payable",
+      type: "function",
     },
     {
-      "inputs": [
+      inputs: [
         {
-          "internalType": "uint256",
-          "name": "",
-          "type": "uint256"
+          internalType: "uint256",
+          name: "",
+          type: "uint256",
         },
         {
-          "internalType": "uint256",
-          "name": "",
-          "type": "uint256"
-        }
+          internalType: "uint256",
+          name: "",
+          type: "uint256",
+        },
       ],
-      "name": "fidUsedInRound",
-      "outputs": [
+      name: "fidUsedInRound",
+      outputs: [
         {
-          "internalType": "bool",
-          "name": "",
-          "type": "bool"
-        }
+          internalType: "bool",
+          name: "",
+          type: "bool",
+        },
       ],
-      "stateMutability": "view",
-      "type": "function"
+      stateMutability: "view",
+      type: "function",
     },
     {
-      "inputs": [],
-      "name": "getActiveRound",
-      "outputs": [
+      inputs: [],
+      name: "getActiveRound",
+      outputs: [
         {
-          "components": [
+          components: [
             {
-              "internalType": "uint256",
-              "name": "startTime",
-              "type": "uint256"
+              internalType: "uint256",
+              name: "startTime",
+              type: "uint256",
             },
             {
-              "internalType": "bool",
-              "name": "isActive",
-              "type": "bool"
+              internalType: "bool",
+              name: "isActive",
+              type: "bool",
             },
             {
-              "internalType": "uint256",
-              "name": "participantCount",
-              "type": "uint256"
+              internalType: "uint256",
+              name: "participantCount",
+              type: "uint256",
             },
             {
-              "internalType": "uint256",
-              "name": "totalCheckIns",
-              "type": "uint256"
-            }
+              internalType: "uint256",
+              name: "totalCheckIns",
+              type: "uint256",
+            },
           ],
-          "internalType": "struct CeloDailyCheckIn.Round",
-          "name": "",
-          "type": "tuple"
-        }
+          internalType: "struct CeloDailyCheckIn.Round",
+          name: "",
+          type: "tuple",
+        },
       ],
-      "stateMutability": "view",
-      "type": "function"
+      stateMutability: "view",
+      type: "function",
     },
     {
-      "inputs": [],
-      "name": "getAllRounds",
-      "outputs": [
+      inputs: [],
+      name: "getAllRounds",
+      outputs: [
         {
-          "components": [
+          components: [
             {
-              "internalType": "uint256",
-              "name": "startTime",
-              "type": "uint256"
+              internalType: "uint256",
+              name: "startTime",
+              type: "uint256",
             },
             {
-              "internalType": "bool",
-              "name": "isActive",
-              "type": "bool"
+              internalType: "bool",
+              name: "isActive",
+              type: "bool",
             },
             {
-              "internalType": "uint256",
-              "name": "participantCount",
-              "type": "uint256"
+              internalType: "uint256",
+              name: "participantCount",
+              type: "uint256",
             },
             {
-              "internalType": "uint256",
-              "name": "totalCheckIns",
-              "type": "uint256"
-            }
+              internalType: "uint256",
+              name: "totalCheckIns",
+              type: "uint256",
+            },
           ],
-          "internalType": "struct CeloDailyCheckIn.Round[]",
-          "name": "",
-          "type": "tuple[]"
-        }
+          internalType: "struct CeloDailyCheckIn.Round[]",
+          name: "",
+          type: "tuple[]",
+        },
       ],
-      "stateMutability": "view",
-      "type": "function"
+      stateMutability: "view",
+      type: "function",
     },
     {
-      "inputs": [
+      inputs: [
         {
-          "internalType": "address",
-          "name": "user",
-          "type": "address"
-        }
+          internalType: "address",
+          name: "user",
+          type: "address",
+        },
       ],
-      "name": "getUserStatus",
-      "outputs": [
+      name: "getUserStatus",
+      outputs: [
         {
-          "internalType": "uint256",
-          "name": "currentCheckIns",
-          "type": "uint256"
+          internalType: "uint256",
+          name: "currentCheckIns",
+          type: "uint256",
         },
         {
-          "internalType": "bool",
-          "name": "eligibleForReward",
-          "type": "bool"
+          internalType: "bool",
+          name: "eligibleForReward",
+          type: "bool",
         },
         {
-          "internalType": "bool",
-          "name": "hasClaimed",
-          "type": "bool"
-        }
+          internalType: "bool",
+          name: "hasClaimed",
+          type: "bool",
+        },
       ],
-      "stateMutability": "view",
-      "type": "function"
+      stateMutability: "view",
+      type: "function",
     },
     {
-      "inputs": [],
-      "name": "rewardAmount",
-      "outputs": [
+      inputs: [],
+      name: "rewardAmount",
+      outputs: [
         {
-          "internalType": "uint256",
-          "name": "",
-          "type": "uint256"
-        }
+          internalType: "uint256",
+          name: "",
+          type: "uint256",
+        },
       ],
-      "stateMutability": "view",
-      "type": "function"
+      stateMutability: "view",
+      type: "function",
     },
     {
-      "inputs": [
+      inputs: [
         {
-          "internalType": "uint256",
-          "name": "",
-          "type": "uint256"
-        }
+          internalType: "uint256",
+          name: "",
+          type: "uint256",
+        },
       ],
-      "name": "rounds",
-      "outputs": [
+      name: "rounds",
+      outputs: [
         {
-          "internalType": "uint256",
-          "name": "startTime",
-          "type": "uint256"
+          internalType: "uint256",
+          name: "startTime",
+          type: "uint256",
         },
         {
-          "internalType": "bool",
-          "name": "isActive",
-          "type": "bool"
+          internalType: "bool",
+          name: "isActive",
+          type: "bool",
         },
         {
-          "internalType": "uint256",
-          "name": "participantCount",
-          "type": "uint256"
+          internalType: "uint256",
+          name: "participantCount",
+          type: "uint256",
         },
         {
-          "internalType": "uint256",
-          "name": "totalCheckIns",
-          "type": "uint256"
-        }
+          internalType: "uint256",
+          name: "totalCheckIns",
+          type: "uint256",
+        },
       ],
-      "stateMutability": "view",
-      "type": "function"
+      stateMutability: "view",
+      type: "function",
     },
     {
-      "inputs": [
+      inputs: [
         {
-          "internalType": "uint256",
-          "name": "newFee",
-          "type": "uint256"
-        }
+          internalType: "uint256",
+          name: "newFee",
+          type: "uint256",
+        },
       ],
-      "name": "setCheckInFee",
-      "outputs": [],
-      "stateMutability": "nonpayable",
-      "type": "function"
+      name: "setCheckInFee",
+      outputs: [],
+      stateMutability: "nonpayable",
+      type: "function",
     },
     {
-      "inputs": [
+      inputs: [
         {
-          "internalType": "address",
-          "name": "newSigner",
-          "type": "address"
-        }
+          internalType: "address",
+          name: "newSigner",
+          type: "address",
+        },
       ],
-      "name": "setTrustedSigner",
-      "outputs": [],
-      "stateMutability": "nonpayable",
-      "type": "function"
+      name: "setTrustedSigner",
+      outputs: [],
+      stateMutability: "nonpayable",
+      type: "function",
     },
     {
-      "inputs": [],
-      "name": "startNewRound",
-      "outputs": [],
-      "stateMutability": "nonpayable",
-      "type": "function"
+      inputs: [],
+      name: "startNewRound",
+      outputs: [],
+      stateMutability: "nonpayable",
+      type: "function",
     },
     {
-      "inputs": [],
-      "name": "stopRound",
-      "outputs": [],
-      "stateMutability": "nonpayable",
-      "type": "function"
+      inputs: [],
+      name: "stopRound",
+      outputs: [],
+      stateMutability: "nonpayable",
+      type: "function",
     },
     {
-      "inputs": [],
-      "name": "trustedSigner",
-      "outputs": [
+      inputs: [],
+      name: "trustedSigner",
+      outputs: [
         {
-          "internalType": "address",
-          "name": "",
-          "type": "address"
-        }
+          internalType: "address",
+          name: "",
+          type: "address",
+        },
       ],
-      "stateMutability": "view",
-      "type": "function"
+      stateMutability: "view",
+      type: "function",
     },
     {
-      "inputs": [
+      inputs: [
         {
-          "internalType": "uint256",
-          "name": "",
-          "type": "uint256"
+          internalType: "uint256",
+          name: "",
+          type: "uint256",
         },
         {
-          "internalType": "address",
-          "name": "",
-          "type": "address"
-        }
+          internalType: "address",
+          name: "",
+          type: "address",
+        },
       ],
-      "name": "userRoundData",
-      "outputs": [
+      name: "userRoundData",
+      outputs: [
         {
-          "internalType": "uint256",
-          "name": "checkInCount",
-          "type": "uint256"
+          internalType: "uint256",
+          name: "checkInCount",
+          type: "uint256",
         },
         {
-          "internalType": "bool",
-          "name": "hasClaimed",
-          "type": "bool"
-        }
+          internalType: "bool",
+          name: "hasClaimed",
+          type: "bool",
+        },
       ],
-      "stateMutability": "view",
-      "type": "function"
+      stateMutability: "view",
+      type: "function",
     },
     {
-      "inputs": [],
-      "name": "withdrawFunds",
-      "outputs": [],
-      "stateMutability": "nonpayable",
-      "type": "function"
+      inputs: [],
+      name: "withdrawFunds",
+      outputs: [],
+      stateMutability: "nonpayable",
+      type: "function",
     },
     {
-      "stateMutability": "payable",
-      "type": "receive"
-    }
+      stateMutability: "payable",
+      type: "receive",
+    },
   ];
 
   // Initialize contract
-  const contract = await hre.viem.getContractAt("CeloDailyCheckIn", contractAddress);
+  const contract = await hre.viem.getContractAt(
+    "CeloDailyCheckIn",
+    contractAddress,
+  );
 
   // Helper function to generate signatures
-  async function signCheckIn(userAddress: string, day: number, round: number): Promise<string> {
-    const messageHash = ethers.utils.solidityKeccak256(["address", "uint256", "uint256"], [userAddress, day, round]);
-    const signature = await trustedSigner.signMessage(ethers.utils.arrayify(messageHash));
+  async function signCheckIn(
+    userAddress: string,
+    day: number,
+    round: number,
+  ): Promise<string> {
+    const messageHash = ethers.utils.solidityKeccak256(
+      ["address", "uint256", "uint256"],
+      [userAddress, day, round],
+    );
+    const signature = await trustedSigner.signMessage(
+      ethers.utils.arrayify(messageHash),
+    );
     return signature;
   }
 
-  async function signClaimReward(userAddress: string, fid: number, round: number): Promise<string> {
-    const messageHash = ethers.utils.solidityKeccak256(["address", "uint256", "uint256"], [userAddress, fid, round]);
-    const signature = await trustedSigner.signMessage(ethers.utils.arrayify(messageHash));
+  async function signClaimReward(
+    userAddress: string,
+    fid: number,
+    round: number,
+  ): Promise<string> {
+    const messageHash = ethers.utils.solidityKeccak256(
+      ["address", "uint256", "uint256"],
+      [userAddress, fid, round],
+    );
+    const signature = await trustedSigner.signMessage(
+      ethers.utils.arrayify(messageHash),
+    );
     return signature;
   }
 
@@ -530,7 +552,9 @@ async function main() {
       functionName: "deposit",
       value: parseEther("1"),
     });
-    const receipt = await publicClient.waitForTransactionReceipt({ hash: depositHash });
+    const receipt = await publicClient.waitForTransactionReceipt({
+      hash: depositHash,
+    });
     console.log(`✅ Deposit Tx: ${depositHash}, Status: ${receipt.status}`);
     balance = await publicClient.getBalance({ address: contractAddress });
     console.log(`✅ New contract balance: ${formatEther(balance)} CELO`);
@@ -556,14 +580,17 @@ async function main() {
         value: checkInFee,
       });
       const receipt = await publicClient.waitForTransactionReceipt({ hash });
-      console.log(`✅ Check-in successful for day ${day}! Tx: ${hash}, Status: ${receipt.status}`);
+      console.log(
+        `✅ Check-in successful for day ${day}! Tx: ${hash}, Status: ${receipt.status}`,
+      );
     } catch (error: any) {
       console.error(`❌ Check-in failed for day ${day}:`, error.message);
     }
   }
 
   // 4. Verify user status after check-ins
-  const [checkInCount, eligibleForReward, hasClaimed] = await contract.read.getUserStatus([userAddress]);
+  const [checkInCount, eligibleForReward, hasClaimed] =
+    await contract.read.getUserStatus([userAddress]);
   console.log(`👨‍💼 User status:
     Check-ins: ${checkInCount}
     Eligible for reward: ${eligibleForReward}
@@ -575,7 +602,9 @@ async function main() {
     const fid = 12345; // Example FID
     try {
       const signature = await signClaimReward(userAddress, fid, currentRound);
-      const initialBalance = await publicClient.getBalance({ address: userAddress });
+      const initialBalance = await publicClient.getBalance({
+        address: userAddress,
+      });
       const hash = await walletClient.writeContract({
         address: contractAddress,
         abi,
@@ -583,9 +612,13 @@ async function main() {
         args: [fid, signature],
       });
       const receipt = await publicClient.waitForTransactionReceipt({ hash });
-      const finalBalance = await publicClient.getBalance({ address: userAddress });
+      const finalBalance = await publicClient.getBalance({
+        address: userAddress,
+      });
       console.log(`✅ Reward claimed! Tx: ${hash}, Status: ${receipt.status}`);
-      console.log(`💰 User balance change: ${formatEther(initialBalance)} -> ${formatEther(finalBalance)} CELO`);
+      console.log(
+        `💰 User balance change: ${formatEther(initialBalance)} -> ${formatEther(finalBalance)} CELO`,
+      );
     } catch (error: any) {
       console.error("❌ Claim reward failed:", error.message);
     }
@@ -616,9 +649,16 @@ async function main() {
   // Test invalid signature
   console.log("🔑 Attempting check-in with invalid signature...");
   try {
-    const invalidSigner = new ethers.Wallet("0x0000000000000000000000000000000000000000000000000000000000000001");
+    const invalidSigner = new ethers.Wallet(
+      "0x0000000000000000000000000000000000000000000000000000000000000001",
+    );
     const invalidSignature = await invalidSigner.signMessage(
-      ethers.utils.arrayify(ethers.utils.solidityKeccak256(["address", "uint256", "uint256"], [userAddress, 1, currentRound]))
+      ethers.utils.arrayify(
+        ethers.utils.solidityKeccak256(
+          ["address", "uint256", "uint256"],
+          [userAddress, 1, currentRound],
+        ),
+      ),
     );
     const hash = await walletClient.writeContract({
       address: contractAddress,
@@ -644,7 +684,9 @@ async function main() {
     await publicClient.waitForTransactionReceipt({ hash });
     console.log("❌ Non-admin startNewRound did not revert as expected!");
   } catch (error: any) {
-    console.log(`✅ Non-admin startNewRound correctly reverted: ${error.message}`);
+    console.log(
+      `✅ Non-admin startNewRound correctly reverted: ${error.message}`,
+    );
   }
 
   // 7. Check active round details

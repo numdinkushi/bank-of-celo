@@ -5,7 +5,7 @@ const LoyaltyRewardsModule = buildModule("LoyaltyRewardsModule", (m) => {
   // Parameters with default values
   const initialOwner = m.getParameter(
     "_initialOwner",
-    "0xbE95bb47789E5f4Af467306C97DED0877BF817B5" // Same dev wallet as your example
+    "0xbE95bb47789E5f4Af467306C97DED0877BF817B5", // Same dev wallet as your example
   );
 
   // Deploy the LoyaltyRewards contract

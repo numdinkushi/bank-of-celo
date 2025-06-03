@@ -10,38 +10,41 @@ Bank of Celo is the first open-source DeFi banking platform built specifically f
 
 Bank of Celo addresses a critical market gap: Farcaster's 140,000+ active users lack native financial tools despite the platform's $50M+ in funding and growing ecosystem. Our platform provides:
 
-- 🏦 **Smart Vault System** – Secure CELO deposits with 2.5% automated yield  
-- 🎯 **Gamified Engagement** – Weekly scoring system with USDC rewards for top performers  
-- 🔐 **Identity Verification** – Self Protocol integration with 10x earning multipliers  
-- 🤝 **Community Features** – P2P donations and ecosystem support mechanisms  
+- 🏦 **Smart Vault System** – Secure CELO deposits with 2.5% automated yield
+- 🎯 **Gamified Engagement** – Weekly scoring system with USDC rewards for top performers
+- 🔐 **Identity Verification** – Self Protocol integration with 10x earning multipliers
+- 🤝 **Community Features** – P2P donations and ecosystem support mechanisms
 
 ---
 
 ## 🚀 Key Features
 
 ### For Content Creators
-- Monetize engagement through proprietary scoring algorithms  
-- Earn daily passive income from vault deposits  
-- Access premium benefits with identity verification  
+
+- Monetize engagement through proprietary scoring algorithms
+- Earn daily passive income from vault deposits
+- Access premium benefits with identity verification
 
 ### For Community Builders
-- Support ecosystem growth through donation systems  
-- Track contribution impact via leaderboards  
-- Early access to exclusive features  
+
+- Support ecosystem growth through donation systems
+- Track contribution impact via leaderboards
+- Early access to exclusive features
 
 ### For DeFi Users
-- Seamless Celo integration with familiar UX  
-- Transparent yield farming without complexity  
-- Mobile-first social experience  
+
+- Seamless Celo integration with familiar UX
+- Transparent yield farming without complexity
+- Mobile-first social experience
 
 ---
 
 ## 📊 Market Opportunity
 
-- $100B+ DeFi market growing at 40% annually  
-- Creator economy reaching $104B globally  
-- First-mover advantage in social DeFi infrastructure  
-- Zero native financial tools currently exist for Farcaster users  
+- $100B+ DeFi market growing at 40% annually
+- Creator economy reaching $104B globally
+- First-mover advantage in social DeFi infrastructure
+- Zero native financial tools currently exist for Farcaster users
 
 ---
 
@@ -49,10 +52,10 @@ Bank of Celo addresses a critical market gap: Farcaster's 140,000+ active users 
 
 Built with modern Web3 infrastructure:
 
-- **Frontend:** Next.js + TypeScript + React  
-- **Blockchain:** Celo network integration  
-- **Identity:** Self Protocol for KYC compliance  
-- **Social:** Native Farcaster Mini Apps framework  
+- **Frontend:** Next.js + TypeScript + React
+- **Blockchain:** Celo network integration
+- **Identity:** Self Protocol for KYC compliance
+- **Social:** Native Farcaster Mini Apps framework
 
 ---
 
@@ -126,7 +129,7 @@ npm run build
 To use the CLI directly in JavaScript:
 
 ```javascript
-import { init } from '@neynar/create-farcaster-mini-app';
+import { init } from "@neynar/create-farcaster-mini-app";
 ```
 
 ---

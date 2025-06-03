@@ -7,7 +7,7 @@ async function main() {
   const [deployer] = await hre.ethers.getSigners();
   console.log("Deploying with account:", deployer.address);
 
-  const TrusteeAddress = "0xC32ecED3420f59e38b0F719AAC67b3C36c6A5d97"
+  const TrusteeAddress = "0xC32ecED3420f59e38b0F719AAC67b3C36c6A5d97";
 
   const BocContract = await hre.ethers.getContractFactory("CeloDailyCheckIn");
 

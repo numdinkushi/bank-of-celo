@@ -5,7 +5,14 @@ import { useAccount } from "wagmi";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import { useQuery } from "convex/react";
-import { Trophy, Loader2, Award, ChevronDown, ChevronUp, RefreshCcw } from "lucide-react";
+import {
+  Trophy,
+  Loader2,
+  Award,
+  ChevronDown,
+  ChevronUp,
+  RefreshCcw,
+} from "lucide-react";
 import { api } from "../../../../../convex/_generated/api";
 
 interface User {
@@ -28,7 +35,7 @@ export default function RewardsLeaderBoard({
   const { address } = useAccount();
   const [expandedDonor, setExpandedDonor] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
-  
+
   // Fetch leaderboard from Convex
   const leaderboardData = useQuery(api.users.getLeaderboard, { limit: 50 });
   const users = leaderboardData || [];
@@ -55,9 +62,11 @@ export default function RewardsLeaderBoard({
   // Check if current user is in the leaderboard
   const getUserRank = () => {
     if (!address) return null;
-    return sortedUsers.findIndex(
-      (user) => user.address.toLowerCase() === address.toLowerCase()
-    ) + 1;
+    return (
+      sortedUsers.findIndex(
+        (user) => user.address.toLowerCase() === address.toLowerCase(),
+      ) + 1
+    );
   };
 
   const userRank = getUserRank();
@@ -93,10 +102,12 @@ export default function RewardsLeaderBoard({
             )}
           </button>
         </div>
-        
+
         <div className="p-5 mb-4 bg-gradient-to-r text-xs from-purple-50 to-blue-50 dark:from-purple-900/30 dark:to-blue-900/30 rounded-2xl border border-purple-100 dark:border-purple-800">
-          Welcome to the Celo Leaderboard where we display our users who cast via the celo channel!!
-          In addition, users successfully verified using their passports through the Self Protocol will have a multiplier of x2!!
+          Welcome to the Celo Leaderboard where we display our users who cast
+          via the celo channel!! In addition, users successfully verified using
+          their passports through the Self Protocol will have a multiplier of
+          x2!!
         </div>
 
         {!isCorrectChain ? (
@@ -134,7 +145,7 @@ export default function RewardsLeaderBoard({
                   <button
                     onClick={() =>
                       setExpandedDonor(
-                        expandedDonor === user.address ? null : user.address
+                        expandedDonor === user.address ? null : user.address,
                       )
                     }
                     className="w-full flex items-center p-3"
@@ -240,7 +251,8 @@ export default function RewardsLeaderBoard({
             </div>
             <div>
               <p className="text-sm font-medium text-gray-900 dark:text-white">
-                {sortedUsers[0].username || truncateAddress(sortedUsers[0].address)}
+                {sortedUsers[0].username ||
+                  truncateAddress(sortedUsers[0].address)}
               </p>
               <p className="text-xs text-gray-600 dark:text-gray-300">
                 {sortedUsers[0].score.toFixed(2)} Points
@@ -254,7 +266,8 @@ export default function RewardsLeaderBoard({
       {userRank !== null && userRank > sortedUsers.length && (
         <div className="p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
           <p className="text-sm text-center text-gray-600 dark:text-gray-300">
-            Your rank: #{userRank} with {sortedUsers[userRank - 1]?.score.toFixed(2) || "0"} Points
+            Your rank: #{userRank} with{" "}
+            {sortedUsers[userRank - 1]?.score.toFixed(2) || "0"} Points
           </p>
         </div>
       )}

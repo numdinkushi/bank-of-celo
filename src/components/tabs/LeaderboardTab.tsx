@@ -40,18 +40,20 @@ export default function LeaderboardTab({
   useEffect(() => {
     async function fetchUsername() {
       try {
-        const response = await fetch(`/api/farcaster/username?address=${address}`);
+        const response = await fetch(
+          `/api/farcaster/username?address=${address}`,
+        );
         const data = await response.json();
 
         if (response.ok && data.username) {
           setUsername(data.username);
-          console.log('Fetched username:', data.username);
+          console.log("Fetched username:", data.username);
         } else {
           setUsername(null);
-          console.log('No username found for address:', address);
+          console.log("No username found for address:", address);
         }
       } catch (error) {
-        console.error('Error fetching Farcaster username:', error);
+        console.error("Error fetching Farcaster username:", error);
         setUsername(null);
       } finally {
         setLoading(false);
@@ -62,7 +64,9 @@ export default function LeaderboardTab({
   const getUsername = async (donorAddress: string) => {
     if (!donorAddress) return null;
     try {
-      const response = await fetch(`/api/farcaster/username?address=${donorAddress}`);
+      const response = await fetch(
+        `/api/farcaster/username?address=${donorAddress}`,
+      );
       const data = await response.json();
       return data.username || null;
     } catch (error) {
@@ -289,7 +293,7 @@ export default function LeaderboardTab({
             </div>
             <div>
               <p className="text-sm font-medium text-gray-900 dark:text-white">
-                { truncateAddress(donors[0].donor)}
+                {truncateAddress(donors[0].donor)}
               </p>
               <p className="text-xs text-gray-600 dark:text-gray-300">
                 {parseFloat(donors[0].amount).toFixed(2)} CELO donated

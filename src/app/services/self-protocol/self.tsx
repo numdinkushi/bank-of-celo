@@ -8,7 +8,13 @@ import SelfQRcodeWrapper, {
   SelfAppBuilder,
   type SelfApp,
 } from "@selfxyz/qrcode";
-import { Shield, Copy, ExternalLink, CheckCircle, Verified } from "lucide-react";
+import {
+  Shield,
+  Copy,
+  ExternalLink,
+  CheckCircle,
+  Verified,
+} from "lucide-react";
 import { useAccount } from "wagmi";
 import { APP_ICON_URL } from "~/lib/constants";
 import { useQuery } from "convex/react";
@@ -120,8 +126,8 @@ const SelfProtocolComponent: React.FC<SelfProtocolComponentProps> = ({
               You are Verified!
             </h3>
             <p className="text-gray-300 text-sm leading-relaxed">
-              Your identity has been successfully verified. You now have access to
-              O.G benefits including 2x rewards!
+              Your identity has been successfully verified. You now have access
+              to O.G benefits including 2x rewards!
             </p>
           </div>
 

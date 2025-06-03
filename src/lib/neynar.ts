@@ -90,28 +90,30 @@ interface NeynarUserResponse {
   users: FarcasterUser[];
 }
 
-export async function fetchUsersByAddress(addresses: string[]): Promise<NeynarUserResponse> {
-  console.log('fetchUsersByAddress called with addresses:', addresses); // Log the input addresses for debugging
+export async function fetchUsersByAddress(
+  addresses: string[],
+): Promise<NeynarUserResponse> {
+  console.log("fetchUsersByAddress called with addresses:", addresses); // Log the input addresses for debugging
   if (!addresses || addresses.length === 0) {
     return { users: [] };
   }
-  const csv = addresses.join(',');
-  console.log('fetchUsersByAddress called with CSV string:', csv);
+  const csv = addresses.join(",");
+  console.log("fetchUsersByAddress called with CSV string:", csv);
   const query = csv;
   const options = {
-    method: 'GET',
+    method: "GET",
     headers: {
-      'x-api-key': process.env.NEYNAR_API_KEY || '',
-      'x-neynar-experimental': 'false',
+      "x-api-key": process.env.NEYNAR_API_KEY || "",
+      "x-neynar-experimental": "false",
     },
   };
   const url = `https://api.neynar.com/v2/farcaster/user/bulk-by-address?addresses=${query}`;
   try {
     const response = await fetch(url, options);
     if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-    return await response.json() as NeynarUserResponse;
+    return (await response.json()) as NeynarUserResponse;
   } catch (err) {
-    console.error('Failed to fetch users by address:', err);
+    console.error("Failed to fetch users by address:", err);
     throw err;
   }
 }

@@ -11,7 +11,7 @@ export default defineSchema({
     address: v.string(), // Wallet address for rewards
     lastUpdated: v.number(), // Timestamp for last score update
   }).index("by_fid", ["fid"]),
-  
+
   rewards: defineTable({
     fid: v.string(),
     amount: v.number(), // CELO reward amount (in wei)

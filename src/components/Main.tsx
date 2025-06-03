@@ -53,11 +53,7 @@ import { cubesImage } from "~/constants/images";
 import { cn } from "~/lib/utils";
 import Rewards from "./tabs/rewards";
 
-export default function Main({
-  title = "Bank of Celo",
-}: {
-  title?: string;
-}) {
+export default function Main({ title = "Bank of Celo" }: { title?: string }) {
   const { address, isConnected, chain } = useAccount();
   const { disconnect } = useDisconnect();
   const { connect, connectors } = useConnect();
@@ -184,15 +180,14 @@ export default function Main({
     return () => clearInterval(interval);
   }, [fetchContractData]);
 
-
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
-    const tabParam = urlParams.get('tab');
+    const tabParam = urlParams.get("tab");
 
-    if (tabParam === 'rewards') {
+    if (tabParam === "rewards") {
       // Close welcome modal and navigate to rewards tab
       setShowWelcome(false);
-      setActiveTab('rewards');
+      setActiveTab("rewards");
       // Also set the welcome localStorage to prevent it from showing
       localStorage.setItem("hasSeenWelcome", "true");
     }
@@ -230,15 +225,16 @@ export default function Main({
       const dataSuffix = getDataSuffix({
         consumer: "0xC5337CeE97fF5B190F26C4A12341dd210f26e17c",
         providers: [
-          "0x5f0a55FaD9424ac99429f635dfb9bF20c3360Ab8",
-          "0x6226ddE08402642964f9A6de844ea3116F0dFc7e",
+          "0x0423189886d7966f0dd7e7d256898daeee625dca",
+          "0xc95876688026be9d6fa7a7c33328bd013effa2bb",
+          "0x5f0a55fad9424ac99429f635dfb9bf20c3360ab8",
         ],
       });
 
       // 3. Properly combine the data
       const combinedData = dataSuffix
         ? donateData +
-        (dataSuffix.startsWith("0x") ? dataSuffix.slice(2) : dataSuffix)
+          (dataSuffix.startsWith("0x") ? dataSuffix.slice(2) : dataSuffix)
         : donateData;
 
       // 4. Send the transaction
@@ -301,12 +297,12 @@ export default function Main({
 
     // Check if we should navigate to rewards tab after closing welcome
     const urlParams = new URLSearchParams(window.location.search);
-    const tabParam = urlParams.get('tab');
+    const tabParam = urlParams.get("tab");
 
-    if (tabParam === 'rewards') {
-      setActiveTab('rewards');
+    if (tabParam === "rewards") {
+      setActiveTab("rewards");
       // Optionally clean up the URL
-      window.history.replaceState({}, '', window.location.pathname);
+      window.history.replaceState({}, "", window.location.pathname);
     }
   };
 
@@ -322,8 +318,6 @@ export default function Main({
       </div>
     );
   }
-
-
 
   return (
     <div
@@ -527,10 +521,11 @@ export default function Main({
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
-            className={`relative flex flex-col items-center p-2 rounded-xl transition-all ${activeTab === tab.id
+            className={`relative flex flex-col items-center p-2 rounded-xl transition-all ${
+              activeTab === tab.id
                 ? "text-white bg-gradient-to-r from-emerald-500 to-emerald-600 shadow-md"
                 : "text-gray-600 dark:text-gray-300 hover:text-emerald-600 dark:hover:text-emerald-400"
-              }`}
+            }`}
             aria-label={tab.label}
           >
             {tab.icon}

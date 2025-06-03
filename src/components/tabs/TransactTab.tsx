@@ -62,7 +62,9 @@ export default function TransactTab({
   const [fid, setFid] = useState<number | null>(null);
   const [fidLoading, setFidLoading] = useState(false);
   const [fidError, setFidError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<"donate" | "claim" | "lottery">("donate");
+  const [activeTab, setActiveTab] = useState<"donate" | "claim" | "lottery">(
+    "donate",
+  );
   const [claimPending, setClaimPending] = useState(false);
   const [txHash, setTxHash] = useState<string | null>(null);
   const [hasClaimed, setHasClaimed] = useState(false);
@@ -73,7 +75,9 @@ export default function TransactTab({
   const getUsername = async (userAddress: string): Promise<string | null> => {
     if (!userAddress) return null;
     try {
-      const response = await fetch(`/api/farcaster/username?address=${userAddress}`);
+      const response = await fetch(
+        `/api/farcaster/username?address=${userAddress}`,
+      );
       const data = await response.json();
       return data.username || null;
     } catch (error) {
@@ -96,7 +100,7 @@ export default function TransactTab({
       }
 
       setFid(data.fid);
-      const username = await getUsername(address)
+      const username = await getUsername(address);
       setUsername(username);
       if (!data.fid) {
         setFidError("No Farcaster ID associated with this address");
@@ -164,7 +168,7 @@ export default function TransactTab({
       toast.error("Farcaster ID or address missing");
       return;
     }
-    if(availableForClaim  < maxClaim) {
+    if (availableForClaim < maxClaim) {
       toast.error("Insufficient vault balance to claim");
       return;
     }
@@ -220,8 +224,9 @@ export default function TransactTab({
         dataSuffix = getDataSuffix({
           consumer: "0xC5337CeE97fF5B190F26C4A12341dd210f26e17c",
           providers: [
-            "0x5f0a55FaD9424ac99429f635dfb9bF20c3360Ab8",
-            "0x6226ddE08402642964f9A6de844ea3116F0dFc7e",
+            "0x0423189886d7966f0dd7e7d256898daeee625dca",
+            "0xc95876688026be9d6fa7a7c33328bd013effa2bb",
+            "0x5f0a55fad9424ac99429f635dfb9bf20c3360ab8",
           ],
         });
       } catch (diviError) {
@@ -234,7 +239,7 @@ export default function TransactTab({
       const minBalance = parseEther("0.001"); // Minimum to cover gas (~0.001 CELO)
 
       if (balance >= minBalance) {
-        // User has CELO: Call claim directly
+        // UserdataSuffix =  has CELO: Call claim directly
         const contractData = encodeFunctionData({
           abi: BANK_OF_CELO_CONTRACT_ABI,
           functionName: "claim",
@@ -348,15 +353,17 @@ export default function TransactTab({
       });
 
       toast.success(
-        `Successfully bought ${tickets} lottery ticket${tickets > 1 ? 's' : ''} for ${tickets} CELO! Transaction: ${hash.slice(0, 6)}...`
+        `Successfully bought ${tickets} lottery ticket${tickets > 1 ? "s" : ""} for ${tickets} CELO! Transaction: ${hash.slice(0, 6)}...`,
       );
-      
+
       setTicketCount("1"); // Reset to default
       setTxHash(hash);
     } catch (error) {
       console.log("Lottery ticket purchase error:", error);
       toast.error(
-        error instanceof Error ? error.message : "Failed to purchase lottery tickets"
+        error instanceof Error
+          ? error.message
+          : "Failed to purchase lottery tickets",
       );
     } finally {
       setLotteryPending(false);
@@ -610,7 +617,8 @@ export default function TransactTab({
                 🎰 Lottery Pot
               </h3>
               <p className="text-sm text-gray-600 dark:text-gray-400">
-                Buy lottery tickets for a chance to win the pot! Each ticket costs 1 CELO.
+                Buy lottery tickets for a chance to win the pot! Each ticket
+                costs 1 CELO.
               </p>
             </div>
 
@@ -648,7 +656,11 @@ export default function TransactTab({
                 step="1"
               />
               <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                Total cost: {ticketCount && !isNaN(parseInt(ticketCount)) ? parseInt(ticketCount) * 1 : 0} CELO
+                Total cost:{" "}
+                {ticketCount && !isNaN(parseInt(ticketCount))
+                  ? parseInt(ticketCount) * 1
+                  : 0}{" "}
+                CELO
               </p>
             </div>
 
@@ -670,8 +682,11 @@ export default function TransactTab({
                 <div className="flex items-center justify-center gap-2">
                   <Ticket className="w-5 h-5" />
                   <span>
-                    Buy {ticketCount && !isNaN(parseInt(ticketCount)) ? parseInt(ticketCount) : 1} 
-                    {' '}Ticket{parseInt(ticketCount) > 1 ? 's' : ''}
+                    Buy{" "}
+                    {ticketCount && !isNaN(parseInt(ticketCount))
+                      ? parseInt(ticketCount)
+                      : 1}{" "}
+                    Ticket{parseInt(ticketCount) > 1 ? "s" : ""}
                   </span>
                 </div>
               )}
@@ -679,7 +694,8 @@ export default function TransactTab({
 
             <div className="text-center pt-2">
               <p className="text-xs text-gray-500 dark:text-gray-400">
-                🍀 Good luck! The more tickets you buy, the higher your chances of winning!
+                🍀 Good luck! The more tickets you buy, the higher your chances
+                of winning!
               </p>
             </div>
           </div>

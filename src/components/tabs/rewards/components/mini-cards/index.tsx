@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 
 interface MiniCard {
   id: "scored" | "rewards" | "earn" | "leaderboard" | "og-earning";
@@ -11,11 +11,15 @@ interface MiniCard {
 
 interface MiniCardsProps {
   miniCards: MiniCard[];
-  openSheet: (sheetId: MiniCard['id']) => void;
+  openSheet: (sheetId: MiniCard["id"]) => void;
   scrollRef: React.RefObject<HTMLDivElement>;
 }
 
-const MiniCards: React.FC<MiniCardsProps> = ({ miniCards, openSheet, scrollRef }) => {
+const MiniCards: React.FC<MiniCardsProps> = ({
+  miniCards,
+  openSheet,
+  scrollRef,
+}) => {
   return (
     <div
       ref={scrollRef}
@@ -30,16 +34,17 @@ const MiniCards: React.FC<MiniCardsProps> = ({ miniCards, openSheet, scrollRef }
         >
           <div className="flex flex-col items-start">
             <div
-              className={`p-2 rounded-lg mb-2 ${card.iconColor === "purple"
-                ? "bg-purple-100"
-                : card.iconColor === "emerald"
-                  ? "bg-emerald-100"
-                  : card.iconColor === "blue"
-                    ? "bg-blue-100"
-                    : card.iconColor === "gold"
-                      ? "bg-yellow-100"
-                      : "bg-gray-200"
-                }`}
+              className={`p-2 rounded-lg mb-2 ${
+                card.iconColor === "purple"
+                  ? "bg-purple-100"
+                  : card.iconColor === "emerald"
+                    ? "bg-emerald-100"
+                    : card.iconColor === "blue"
+                      ? "bg-blue-100"
+                      : card.iconColor === "gold"
+                        ? "bg-yellow-100"
+                        : "bg-gray-200"
+              }`}
             >
               {card.icon}
             </div>

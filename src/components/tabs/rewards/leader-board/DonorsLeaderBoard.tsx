@@ -53,7 +53,9 @@ export default function DonorsLeaderBoard({
           setLoading(false);
           return;
         }
-        const response = await fetch(`/api/farcaster/username?address=${address}`);
+        const response = await fetch(
+          `/api/farcaster/username?address=${address}`,
+        );
         const data = await response.json();
 
         if (response.ok && data.username) {
@@ -77,7 +79,9 @@ export default function DonorsLeaderBoard({
   const getUsername = async (donorAddress: string): Promise<string | null> => {
     if (!donorAddress) return null;
     try {
-      const response = await fetch(`/api/farcaster/username?address=${donorAddress}`);
+      const response = await fetch(
+        `/api/farcaster/username?address=${donorAddress}`,
+      );
       const data = await response.json();
       return data.username || null;
     } catch (error) {
@@ -182,7 +186,8 @@ export default function DonorsLeaderBoard({
             </button>
           </div>
           <div className="p-5 mb-4 bg-gradient-to-r text-xs from-purple-50 to-blue-50 dark:from-purple-900/30 dark:to-blue-900/30 rounded-2xl border border-purple-100 dark:border-purple-800">
-            Welcome to the Donors Leaderboard where, a list of our top donors are acknowledged!!
+            Welcome to the Donors Leaderboard where, a list of our top donors
+            are acknowledged!!
           </div>
 
           {!isCorrectChain ? (
@@ -290,7 +295,9 @@ export default function DonorsLeaderBoard({
                           {donor.username && (
                             <div className="flex justify-between text-xs text-gray-600 dark:text-gray-300 mt-1">
                               <span>Username:</span>
-                              <span className="font-medium">{donor.username}</span>
+                              <span className="font-medium">
+                                {donor.username}
+                              </span>
                             </div>
                           )}
                         </div>

@@ -50,50 +50,50 @@ export default function Rewards(): JSX.Element {
 
   const [rewardItems, setRewardItems] = useState<RewardItemProps[]>([
     {
-      id: '1',
-      title: 'Weekly Bonus',
-      amount: '$25 USDC',
-      description: 'Bonus reward for consistent weekly participation',
-      status: 'available',
+      id: "1",
+      title: "Weekly Bonus",
+      amount: "$25 USDC",
+      description: "Bonus reward for consistent weekly participation",
+      status: "available",
       icon: <Coins className="w-6 h-6 text-emerald-400" />,
-      rarity: 'common'
+      rarity: "common",
     },
     {
-      id: '2',
-      title: 'Engagement Master',
-      amount: '$100 USDC',
-      description: 'Achieved 1000+ engagement points this week',
-      status: 'available',
+      id: "2",
+      title: "Engagement Master",
+      amount: "$100 USDC",
+      description: "Achieved 1000+ engagement points this week",
+      status: "available",
       icon: <TrendingUp className="w-6 h-6 text-blue-400" />,
-      rarity: 'rare'
+      rarity: "rare",
     },
     {
-      id: '3',
-      title: 'Top Creator',
-      amount: '$500 USDC',
-      description: 'Ranked in top 10 creators this month',
-      status: 'locked',
+      id: "3",
+      title: "Top Creator",
+      amount: "$500 USDC",
+      description: "Ranked in top 10 creators this month",
+      status: "locked",
       icon: <Crown className="w-6 h-6 text-purple-400" />,
-      rarity: 'epic'
+      rarity: "epic",
     },
     {
-      id: '4',
-      title: 'Legend Status',
-      amount: '$1000 USDC',
-      description: 'Exclusive reward for legendary contributors',
-      status: 'locked',
+      id: "4",
+      title: "Legend Status",
+      amount: "$1000 USDC",
+      description: "Exclusive reward for legendary contributors",
+      status: "locked",
       icon: <Star className="w-6 h-6 text-yellow-400" />,
-      rarity: 'legendary'
+      rarity: "legendary",
     },
     {
-      id: '5',
-      title: 'Daily Streak',
-      amount: '$10 USDC',
-      description: 'Maintained 30-day posting streak',
-      status: 'claimed',
+      id: "5",
+      title: "Daily Streak",
+      amount: "$10 USDC",
+      description: "Maintained 30-day posting streak",
+      status: "claimed",
       icon: <Flame className="w-6 h-6 text-orange-400" />,
-      rarity: 'common'
-    }
+      rarity: "common",
+    },
   ]);
 
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -154,15 +154,12 @@ export default function Rewards(): JSX.Element {
   };
 
   const handleRewardRedeem = (rewardId: string): void => {
-    setRewardItems(prev =>
-      prev.map(item =>
-        item.id === rewardId
-          ? { ...item, status: 'claimed' as const }
-          : item
-      )
+    setRewardItems((prev) =>
+      prev.map((item) =>
+        item.id === rewardId ? { ...item, status: "claimed" as const } : item,
+      ),
     );
   };
-
 
   return (
     <div className="min-h-screen bg-white text-gray-900 rounded-md relative overflow-hidden">
@@ -181,7 +178,9 @@ export default function Rewards(): JSX.Element {
             className="flex-1 bg-gradient-to-r from-emerald-500/20 to-emerald-600/20 border border-emerald-500/30 rounded-xl sm:rounded-2xl p-3 sm:p-4 flex items-center justify-center gap-2 sm:gap-3 hover:scale-[1.02] transition-all duration-300 hover:shadow-lg hover:shadow-emerald-500/20 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <Gift className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-600" />
-            <span className="font-semibold text-sm sm:text-base text-emerald-700">Claim</span>
+            <span className="font-semibold text-sm sm:text-base text-emerald-700">
+              Claim
+            </span>
           </button>
 
           <button
@@ -189,7 +188,9 @@ export default function Rewards(): JSX.Element {
             className="flex-1 bg-gradient-to-r from-blue-500/20 to-blue-600/20 border border-blue-500/30 rounded-xl sm:rounded-2xl p-3 sm:p-4 flex items-center justify-center gap-2 sm:gap-3 hover:scale-[1.02] transition-all duration-300 hover:shadow-lg hover:shadow-blue-500/20"
           >
             <CheckCircle2 className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600" />
-            <span className="font-semibold text-sm sm:text-base text-blue-700">Check In</span>
+            <span className="font-semibold text-sm sm:text-base text-blue-700">
+              Check In
+            </span>
           </button>
         </div>
 
@@ -222,10 +223,7 @@ export default function Rewards(): JSX.Element {
       />
 
       {/* How to Earn Sheet */}
-      <HowToEarnSheet
-        isOpen={activeSheet === "earn"}
-        onClose={closeSheet}
-      />
+      <HowToEarnSheet isOpen={activeSheet === "earn"} onClose={closeSheet} />
 
       {/* Leaderboard Sheet */}
       <LeaderboardSheet
