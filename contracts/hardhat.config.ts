@@ -11,7 +11,7 @@ const config: HardhatUserConfig = {
     },
     celo: {
       accounts: [process.env.PRIVATE_KEY ?? "0x0"],
-      url: "https://forno.celo.org",
+      url: "https://celo-mainnet.g.alchemy.com/v2/ImPte7otRAJ_4gDny9NLO_Ao9GT4_CiQ",
     },
     base: {
       accounts: [process.env.PRIVATE_KEY ?? "0x0"],
