@@ -49,6 +49,7 @@ export const DailyCheckinSheet: React.FC<DailyCheckinSheetProps> = ({
   const [txHash, setTxHash] = useState<string | null>(null);
   const [currentDay, setCurrentDay] = useState(1);
   const [lastCheckInTime, setLastCheckInTime] = useState<Date | null>(null);
+  const [isRoundActive, setIsRoundActive] = useState(true);
   
   const CELO_CHAIN_ID = 42220; // Celo mainnet
   const isCorrectChain = chainId === CELO_CHAIN_ID;
@@ -95,6 +96,7 @@ export const DailyCheckinSheet: React.FC<DailyCheckinSheetProps> = ({
         participantCount: bigint;
         totalCheckIns: bigint;
       };
+      setIsRoundActive(roundData.isActive);
 
       const currentRound = Number(
         await publicClient.readContract({
@@ -434,67 +436,76 @@ export const DailyCheckinSheet: React.FC<DailyCheckinSheetProps> = ({
         </div>
 
         {/* Check-in Button */}
-        {!isCorrectChain ? (
-          <Button
-            onClick={() => switchChainAsync({ chainId: CELO_CHAIN_ID })}
-            className="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white font-semibold py-4 px-6 rounded-xl"
-          >
-            Switch to Celo Network
-          </Button>
-        ) : isLoading ? (
-          <div className="w-full bg-gray-500/20 text-gray-400 font-semibold py-4 px-6 rounded-xl flex items-center justify-center gap-3">
-            <Loader2 className="w-5 h-5 animate-spin" />
-            Processing...
-          </div>
-        ) : canCheckinToday ? (
-          <Button
-            onClick={handleCheckin}
-            disabled={isTxPending || !address}
-            className="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white font-semibold py-4 px-6 rounded-xl hover:scale-[1.02] transition-all duration-300 flex items-center justify-center gap-3 shadow-lg"
-          >
-            <CheckCircle2 className="w-5 h-5" />
-            Check In for Day {currentDay} (+{POINTS_PER_CHECKIN} points)
-          </Button>
-        ) : (
-          <div className="w-full bg-gray-500/20 text-gray-400 font-semibold py-4 px-6 rounded-xl flex items-center justify-center gap-3">
-            <CheckCircle2 className="w-5 h-5" />
-            Already checked in for Day {currentDay}
-          </div>
-        )}
+{!isCorrectChain ? (
+  <Button
+    onClick={() => switchChainAsync({ chainId: CELO_CHAIN_ID })}
+    className="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white font-semibold py-4 px-6 rounded-xl"
+  >
+    Switch to Celo Network
+  </Button>
+) : isLoading ? (
+  <div className="w-full bg-gray-500/20 text-gray-400 font-semibold py-4 px-6 rounded-xl flex items-center justify-center gap-3">
+    <Loader2 className="w-5 h-5 animate-spin" />
+    Processing...
+  </div>
+) : !isRoundActive ? (
+  <div className="w-full bg-red-600/80 text-white font-semibold py-4 px-6 rounded-xl flex items-center justify-center gap-3">
+    <AlertCircle className="w-5 h-5" />
+    Round is inactive. Wait for the next round.
+  </div>
+) : canCheckinToday ? (
+  <Button
+    onClick={handleCheckin}
+    disabled={isTxPending || !address}
+    className="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white font-semibold py-4 px-6 rounded-xl hover:scale-[1.02] transition-all duration-300 flex items-center justify-center gap-3 shadow-lg"
+  >
+    <CheckCircle2 className="w-5 h-5" />
+    Check In for Day {currentDay} (+{POINTS_PER_CHECKIN} points)
+  </Button>
+) : (
+  <div className="w-full bg-gray-500/20 text-gray-400 font-semibold py-4 px-6 rounded-xl flex items-center justify-center gap-3">
+    <CheckCircle2 className="w-5 h-5" />
+    Already checked in for Day {currentDay}
+  </div>
+)}
 
         {/* Claim Reward Button */}
-        {canClaimReward ? (
-          <Button
-            onClick={handleClaimReward}
-            disabled={isTxPending || !address || !isCorrectChain}
-            className="w-full bg-gradient-to-r from-emerald-600 to-emerald-700 text-white font-semibold py-4 px-6 rounded-xl hover:scale-[1.02] transition-all duration-300 flex items-center justify-center gap-3 shadow-lg animate-pulse"
-          >
-            <Gift className="w-5 h-5" />
-            Claim Your Reward
-          </Button>
-        ) : (
-          <div className="w-full bg-gray-500/20 text-gray-400 font-semibold py-4 px-6 rounded-xl flex items-center justify-center gap-3">
-            <Gift className="w-5 h-5" />
-            Reward available at {POINTS_FOR_REWARD} points
-          </div>
-        )}
-
-        {/* Info Card */}
-        <div className="bg-gray-500/10 rounded-xl p-4 border border-gray-500/20">
-          <h4 className="text-white font-semibold mb-2">How it works:</h4>
-          <ul className="text-gray-300 text-sm space-y-1">
-            <li>
-              • Check in daily to earn {POINTS_PER_CHECKIN} points (0.001 CELO
-              fee)
-            </li>
-            <li>
-              • Complete 7 check-ins ({POINTS_FOR_REWARD} points) to claim $CELO
-              at the end of the week{" "}
-            </li>
-            <li>• Maintain your streak for bonus engagement</li>
-            <li>• Points reset after claiming</li>
-          </ul>
-        </div>
+{canClaimReward ? (
+  <Button
+    onClick={handleClaimReward}
+    disabled={isTxPending || !address || !isCorrectChain || !isRoundActive}
+    className={`w-full bg-gradient-to-r from-emerald-600 to-emerald-700 text-white font-semibold py-4 px-6 rounded-xl hover:scale-[1.02] transition-all duration-300 flex items-center justify-center gap-3 shadow-lg ${isRoundActive ? 'animate-pulse' : ''}`}
+  >
+    <Gift className="w-5 h-5" />
+    {isRoundActive ? 'Claim Your Reward' : 'Round Inactive - Cannot Claim'}
+  </Button>
+) : (
+  <div className="w-full bg-gray-500/20 text-gray-400 font-semibold py-4 px-6 rounded-xl flex items-center justify-center gap-3">
+    <Gift className="w-5 h-5" />
+    Reward available at {POINTS_FOR_REWARD} points
+  </div>
+)}
+{/* Info Card */}
+<div className="bg-gray-500/10 rounded-xl p-4 border border-gray-500/20">
+  <div className="flex justify-between items-center mb-2">
+    <h4 className="text-white font-semibold">How it works:</h4>
+    <div className={`text-xs px-2 py-1 rounded-full ${isRoundActive ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}`}>
+      {isRoundActive ? 'Round Active' : 'Round Inactive'}
+    </div>
+  </div>
+  <ul className="text-gray-300 text-sm space-y-1">
+    <li>
+      • Check in daily to earn {POINTS_PER_CHECKIN} points (0.001 CELO
+      fee)
+    </li>
+    <li>
+      • Complete 7 check-ins ({POINTS_FOR_REWARD} points) to claim $CELO
+      at the end of the week{" "}
+    </li>
+    <li>• Maintain your streak for bonus engagement</li>
+    <li>• Points reset after claiming</li>
+  </ul>
+</div>
       </motion.div>
     </BottomSheet>
   );
