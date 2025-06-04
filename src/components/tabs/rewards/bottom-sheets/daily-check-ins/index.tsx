@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable react/no-unescaped-entities */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -25,7 +26,10 @@ interface DailyCheckinSheetProps {
   isOpen: boolean;
   onClose: () => void;
 }
-
+interface NeynarResponse {
+  fid: number | null;
+  error?: string;
+}
 interface SignatureResponse {
   signature: string;
   error?: string;
@@ -50,7 +54,10 @@ export const DailyCheckinSheet: React.FC<DailyCheckinSheetProps> = ({
   const [currentDay, setCurrentDay] = useState(1);
   const [lastCheckInTime, setLastCheckInTime] = useState<Date | null>(null);
   const [isRoundActive, setIsRoundActive] = useState(true);
-  
+  const [fid, setFid] = useState<number | null>(null);
+  const [fidLoading, setFidLoading] = useState(false);
+  const [fidError, setFidError] = useState<string | null>(null);
+
   const CELO_CHAIN_ID = 42220; // Celo mainnet
   const isCorrectChain = chainId === CELO_CHAIN_ID;
   const CHECK_IN_FEE = parseEther("0.001"); // From contract
@@ -133,8 +140,41 @@ export const DailyCheckinSheet: React.FC<DailyCheckinSheetProps> = ({
 
   useEffect(() => {
     fetchUserStatus();
+    fetchFid();
   }, [fetchUserStatus]);
 
+  const fetchFid = useCallback(async () => {
+    if (!address) return;
+    setFidLoading(true);
+    setFidError(null);
+
+    try {
+      const response = await fetch(`/api/farcaster?address=${address}`);
+      const data: NeynarResponse = await response.json();
+
+      if (!response.ok || data.error) {
+        throw new Error(data.error || "Failed to fetch FID");
+      }
+
+      setFid(data.fid);
+      if (!data.fid) {
+        setFidError("No Farcaster ID associated with this address");
+      } else {
+        if (!publicClient) {
+          throw new Error("Public client is not available");
+        }
+        
+      }
+    } catch (error) {
+      console.log("Error fetching FID:", error);
+      setFidError(
+        error instanceof Error ? error.message : "Failed to fetch FID",
+      );
+      setFid(null);
+    } finally {
+      setFidLoading(false);
+    }
+  }, [address, publicClient]);
   // Fetch signature from backend API
   const fetchSignature = async (
     type: "checkIn" | "claimReward",
@@ -315,9 +355,9 @@ export const DailyCheckinSheet: React.FC<DailyCheckinSheetProps> = ({
           functionName: "currentRound",
         }),
       );
-
-      // Generate a unique FID (for simplicity, use a random number; in production, integrate with Farcaster or user input)
-      const fid = Math.floor(Math.random() * 1000000);
+      if (!fid) {
+        throw new Error("Farcaster ID (FID) not found. Please check or change your wallet.");
+      }
       const signature = await fetchSignature("claimReward", {
         userAddress: address,
         fid,
