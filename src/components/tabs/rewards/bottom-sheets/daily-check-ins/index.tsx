@@ -1,3 +1,4 @@
+/* eslint-disable react/no-unescaped-entities */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, useEffect, useCallback } from "react";
@@ -47,6 +48,8 @@ export const DailyCheckinSheet: React.FC<DailyCheckinSheetProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [txHash, setTxHash] = useState<string | null>(null);
   const [currentDay, setCurrentDay] = useState(1);
+  const [lastCheckInTime, setLastCheckInTime] = useState<Date | null>(null);
+  
   const CELO_CHAIN_ID = 42220; // Celo mainnet
   const isCorrectChain = chainId === CELO_CHAIN_ID;
   const CHECK_IN_FEE = parseEther("0.001"); // From contract
@@ -61,18 +64,25 @@ export const DailyCheckinSheet: React.FC<DailyCheckinSheetProps> = ({
 
     try {
       // Fetch user status
-      const [checkInCount, eligibleForReward, hasClaimed] =
+      const [checkInCount, eligibleForReward, hasClaimed, lastCheckInTimestamp] =
         (await publicClient.readContract({
           address: CELO_CHECK_IN_CONTRACT_ADDRESS,
           abi: CELO_CHECK_IN_ABI,
           functionName: "getUserStatus",
           args: [address],
-        })) as [bigint, boolean, boolean];
+        })) as [bigint, boolean, boolean, bigint];
 
       const points = Number(checkInCount) * POINTS_PER_CHECKIN;
       setDailyPoints(points);
       setCanClaimReward(eligibleForReward && !hasClaimed);
       setCheckinStreak(Number(checkInCount));
+      
+      // Set last check-in time if available
+      if (lastCheckInTimestamp && Number(lastCheckInTimestamp) > 0) {
+        setLastCheckInTime(new Date(Number(lastCheckInTimestamp) * 1000));
+      } else {
+        setLastCheckInTime(null);
+      }
 
       // Fetch current round data
       const roundData = (await publicClient.readContract({
@@ -273,6 +283,7 @@ export const DailyCheckinSheet: React.FC<DailyCheckinSheetProps> = ({
       setIsLoading(false);
     }
   };
+
   // Handle reward claim
   const handleClaimReward = async () => {
     if (!address || !publicClient || !isCorrectChain) {
@@ -348,6 +359,17 @@ export const DailyCheckinSheet: React.FC<DailyCheckinSheetProps> = ({
         transition={{ duration: 0.5 }}
         className="space-y-6"
       >
+        {/* Test Flight Banner */}
+        {checkinStreak >= 2 && (
+          <div className="p-3 bg-yellow-500/20 rounded-lg border border-yellow-500/30 text-sm text-yellow-300">
+            <div className="font-semibold mb-1">🚀 Test Flight Mode</div>
+            <p>
+              If You've completed a 7-day streak! Claims will be live soon. We're 
+              incorporating feedback to ship a better experience with higher rewards.
+            </p>
+          </div>
+        )}
+
         {/* Error or Transaction Status */}
         {error && (
           <div className="p-3 bg-red-50 dark:bg-red-900/30 rounded-lg text-sm text-red-800 dark:text-red-200 flex items-center">
@@ -392,7 +414,7 @@ export const DailyCheckinSheet: React.FC<DailyCheckinSheetProps> = ({
 
         {/* Streak Card */}
         <div className="bg-gradient-to-r from-orange-500/20 to-orange-600/20 rounded-xl p-4 border border-orange-500/30">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-3">
               <Flame className="w-6 h-6 text-orange-400" />
               <div>
@@ -404,6 +426,11 @@ export const DailyCheckinSheet: React.FC<DailyCheckinSheetProps> = ({
               {checkinStreak}
             </div>
           </div>
+          {lastCheckInTime && (
+            <div className="text-xs text-orange-200/80 mt-2">
+              Last check-in: {lastCheckInTime.toLocaleString()}
+            </div>
+          )}
         </div>
 
         {/* Check-in Button */}
@@ -443,7 +470,7 @@ export const DailyCheckinSheet: React.FC<DailyCheckinSheetProps> = ({
             className="w-full bg-gradient-to-r from-emerald-600 to-emerald-700 text-white font-semibold py-4 px-6 rounded-xl hover:scale-[1.02] transition-all duration-300 flex items-center justify-center gap-3 shadow-lg animate-pulse"
           >
             <Gift className="w-5 h-5" />
-            Claim Your Reward (1 CELO)
+            Claim Your Reward
           </Button>
         ) : (
           <div className="w-full bg-gray-500/20 text-gray-400 font-semibold py-4 px-6 rounded-xl flex items-center justify-center gap-3">
