@@ -1,46 +1,21 @@
 import { ethers } from "ethers";
 import fs from "fs";
+import path from "path";
 
 async function main() {
   const contractAddress = "0xaFbFAaac9c495C74de33c039C0B56172b393d2Ad";
-  const deploymentBlock = 34968748; // Estimated for May 28, 2025
   
-  // Use the provider from hardhat instead of creating a new one
-  const provider = new ethers.providers.JsonRpcProvider("https://forno.celo.org");  
-  // Or if you need to use a specific provider:
-  // const provider = new ethers.providers.JsonRpcProvider("https://celo-mainnet.g.alchemy.com/v2/ImPte7otRAJ_4gDny9NLO_Ao9GT4_CiQ");
+  // Initialize provider (using Alchemy for Celo)
+  const provider = new ethers.providers.JsonRpcProvider(
+    "https://celo-mainnet.g.alchemy.com/v2/ImPte7otRAJ_4gDny9NLO_Ao9GT4_CiQ"
+  );
 
-  const currentBlock = await provider.getBlockNumber();
-  console.log(`⏳ Fetching check-in stats from block ${deploymentBlock} to ${currentBlock}...`);
-
-  // Contract ABI
+  // Contract ABI (simplified with just what we need)
   const abi = [
-    {
-      anonymous: false,
-      inputs: [
-        { indexed: true, name: "user", type: "address" },
-        { indexed: true, name: "day", type: "uint256" },
-        { indexed: true, name: "round", type: "uint256" },
-      ],
-      name: "CheckedIn",
-      type: "event",
-    },
     {
       inputs: [],
       name: "currentRound",
       outputs: [{ name: "", type: "uint256" }],
-      stateMutability: "view",
-      type: "function",
-    },
-    {
-      inputs: [{ name: "round", type: "uint256" }],
-      name: "rounds",
-      outputs: [
-        { name: "startTime", type: "uint256" },
-        { name: "isActive", type: "bool" },
-        { name: "participantCount", type: "uint256" },
-        { name: "totalCheckIns", type: "uint256" },
-      ],
       stateMutability: "view",
       type: "function",
     },
@@ -59,100 +34,64 @@ async function main() {
     },
   ];
 
-  // Get contract instance using the ABI
+  // Get contract instance
   const contract = new ethers.Contract(contractAddress, abi, provider);
 
   // Get current round
   const currentRound = await contract.currentRound();
   console.log(`ℹ️ Current Round: ${currentRound}`);
 
-  // Get round data
-  const roundData = await contract.rounds(currentRound);
-  console.log(`ℹ️ Raw Round Data:`, roundData);
+  // Read addresses from file (assuming one address per line)
+  const addressesFilePath = path.join(__dirname, "addresses.txt");
+  const addressesFileContent = fs.readFileSync(addressesFilePath, "utf-8");
+  const addresses = addressesFileContent
+    .split("\n")
+    .map(line => line.trim())
+    .filter(line => line.length > 0 && ethers.utils.isAddress(line));
 
-  // Destructure roundData
-  const [startTime, isActive, participantCount, totalCheckIns] = roundData;
-
-  // Handle startTime
-  let startTimeDisplay = "Invalid or not set";
-  if (startTime && Number(startTime) > 0) {
-    startTimeDisplay = new Date(Number(startTime) * 1000).toISOString();
-  }
-
-  console.log(`\n📊 Round ${currentRound} Stats:`);
-  console.log(`- Start Time: ${startTimeDisplay}`);
-  console.log(`- Active: ${isActive}`);
-  console.log(`- Total Participants: ${participantCount}`);
-  console.log(`- Total Check-Ins: ${totalCheckIns}`);
-
-  // Fetch CheckedIn events to get user addresses
-  console.log(`\n⏳ Fetching CheckedIn events to collect user addresses...`);
-  const maxBlockRange = 2000; // Increased range for better performance
-  const userAddresses = new Set<string>();
-  
-  for (let fromBlock = deploymentBlock; fromBlock <= currentBlock; fromBlock += maxBlockRange) {
-    const toBlock = Math.min(fromBlock + maxBlockRange - 1, currentBlock);
-    console.log(`Fetching events from block ${fromBlock} to ${toBlock}...`);
-
-    try {
-      const checkInFilter = contract.filters.CheckedIn(null, null, currentRound);
-      const checkInBatch = await contract.queryFilter(checkInFilter, fromBlock, toBlock);
-      checkInBatch.forEach((event) => {
-        if (event.args && event.args.user) {
-          userAddresses.add(event.args.user.toLowerCase());
-        }
-      });
-    } catch (error) {
-      console.warn(`⚠️ Error fetching events for block range ${fromBlock}-${toBlock}: ${error instanceof Error ? error.message : String(error)}`);
-      // Add a delay before retrying
-      await new Promise(resolve => setTimeout(resolve, 1000));
-    }
-  }
-
-  console.log(`ℹ️ Found ${userAddresses.size} unique user addresses`);
-
-  // If no addresses found, exit
-  if (userAddresses.size === 0) {
-    console.error("\n❌ No user addresses found. Possible issues:");
-    console.log("- No check-ins in the scanned block range.");
-    console.log("- Incorrect deploymentBlock (try a later block).");
-    console.log("- RPC issues (check Alchemy dashboard).");
-    console.log("- Contract address or round number is incorrect.");
+  if (addresses.length === 0) {
+    console.error("❌ No valid addresses found in addresses.txt");
     process.exit(1);
   }
 
+  console.log(`\n⏳ Checking ${addresses.length} addresses...`);
+
   // Fetch user data
-  console.log(`\n⏳ Fetching user data for ${userAddresses.size} addresses...`);
-  const userStats: { address: string; checkInCount: number; hasClaimed: boolean }[] = [];
+  const userStats: {
+    address: string;
+    checkInCount: number;
+    hasClaimed: boolean;
+  }[] = [];
 
-  // Convert Set to Array for easier processing
-  const userAddressesArray = Array.from(userAddresses);
-  
-  for (let i = 0; i < userAddressesArray.length; i++) {
-    const address = userAddressesArray[i];
-    try {
-      const userData = await contract.userRoundData(currentRound, address);
-      const checkInCount = Number(userData.checkInCount);
-      const hasClaimed = userData.hasClaimed;
+  // Process in batches to avoid rate limiting
+  const BATCH_SIZE = 50;
+  const DELAY_MS = 1000;
 
-      if (checkInCount > 0) {
-        userStats.push({
+  for (let i = 0; i < addresses.length; i += BATCH_SIZE) {
+    const batch = addresses.slice(i, i + BATCH_SIZE);
+    console.log(`Processing batch ${i / BATCH_SIZE + 1} of ${Math.ceil(addresses.length / BATCH_SIZE)}...`);
+
+    const batchPromises = batch.map(async (address) => {
+      try {
+        const userData = await contract.userRoundData(currentRound, address);
+        return {
           address,
-          checkInCount,
-          hasClaimed,
-        });
+          checkInCount: Number(userData.checkInCount),
+          hasClaimed: userData.hasClaimed,
+        };
+      } catch (error) {
+        console.warn(`⚠️ Error fetching data for ${address}: ${error instanceof Error ? error.message : String(error)}`);
+        return null;
       }
-      
-      // Show progress
-      if (i % 10 === 0 || i === userAddressesArray.length - 1) {
-        console.log(`Processed ${i + 1}/${userAddressesArray.length} users...`);
-      }
-    } catch (error) {
-      console.warn(`⚠️ Error fetching userRoundData for ${address}: ${error instanceof Error ? error.message : String(error)}`);
-    }
+    });
 
-    // Delay to avoid rate limiting
-    await new Promise(resolve => setTimeout(resolve, 200));
+    const batchResults = await Promise.all(batchPromises);
+    userStats.push(...batchResults.filter(Boolean));
+
+    // Delay between batches
+    if (i + BATCH_SIZE < addresses.length) {
+      await new Promise(resolve => setTimeout(resolve, DELAY_MS));
+    }
   }
 
   // Sort by check-in count (descending)
@@ -161,50 +100,60 @@ async function main() {
   // Calculate statistics
   const totalParticipants = userStats.length;
   const perfectCheckIns = userStats.filter(u => u.checkInCount === 6).length;
-  const averageCheckIns = totalParticipants > 0
-    ? userStats.reduce((sum, u) => sum + u.checkInCount, 0) / totalParticipants
-    : 0;
-  const eligibleForRewards = userStats.filter(u => !u.hasClaimed && u.checkInCount >= 6).length;
+  const averageCheckIns =
+    totalParticipants > 0
+      ? userStats.reduce((sum, u) => sum + u.checkInCount, 0) / totalParticipants
+      : 0;
+  const eligibleForRewards = userStats.filter(
+    u => !u.hasClaimed && u.checkInCount >= 6
+  ).length;
 
   // Display results
-  console.log("\n📊 Check-In Statistics (Current Round):");
-  console.log(`- Total Participants: ${totalParticipants}`);
+  console.log("\n📊 Check-In Statistics:");
+  console.log(`- Total Addresses Checked: ${addresses.length}`);
+  console.log(`- Active Participants: ${totalParticipants}`);
   console.log(`- Users with all 6 days checked in: ${perfectCheckIns}`);
   console.log(`- Average check-ins per user: ${averageCheckIns.toFixed(2)}`);
-  console.log(`- Users eligible for rewards (6+ check-ins, unclaimed): ${eligibleForRewards}`);
+  console.log(
+    `- Users eligible for rewards (6+ check-ins, unclaimed): ${eligibleForRewards}`
+  );
 
   console.log("\n🏆 Top Participants by Check-Ins:");
-  const topParticipants = userStats.slice(0, 10); // Show top 10
+  const topParticipants = userStats.slice(0, 10);
   topParticipants.forEach((user, index) => {
-    console.log(`${index + 1}. ${user.address} - ${user.checkInCount} check-ins (Claimed: ${user.hasClaimed})`);
+    console.log(
+      `${index + 1}. ${user.address} - ${user.checkInCount} check-ins (Claimed: ${user.hasClaimed})`
+    );
   });
 
   // Save to JSON file
   const output = {
     round: Number(currentRound),
-    totalParticipants,
-    totalCheckIns: Number(totalCheckIns),
+    totalAddressesChecked: addresses.length,
+    activeParticipants: totalParticipants,
     perfectCheckIns,
     averageCheckIns: averageCheckIns.toFixed(2),
     eligibleForRewards,
-    startTime: startTimeDisplay,
-    isActive,
     userStats,
   };
-  
-  fs.writeFileSync("check-in-stats.json", JSON.stringify(output, null, 2));
-  console.log("\n📄 Saved to check-in-stats.json");
 
-  if (userStats.length === 0) {
-    console.log("\n❌ No check-in data found. Possible issues:");
-    console.log("- No check-ins in the scanned block range.");
-    console.log("- Incorrect deploymentBlock (try a later block).");
-    console.log("- RPC issues (check Alchemy dashboard).");
-    console.log("- Contract address or round number is incorrect.");
-  }
+  fs.writeFileSync("check-in-stats.json", JSON.stringify(output, null, 2));
+  console.log("\n📄 Results saved to check-in-stats.json");
+
+  // Save CSV file for easy analysis
+  const csvHeader = "Address,CheckInCount,HasClaimed\n";
+  const csvContent =
+    csvHeader +
+    userStats
+      .map(
+        user => `${user.address},${user.checkInCount},${user.hasClaimed}`
+      )
+      .join("\n");
+  fs.writeFileSync("check-in-stats.csv", csvContent);
+  console.log("📄 CSV results saved to check-in-stats.csv");
 }
 
 main().catch((err) => {
-  console.error("Error fetching check-in stats:", err instanceof Error ? err.message : String(err));
+  console.error("Error:", err instanceof Error ? err.message : String(err));
   process.exit(1);
 });
