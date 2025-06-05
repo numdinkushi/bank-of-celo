@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { NextRequest, NextResponse } from "next/server";
 import { getUserIdentifier, SelfBackendVerifier } from "@selfxyz/core";
 import { ConvexHttpClient } from "convex/browser";
@@ -29,7 +30,7 @@ export async function POST(req: NextRequest) {
       `bank-of-celo`, // scope
       `https://bank-of-celo.vercel.app/api/self-protocol`, // endpoint
       "hex", // user_identifier_type
-      true, // mockPassport
+       // mockPassport
     );
     console.log("passed");
 
@@ -41,7 +42,7 @@ export async function POST(req: NextRequest) {
 
     if (result.isValid) {
       // Return successful verification response
-      await convex.mutation(api.users.verifyOG, { address: result.userId });
+      // await convex.mutation(api.users.verifyOG, { address: result.userId });
 
       return NextResponse.json({
         status: "success",
