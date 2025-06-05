@@ -177,27 +177,28 @@ const SelfProtocolComponent: React.FC<SelfProtocolComponentProps> = ({
         </div>
 
         {/* QR Code Container */}
-        <div className="bg-white rounded-2xl p-6 mb-20 mt-10 mx-auto w-64">
-          <div className="w-48 h-48 mx-auto flex items-center justify-center rounded-xl">
-            {selfApp ? (
-              <div className="">
-                <SelfQRcodeWrapper
-                  selfApp={selfApp}
-                  onSuccess={handleSuccessfulVerification}
-                />
-              </div>
-            ) : (
-              <div className="w-full h-full bg-gray-100 flex items-center justify-center rounded-xl border-2 border-gray-200">
-                <div className="text-center">
-                  <div className="w-12 h-12 bg-emerald-500 rounded-lg mx-auto mb-2 flex items-center justify-center animate-pulse">
-                    <Shield className="w-6 h-6 text-white" />
-                  </div>
-                  <p className="text-gray-600 text-xs">QR Code Loading...</p>
-                </div>
-              </div>
-            )}
+        <div className="bg-white rounded-2xl p-4 mb-20 mt-10 mx-auto w-48"> {/* Reduced container width and padding */}
+  <div className="w-32 h-32 mx-auto flex items-center justify-center rounded-xl"> {/* Reduced QR code container size */}
+    {selfApp ? (
+      <div className="">
+        <SelfQRcodeWrapper
+          selfApp={selfApp}
+          onSuccess={handleSuccessfulVerification}
+          size={128} // If the component accepts a size prop, you can set it here
+        />
+      </div>
+    ) : (
+      <div className="w-full h-full bg-gray-100 flex items-center justify-center rounded-xl border-2 border-gray-200">
+        <div className="text-center">
+          <div className="w-8 h-8 bg-emerald-500 rounded-lg mx-auto mb-1 flex items-center justify-center animate-pulse"> {/* Reduced icon size */}
+            <Shield className="w-4 h-4 text-white" /> {/* Reduced icon size */}
           </div>
+          <p className="text-gray-600 text-xs">QR Code Loading...</p>
         </div>
+      </div>
+    )}
+  </div>
+</div>
 
         {/* Action Buttons */}
         <div className="flex flex-col gap-3 mb-6 mt-8">
