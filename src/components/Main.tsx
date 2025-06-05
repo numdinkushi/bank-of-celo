@@ -52,8 +52,7 @@ import { getDataSuffix, submitReferral } from "@divvi/referral-sdk";
 import { cubesImage } from "~/constants/images";
 import { cn } from "~/lib/utils";
 import Rewards from "./tabs/rewards";
-import { useSearchParams } from "next/navigation";
-import { useRouter } from "next/router";
+
 
 export default function Main({ title = "Bank of Celo" }: { title?: string }) {
   const { address, isConnected, chain } = useAccount();
@@ -65,10 +64,7 @@ export default function Main({ title = "Bank of Celo" }: { title?: string }) {
   const publicClient = usePublicClient();
   const { writeContract, isPending } = useWriteContract();
   const { isSDKLoaded, context } = useFrame();
-  const searchParams = useSearchParams();
-  const router = useRouter();
-  const [customSearchParams, setCustomSearchParams] = useState<URLSearchParams | null>(null);
-  const effectiveSearchParams = searchParams || customSearchParams;
+  
 
   const [activeTab, setActiveTab] = useState("home");
   const [vaultBalance, setVaultBalance] = useState<string>("0");
@@ -93,23 +89,6 @@ export default function Main({ title = "Bank of Celo" }: { title?: string }) {
 
   console.log("Current chain ID:", chainId);
   console.log("Is correct chain:", isCorrectChain);
-    // Handle URL redirect logic
-  useEffect(() => {
-    if (!effectiveSearchParams) return;
-
-    const shouldRedirect = effectiveSearchParams.get("redirect") === "true";
-    const url = effectiveSearchParams.get("url");
-
-    if (shouldRedirect && url) {
-      // Validate URL first
-      try {
-        new URL(url);
-        sdk.actions.openUrl(url);
-      } catch (error: unknown) {
-        console.error("Invalid URL provided:", url, error);
-      }
-    }
-  }, [effectiveSearchParams]);
 
   const handleSwitchChain = useCallback(() => {
     try {

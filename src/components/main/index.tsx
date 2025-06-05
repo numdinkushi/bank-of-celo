@@ -32,6 +32,8 @@ import WelcomeModal from "./Welcome-Modal";
 import Header from "./Header";
 import TabContent from "./TabContent";
 import BottomNavigation from "./BottomNavigation";
+import { useSearchParams } from "next/navigation";
+import { useRouter } from "next/router";
 
 export default function Main({ title = "Bank of Celo" }: { title?: string }) {
   const { address, isConnected, chain } = useAccount();
@@ -42,6 +44,11 @@ export default function Main({ title = "Bank of Celo" }: { title?: string }) {
   const { sendTransactionAsync } = useSendTransaction();
   const { writeContract, isPending } = useWriteContract();
   const { isSDKLoaded, context } = useFrame();
+  const searchParams = useSearchParams();
+  const router = useRouter();
+ 
+   const [customSearchParams, setCustomSearchParams] = useState<URLSearchParams | null>(null);
+    const effectiveSearchParams = searchParams || customSearchParams;
 
   const [activeTab, setActiveTab] = useState("home");
 
@@ -66,6 +73,25 @@ export default function Main({ title = "Bank of Celo" }: { title?: string }) {
 
   console.log("Current chain ID:", chainId);
   console.log("Is correct chain:", isCorrectChain);
+
+      // Handle URL redirect logic
+    useEffect(() => {
+      if (!effectiveSearchParams) return;
+      alert("Effective search params found:", );
+  
+      const shouldRedirect = effectiveSearchParams.get("redirect") === "true";
+      const url = effectiveSearchParams.get("url");
+  
+      if (shouldRedirect && url) {
+        // Validate URL first
+        try {
+          new URL(url);
+          sdk.actions.openUrl(url);
+        } catch (error: unknown) {
+          console.error("Invalid URL provided:", url, error);
+        }
+      }
+    }, [effectiveSearchParams]);
 
   // URL parameter handling for rewards tab
   useEffect(() => {
