@@ -75,7 +75,6 @@ export default function Main({ title = "Bank of Celo" }: { title?: string }) {
       // Handle URL redirect logic
     useEffect(() => {
       if (!effectiveSearchParams) return;
-      alert("Effective search params found:", );
   
       const shouldRedirect = effectiveSearchParams.get("redirect") === "true";
       const url = effectiveSearchParams.get("url");
