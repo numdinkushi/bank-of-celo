@@ -400,7 +400,7 @@ export const DailyCheckinSheet: React.FC<DailyCheckinSheetProps> = ({
             className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white py-3 rounded-lg font-medium flex items-center justify-center gap-2"
           >
             <CheckCircle2 className="w-5 h-5" />
-            Check In for Day {currentDay} (0.001 CELO)
+            Check In for Day {currentDay}
           </Button>
         ) : (
           <div className="p-3 bg-green-500/10 rounded-lg border border-green-500/20 text-center text-green-400 flex items-center justify-center gap-2">

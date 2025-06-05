@@ -55,6 +55,7 @@ const SelfProtocolComponent: React.FC<SelfProtocolComponentProps> = ({
       const app = new SelfAppBuilder({
         appName: process.env.NEXT_PUBLIC_SELF_APP_NAME || "Bank of Celo",
         scope: "bank-of-celo",
+        devMode: true,
         endpoint: `https://bank-of-celo.vercel.app/api/self-protocol`,
         logoBase64: APP_ICON_URL,
         userId: address,
