@@ -149,6 +149,7 @@ export default function Rewards(): JSX.Element {
   };
 
   const handleVerificationSuccess = (): void => {
+    toast
     closeSheet();
     // Handle successful verification - could update user state, show success message, etc.
   };

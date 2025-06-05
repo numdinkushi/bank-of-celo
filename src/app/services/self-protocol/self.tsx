@@ -19,6 +19,7 @@ import { useAccount } from "wagmi";
 import { APP_ICON_URL } from "~/lib/constants";
 import { useQuery } from "convex/react";
 import { api } from "../../../../convex/_generated/api";
+import {toast} from "sonner";
 
 interface SelfProtocolComponentProps {
   onSuccess?: () => void;
@@ -91,7 +92,7 @@ const SelfProtocolComponent: React.FC<SelfProtocolComponentProps> = ({
       })
       .catch((err) => {
         console.log("Failed to copy text: ", err);
-        displayToast("Failed to copy link");
+        toast.success("Failed to copy link");
       });
   };
 
@@ -99,11 +100,11 @@ const SelfProtocolComponent: React.FC<SelfProtocolComponentProps> = ({
     if (!universalLink) return;
 
     window.open(universalLink, "_blank");
-    displayToast("Opening Self App...");
+    toast.success("Opening Self App...");
   };
 
   const handleSuccessfulVerification = (): void => {
-    displayToast("Verification successful! Redirecting...");
+    toast.success("Identity verified successfully!");
     if (onSuccess) {
       onSuccess();
     } else {
@@ -112,6 +113,8 @@ const SelfProtocolComponent: React.FC<SelfProtocolComponentProps> = ({
       }, 1500);
     }
   };
+
+  console.log("isVerifiedOG:", isVerifiedOG);
 
   if (isVerifiedOG) {
     return (
