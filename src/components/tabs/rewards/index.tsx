@@ -24,6 +24,7 @@ import HowToEarnSheet from "./bottom-sheets/how-to-earn";
 import LeaderboardSheet from "./bottom-sheets/leader-board";
 import { ClaimsSheet } from "./bottom-sheets/claims";
 import { DailyCheckinSheet } from "./bottom-sheets/daily-check-ins";
+import { toast } from "sonner";
 
 interface MiniCard {
   id: "scored" | "rewards" | "earn" | "leaderboard" | "og-earning";
@@ -149,7 +150,7 @@ export default function Rewards(): JSX.Element {
   };
 
   const handleVerificationSuccess = (): void => {
-    toast
+    toast.success("Identity verified successfully!");
     closeSheet();
     // Handle successful verification - could update user state, show success message, etc.
   };
