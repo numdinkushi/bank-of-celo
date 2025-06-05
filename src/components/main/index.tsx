@@ -33,7 +33,6 @@ import Header from "./Header";
 import TabContent from "./TabContent";
 import BottomNavigation from "./BottomNavigation";
 import { useSearchParams } from "next/navigation";
-import { useRouter } from "next/router";
 
 export default function Main({ title = "Bank of Celo" }: { title?: string }) {
   const { address, isConnected, chain } = useAccount();
@@ -45,7 +44,6 @@ export default function Main({ title = "Bank of Celo" }: { title?: string }) {
   const { writeContract, isPending } = useWriteContract();
   const { isSDKLoaded, context } = useFrame();
   const searchParams = useSearchParams();
-  const router = useRouter();
  
    const [customSearchParams, setCustomSearchParams] = useState<URLSearchParams | null>(null);
     const effectiveSearchParams = searchParams || customSearchParams;
