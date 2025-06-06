@@ -15,4 +15,4 @@ const CeloJackpotModult = buildModule("CeloCheckInModuleV2", (m) => {
 });
 
 export default CeloJackpotModult;
-//deployed addy - 
+//deployed addy - 0x9602d02Bd17d9f1c1EB09028fCea26dD29383611
