@@ -27,6 +27,7 @@ import {
 } from "~/lib/constants";
 import { getDataSuffix, submitReferral } from "@divvi/referral-sdk";
 import { encodeFunctionData, parseEther } from "viem";
+import CeloJackpot from "./JackPot";
 
 interface TransactTabProps {
   onDonate: (amount: string) => void;
@@ -69,8 +70,6 @@ export default function TransactTab({
   const [txHash, setTxHash] = useState<string | null>(null);
   const [hasClaimed, setHasClaimed] = useState(false);
   const [username, setUsername] = useState<string | null>(null);
-  const [ticketCount, setTicketCount] = useState("1");
-  const [lotteryPending, setLotteryPending] = useState(false);
 
   const getUsername = async (userAddress: string): Promise<string | null> => {
     if (!userAddress) return null;
@@ -139,8 +138,7 @@ export default function TransactTab({
         functionName: "donors",
         args: [address],
       });
-      // donorInfo is a tuple: [totalDonated, lastDonationTime, tier, hasClaimed]
-      const claimed = donorInfo[3]; // hasClaimed is the 4th element
+      const claimed = donorInfo[3];
       setHasClaimed(claimed as boolean);
     } catch (error) {
       console.error("Error fetching hasClaimed:", error);
@@ -177,9 +175,8 @@ export default function TransactTab({
     setTxHash(null);
 
     try {
-      const deadline = Math.floor(Date.now() / 1000) + 3600; // 1 hour from now
+      const deadline = Math.floor(Date.now() / 1000) + 3600;
 
-      // Get current nonce from contract
       const nonce = (await publicClient.readContract({
         address: BANK_OF_CELO_CONTRACT_ADDRESS,
         abi: BANK_OF_CELO_CONTRACT_ABI,
@@ -187,7 +184,6 @@ export default function TransactTab({
         args: [address],
       })) as bigint;
 
-      // EIP-712 typed data
       const domain = {
         name: "BankOfCelo",
         version: "1",
@@ -218,7 +214,6 @@ export default function TransactTab({
         message,
       });
 
-      // Get Divi referral data suffix
       let dataSuffix;
       try {
         dataSuffix = getDataSuffix({
@@ -234,12 +229,10 @@ export default function TransactTab({
         throw new Error("Failed to generate referral data");
       }
 
-      // Check user's balance
       const balance = await publicClient.getBalance({ address });
-      const minBalance = parseEther("0.001"); // Minimum to cover gas (~0.001 CELO)
+      const minBalance = parseEther("0.001");
 
       if (balance >= minBalance) {
-        // UserdataSuffix =  has CELO: Call claim directly
         const contractData = encodeFunctionData({
           abi: BANK_OF_CELO_CONTRACT_ABI,
           functionName: "claim",
@@ -254,11 +247,10 @@ export default function TransactTab({
           value: 0n,
         });
 
-        // Report to Divi
         try {
           await submitReferral({
             txHash: hash,
-            chainId: 42220, // Celo mainnet
+            chainId: 42220,
           });
         } catch (diviError) {
           console.log("Divi submitReferral error:", diviError);
@@ -270,14 +262,13 @@ export default function TransactTab({
           `Claimed ${maxClaim} CELO! Transaction hash: ${hash.slice(0, 6)}...`,
         );
       } else {
-        // User has no CELO: Use API route for gasless claim
         const requestBody = {
           address,
           fid: fid.toString(),
           deadline: deadline.toString(),
           signature,
           nonce: nonce.toString(),
-          dataSuffix, // Include dataSuffix for gasless claim
+          dataSuffix,
         };
 
         const response = await fetch("/api/claim", {
@@ -294,7 +285,6 @@ export default function TransactTab({
         const result = await response.json();
         setTxHash(result.transactionHash);
 
-        // Report to Divi
         try {
           await submitReferral({
             txHash: result.transactionHash,
@@ -319,57 +309,6 @@ export default function TransactTab({
     }
   };
 
-  const handleLotteryTicket = async () => {
-    if (!address || !publicClient) {
-      toast.error("Wallet not connected");
-      return;
-    }
-
-    const tickets = parseInt(ticketCount);
-    if (isNaN(tickets) || tickets < 1) {
-      toast.error("Please enter a valid number of tickets");
-      return;
-    }
-
-    setLotteryPending(true);
-
-    try {
-      // Calculate total cost (1 CELO per ticket)
-      const totalCost = parseEther((tickets * 1).toString());
-
-      // Check user's balance
-      const balance = await publicClient.getBalance({ address });
-      if (balance < totalCost) {
-        toast.error("Insufficient CELO balance to buy tickets");
-        return;
-      }
-
-      // For now, we'll simulate the lottery ticket purchase
-      // In a real implementation, you would call a lottery contract function
-      const hash = await sendTransactionAsync({
-        to: BANK_OF_CELO_CONTRACT_ADDRESS, // This would be your lottery contract address
-        value: totalCost,
-        data: "0x", // This would contain the lottery function call data
-      });
-
-      toast.success(
-        `Successfully bought ${tickets} lottery ticket${tickets > 1 ? "s" : ""} for ${tickets} CELO! Transaction: ${hash.slice(0, 6)}...`,
-      );
-
-      setTicketCount("1"); // Reset to default
-      setTxHash(hash);
-    } catch (error) {
-      console.log("Lottery ticket purchase error:", error);
-      toast.error(
-        error instanceof Error
-          ? error.message
-          : "Failed to purchase lottery tickets",
-      );
-    } finally {
-      setLotteryPending(false);
-    }
-  };
-
   const handleSubmit = () => {
     if (!isCorrectChain) {
       toast.error("Please switch to Celo Network");
@@ -385,8 +324,6 @@ export default function TransactTab({
       setAmount("");
     } else if (activeTab === "claim") {
       handleClaim();
-    } else if (activeTab === "lottery") {
-      handleLotteryTicket();
     }
   };
 
@@ -440,23 +377,17 @@ export default function TransactTab({
                 ? "bg-white dark:bg-gray-700 shadow-sm text-purple-600 dark:text-purple-400"
                 : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
             }`}
-            aria-label="Lottery Pot tab"
+            aria-label="jackpot tab"
             role="tab"
             aria-selected={activeTab === "lottery"}
           >
             <Ticket className="w-4 h-4" />
-            Lottery Pot
+             Jackpot
           </button>
         </div>
       </div>
 
-      {!isCorrectChain ? (
-        <div className="p-6 bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 text-center">
-          <p className="text-gray-600 dark:text-gray-300">
-            Please switch to Celo Network to proceed
-          </p>
-        </div>
-      ) : activeTab === "donate" ? (
+      {activeTab === "donate" ? (
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
@@ -605,101 +536,7 @@ export default function TransactTab({
           </div>
         </motion.div>
       ) : (
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3 }}
-          className="p-6 bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700"
-        >
-          <div className="space-y-5">
-            <div className="text-center mb-4">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-                🎰 Lottery Pot
-              </h3>
-              <p className="text-sm text-gray-600 dark:text-gray-400">
-                Buy lottery tickets for a chance to win the pot! Each ticket
-                costs 1 CELO.
-              </p>
-            </div>
-
-            {txHash && (
-              <div className="p-3 bg-green-50 dark:bg-green-900/30 rounded-lg text-sm text-green-800 dark:text-green-200 flex items-center">
-                <span>
-                  Tickets purchased successfully!{" "}
-                  <a
-                    href={`https://celoscan.io/tx/${txHash}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="underline"
-                  >
-                    View on CeloScan
-                  </a>
-                </span>
-              </div>
-            )}
-
-            <div>
-              <label
-                htmlFor="ticket-count"
-                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-              >
-                Number of Tickets (1 CELO each)
-              </label>
-              <Input
-                id="ticket-count"
-                type="number"
-                value={ticketCount}
-                onChange={(e) => setTicketCount(e.target.value)}
-                placeholder="1"
-                className="w-full py-3 text-black"
-                min="1"
-                step="1"
-              />
-              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                Total cost:{" "}
-                {ticketCount && !isNaN(parseInt(ticketCount))
-                  ? parseInt(ticketCount) * 1
-                  : 0}{" "}
-                CELO
-              </p>
-            </div>
-
-            <Button
-              onClick={handleSubmit}
-              disabled={
-                isPending ||
-                lotteryPending ||
-                !ticketCount ||
-                isNaN(parseInt(ticketCount)) ||
-                parseInt(ticketCount) < 1
-              }
-              className="w-full py-3 bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-700 hover:to-purple-600 text-white"
-              aria-label="Buy lottery tickets"
-            >
-              {lotteryPending || isPending ? (
-                <Loader2 className="w-5 h-5 animate-spin" />
-              ) : (
-                <div className="flex items-center justify-center gap-2">
-                  <Ticket className="w-5 h-5" />
-                  <span>
-                    Buy{" "}
-                    {ticketCount && !isNaN(parseInt(ticketCount))
-                      ? parseInt(ticketCount)
-                      : 1}{" "}
-                    Ticket{parseInt(ticketCount) > 1 ? "s" : ""}
-                  </span>
-                </div>
-              )}
-            </Button>
-
-            <div className="text-center pt-2">
-              <p className="text-xs text-gray-500 dark:text-gray-400">
-                🍀 Good luck! The more tickets you buy, the higher your chances
-                of winning!
-              </p>
-            </div>
-          </div>
-        </motion.div>
+        <CeloJackpot isCorrectChain={isCorrectChain} />
       )}
     </motion.div>
   );
