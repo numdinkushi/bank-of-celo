@@ -335,12 +335,7 @@ export default function TransactTab({
       className="space-y-6"
     >
       <div className="flex flex-col gap-4">
-        <div className="flex items-center gap-3">
-          <div className="bg-blue-100 dark:bg-blue-900 p-2 rounded-lg">
-            <Gift className="w-5 h-5 text-blue-600 dark:text-blue-300" />
-          </div>
-          <h2 className="text-3xl font-semibold text-white">BOC</h2>
-        </div>
+       
         <div className="flex bg-gray-100 dark:bg-gray-800 rounded-xl p-1">
           <button
             onClick={() => setActiveTab("donate")}
