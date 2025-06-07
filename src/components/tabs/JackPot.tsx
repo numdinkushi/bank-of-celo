@@ -6,9 +6,9 @@ import { motion } from "framer-motion";
 import { Loader2, Ticket, Clock, Wallet, Trophy, ChevronRight } from "lucide-react";
 import { Button } from "~/components/ui/Button";
 import { toast } from "sonner";
-import { formatDistanceToNow } from "date-fns";
+import { formatDistanceToNow, format } from "date-fns";
 import { useAccount, usePublicClient, useSendTransaction } from "wagmi";
-import { CELO_JACKPOT_CONTRACT_ADDRESS, CELO_JACKPOT_ABI } from "~/lib/constants";
+import { CELO_JACKPOT_CONTRACT_ADDRESS, CELO_JACKPOT_ABI, MOTIVATIONAL_STATEMENTS } from "~/lib/constants";
 import { encodeFunctionData, parseEther, formatEther, parseUnits } from "viem";
 import { getDataSuffix, submitReferral } from "@divvi/referral-sdk";
 import { Input } from "../ui/input";
@@ -53,6 +53,7 @@ export default function CeloJackpot({ isCorrectChain }: CeloJackpotProps) {
 const [countdown, setCountdown] = useState<string>("00:00:00");
 const [isDataLoading, setIsDataLoading] = useState(false); // Renamed for clarity
 const countdownRef = useRef<NodeJS.Timeout>();
+const [drawDate, setDrawDate] = useState<string>("TBD");
   
 
   // Fetch dashboard data and user-specific data
@@ -69,6 +70,7 @@ const countdownRef = useRef<NodeJS.Timeout>();
         functionName: "getDashboardData",
         args: [address],
       });
+
       setDashboardData({
         currentRound: Number(data[0]),
         timeUntilDraw: Number(data[1]),
@@ -101,8 +103,20 @@ const countdownRef = useRef<NodeJS.Timeout>();
         functionName: "rounds",
         args: [roundId],
       });
+
         const winnerAddress = roundData[6] as `0x${string}`;
         const hasWon = winnerAddress === address
+
+        const getCurrentRound: any = await publicClient.readContract({
+        address: CELO_JACKPOT_CONTRACT_ADDRESS,
+        abi: CELO_JACKPOT_ABI,
+        functionName: "getCurrentRound",
+        args: [],
+      });
+          const timestampSeconds = Number(getCurrentRound.startTime);
+          const date = new Date(timestampSeconds * 1000);  // convert seconds to ms
+          const formattedDate = format(date, "MMMM d");
+              setDrawDate(formattedDate);
         
         return { 
           roundId: Number(roundId), 
@@ -390,7 +404,7 @@ useEffect(() => {
           >
             <div className="flex flex-col md:flex-row justify-between items-center gap-4">
               <div>
-                <p className="text-sm text-purple-100 mb-5">BOC Jackpot</p>
+                <p className="text-sm text-purple-100 mb-5">BOC Jackpot - {drawDate}</p>
                 <h3 className="text-3xl font-bold text-white mb-5">
                   {dashboardData.currentPot} CELO
                 </h3>
@@ -629,79 +643,133 @@ useEffect(() => {
 
           {/* Past Tickets Section */}
           <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3, delay: 0.3 }}
-            className="p-6 bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700"
-          >
-            <button
-              onClick={() => setShowPastTickets(!showPastTickets)}
-              className="flex items-center justify-between w-full text-left"
-            >
-              <h3 className="text-lg font-bold text-gray-900 dark:text-white">
-                Your Past Tickets
-              </h3>
-              <ChevronRight 
-                className={`w-5 h-5 text-gray-500 transition-transform ${showPastTickets ? 'rotate-90' : ''}`} 
-              />
-            </button>
+  initial={{ opacity: 0, y: 10 }}
+  animate={{ opacity: 1, y: 0 }}
+  transition={{ duration: 0.3, delay: 0.3 }}
+  className="p-6 bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700"
+>
+  <button
+    onClick={() => setShowPastTickets(!showPastTickets)}
+    className="flex items-center justify-between w-full text-left group"
+  >
+    <h3 className="text-lg font-bold text-gray-900 dark:text-white group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors">
+      Your Ticket History
+    </h3>
+    <ChevronRight 
+      className={`w-5 h-5 text-gray-500 dark:text-gray-400 transition-transform ${showPastTickets ? 'rotate-90' : ''}`} 
+    />
+  </button>
+  
+  {showPastTickets && (
+    <div className="mt-4 space-y-4">
+      {isLoading ? (
+        <div className="text-center py-4">
+          <Loader2 className="w-5 h-5 animate-spin text-purple-500 mx-auto" />
+        </div>
+      ) : pastTickets.length === 0 ? (
+        <div className="text-center py-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+          <p className="text-gray-500 dark:text-gray-400">
+            No past tickets found. Buy tickets to join the jackpot!
+          </p>
+        </div>
+      ) : (
+        <>
+          {pastTickets.map((ticket) => {
+            // Get a random motivational statement for lost rounds
+            const randomStatement = 
+              MOTIVATIONAL_STATEMENTS[0];
             
-            {showPastTickets && (
-              <div className="mt-4 space-y-3">
-                {isLoading ? (
-                  <div className="text-center py-4">
-                    <Loader2 className="w-5 h-5 animate-spin text-purple-500 mx-auto" />
-                  </div>
-                ) : pastTickets.length === 0 ? (
-                  <p className="text-gray-500 dark:text-gray-400 text-center py-4">
-                    No past tickets found.
-                  </p>
-                ) : (
-                  pastTickets.map((ticket) => (
-                    <div
-                      key={ticket.roundId}
-                      className="p-3 bg-gray-50 dark:bg-gray-700 rounded-lg flex justify-between items-center"
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className={`p-2 rounded-lg ${
-                          ticket.hasWon 
-                            ? 'bg-green-100 dark:bg-green-900' 
-                            : 'bg-gray-100 dark:bg-gray-600'
-                        }`}>
-                          <Ticket className={`w-5 h-5 ${
-                            ticket.hasWon 
-                              ? 'text-green-600 dark:text-green-300' 
-                              : 'text-gray-600 dark:text-gray-300'
-                          }`} />
-                        </div>
-                        <div>
-                          <p className="font-medium text-gray-900 dark:text-white">
-                            Round {ticket.roundId}
-                          </p>
-                          <p className="text-sm text-gray-500 dark:text-gray-400">
-                            {ticket.tickets} Ticket{ticket.tickets !== 1 ? "s" : ""}
-                          </p>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-sm font-medium">
-                          {ticket.hasWon ? (
-                            <span className="text-green-600 dark:text-green-400">
-                              Winner! {unclaimedRounds.includes(ticket.roundId) ? "(Unclaimed)" : "(Claimed)"}
-                            </span>
-                          ) : (
-                            <span className="text-gray-500 dark:text-gray-400">
-                              Not won
-                            </span>
-                          )}
-                        </p>
-                      </div>
+            return (
+              <div key={ticket.roundId} className="space-y-3">
+                <div
+                  className={`p-4 rounded-lg flex justify-between items-center border ${
+                    ticket.hasWon
+                      ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800'
+                      : 'bg-gray-50 dark:bg-gray-700 border-gray-200 dark:border-gray-600'
+                  }`}
+                >
+                  <div className="flex items-center gap-3">
+                    <div className={`p-3 rounded-full ${
+                      ticket.hasWon 
+                        ? 'bg-green-100 dark:bg-green-800 text-green-600 dark:text-green-300'
+                        : 'bg-gray-100 dark:bg-gray-600 text-gray-600 dark:text-gray-300'
+                    }`}>
+                      {ticket.hasWon ? (
+                        <Trophy className="w-5 h-5" />
+                      ) : (
+                        <Ticket className="w-5 h-5" />
+                      )}
                     </div>
-                  ))
+                    <div>
+                      <p className="font-medium text-gray-900 dark:text-white">
+                        Round #{ticket.roundId}
+                      </p>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">
+                        {ticket.tickets} Ticket{ticket.tickets !== 1 ? "s" : ""}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <p className={`text-sm font-medium ${
+                      ticket.hasWon 
+                        ? 'text-green-600 dark:text-green-400'
+                        : 'text-gray-500 dark:text-gray-400'
+                    }`}>
+                      {ticket.hasWon ? (
+                        unclaimedRounds.includes(ticket.roundId) 
+                          ? "🏆 Unclaimed Prize!"
+                          : "💰 Prize Claimed"
+                      ) : "Round Ended"}
+                    </p>
+                  </div>
+                </div>
+                
+                {/* Motivational message for lost rounds */}
+                {!ticket.hasWon && (
+                  <div className="px-4 py-3 bg-purple-50 dark:bg-purple-900/20 rounded-lg border border-purple-100 dark:border-purple-800/50">
+                    <div className="flex items-start gap-2">
+                      <svg 
+                        className="w-5 h-5 text-purple-500 dark:text-purple-400 mt-0.5 flex-shrink-0" 
+                        fill="none" 
+                        stroke="currentColor" 
+                        viewBox="0 0 24 24"
+                      >
+                        <path 
+                          strokeLinecap="round" 
+                          strokeLinejoin="round" 
+                          strokeWidth="2" 
+                          d="M13 10V3L4 14h7v7l9-11h-7z" 
+                        />
+                      </svg>
+                      <p className="text-sm text-purple-800 dark:text-purple-200">
+                        {randomStatement}
+                      </p>
+                    </div>
+                  </div>
                 )}
               </div>
-            )}
-          </motion.div>
+            );
+          })}
+          
+          {/* Summary card */}
+          <div className="mt-4 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Wallet className="w-5 h-5 text-gray-600 dark:text-gray-300" />
+                <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                  Total Winnings:
+                </p>
+              </div>
+              <p className="text-lg font-bold text-gray-900 dark:text-white">
+                {dashboardData.totalWinnings} CELO
+              </p>
+            </div>
+          </div>
+        </>
+      )}
+    </div>
+  )}
+</motion.div>
         </>
       )}
     </motion.div>

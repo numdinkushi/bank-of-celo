@@ -21,7 +21,18 @@ export const CELO_CHECK_IN_CONTRACT_ADDRESS =
   "0xd9771bAE9A9647Fd83C9066f981ef91373A56B36" as `0x${string}`;
 
 export const CELO_JACKPOT_CONTRACT_ADDRESS = "0x9602d02Bd17d9f1c1EB09028fCea26dD29383611" as `0x${string}`;
-
+export const MOTIVATIONAL_STATEMENTS = [
+  "The next round could be yours! Keep trying!",
+  "Every ticket brings you closer to victory!",
+  "Luck favors the persistent - don't give up!",
+  "The jackpot is waiting for a champion like you!",
+  "Your winning moment is coming - stay in the game!",
+  "Many small attempts lead to big wins!",
+  "The only sure way to lose is to stop playing!",
+  "Your next ticket could be the golden one!",
+  "Fortune smiles on those who keep trying!",
+  "The bigger the streak of losses, the closer the win!",
+]; 
 export const CELO_CHECK_IN_ABI = [
     {
       "inputs": [
