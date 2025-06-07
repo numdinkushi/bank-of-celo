@@ -418,10 +418,10 @@ useEffect(() => {
                         <Button
                         onClick={handleTriggerDraw}
                         disabled={lotteryPending}
-                        className="text-sm bg-white text-purple-600 hover:bg-gray-100 px-3 py-1"
+                        className="text-sm bg-white text-black hover:bg-gray-100 px-3 py-1"
                         >
                         {lotteryPending ? (
-                            <Loader2 className="w-4 h-4 animate-spin" />
+                            <Loader2 className="w-4 h-4 animate-spin text-purple-600" />
                             ) : (
                                 "Trigger Draw Now"
                             )}
