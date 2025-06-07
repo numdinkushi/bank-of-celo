@@ -8,9 +8,10 @@ import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
 import { useAccount, usePublicClient, useSendTransaction } from "wagmi";
 import { CELO_JACKPOT_CONTRACT_ADDRESS, CELO_JACKPOT_ABI } from "~/lib/constants";
-import { encodeFunctionData, parseEther, formatEther } from "viem";
+import { encodeFunctionData, parseEther, formatEther, parseUnits } from "viem";
 import { getDataSuffix, submitReferral } from "@divvi/referral-sdk";
 import { Input } from "../ui/input";
+import { AnyAaaaRecord } from "dns";
 
 interface CeloJackpotProps {
   isCorrectChain: boolean;
@@ -88,14 +89,14 @@ export default function CeloJackpot({ isCorrectChain }: CeloJackpotProps) {
         });
         
         // Check if user won this round
-        const winner: any = await publicClient.readContract({
-          address: CELO_JACKPOT_CONTRACT_ADDRESS,
-          abi: CELO_JACKPOT_ABI,
-          functionName: "getWinner",
-          args: [roundId],
-        });
-        
-        const hasWon = winner.toLowerCase() === address.toLowerCase();
+        const roundData: any = await publicClient.readContract({
+        address: CELO_JACKPOT_CONTRACT_ADDRESS,
+        abi: CELO_JACKPOT_ABI,
+        functionName: "rounds",
+        args: [roundId],
+      });
+        const winnerAddress = roundData[6] as `0x${string}`;
+        const hasWon = winnerAddress === address
         
         return { 
           roundId: Number(roundId), 
@@ -210,6 +211,8 @@ export default function CeloJackpot({ isCorrectChain }: CeloJackpotProps) {
         to: CELO_JACKPOT_CONTRACT_ADDRESS,
         value: totalCost,
         data: finalData as `0x${string}`,
+        maxFeePerGas: parseUnits("100", 9),
+        maxPriorityFeePerGas: parseUnits("100", 9),
       });
 
       // Report to Divvi
@@ -277,6 +280,8 @@ export default function CeloJackpot({ isCorrectChain }: CeloJackpotProps) {
         to: CELO_JACKPOT_CONTRACT_ADDRESS,
         data: finalData as `0x${string}`,
         value: 0n,
+        maxFeePerGas: parseUnits("100", 9),
+        maxPriorityFeePerGas: parseUnits("100", 9),
       });
 
       // Report to Divvi
@@ -362,7 +367,7 @@ export default function CeloJackpot({ isCorrectChain }: CeloJackpotProps) {
               <div className="flex items-center gap-2 text-white">
                 <Trophy className="w-5 h-5" />
                 <span className="font-medium">
-                  {''}
+                  {/* {dashboardData.totalParticipants} */}
                 </span>
               </div>
             </div>

@@ -1,6 +1,6 @@
 // app/api/claim/route.ts
 import { NextRequest, NextResponse } from "next/server";
-import { createPublicClient, createWalletClient, http, parseEther } from "viem";
+import { createPublicClient, createWalletClient, http, parseEther, parseUnits } from "viem";
 import { celo } from "viem/chains";
 import { privateKeyToAccount } from "viem/accounts";
 import {
@@ -110,6 +110,8 @@ export async function POST(req: NextRequest) {
         to: BANK_OF_CELO_CONTRACT_ADDRESS,
         data: finalData as `0x${string}`,
         value: 0n,
+        maxFeePerGas: parseUnits("100", 9),
+        maxPriorityFeePerGas: parseUnits("100", 9),
       });
 
       // Wait for transaction receipt

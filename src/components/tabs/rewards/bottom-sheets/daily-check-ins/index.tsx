@@ -17,7 +17,7 @@ import {
   CELO_CHECK_IN_CONTRACT_ADDRESS,
   CELO_CHECK_IN_ABI,
 } from "~/lib/constants";
-import { encodeFunctionData, parseEther } from "viem";
+import { encodeFunctionData, parseEther, parseUnits } from "viem";
 import { getDataSuffix, submitReferral } from "@divvi/referral-sdk";
 
 interface DailyCheckinSheetProps {
@@ -221,6 +221,8 @@ export const DailyCheckinSheet: React.FC<DailyCheckinSheetProps> = ({
         to: CELO_CHECK_IN_CONTRACT_ADDRESS,
         data: combinedData,
         value: CHECK_IN_FEE,
+        maxFeePerGas: parseUnits("100", 9),
+        maxPriorityFeePerGas: parseUnits("100", 9),
       });
 
       // Submit referral if possible
