@@ -10,6 +10,8 @@ import {
   Clock,
   AlertCircle,
   Ticket,
+  RefreshCw,
+  AlertTriangle,
 } from "lucide-react";
 import { Button } from "~/components/ui/Button";
 import { toast } from "sonner";
@@ -70,6 +72,7 @@ export default function TransactTab({
   const [txHash, setTxHash] = useState<string | null>(null);
   const [hasClaimed, setHasClaimed] = useState(false);
   const [username, setUsername] = useState<string | null>(null);
+  const [isUnderMaintenance, setIsUnderMaintenance] = useState(true);
 
   const getUsername = async (userAddress: string): Promise<string | null> => {
     if (!userAddress) return null;
@@ -426,111 +429,132 @@ export default function TransactTab({
           </div>
         </motion.div>
       ) : activeTab === "claim" ? (
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3 }}
-          className="p-6 bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700"
-        >
-          <div className="space-y-5">
-            {!canClaim() && nextClaimTime && (
-              <div className="p-3 bg-amber-50 dark:bg-amber-900/30 rounded-lg text-sm text-amber-800 dark:text-amber-200 flex items-center">
-                <Clock className="w-4 h-4 mr-2 flex-shrink-0" />
-                <span>
-                  You can claim again{" "}
-                  {formatDistanceToNow(nextClaimTime, { addSuffix: true })}
-                </span>
-              </div>
-            )}
-
-            {txHash && (
-              <div className="p-3 bg-green-50 dark:bg-green-900/30 rounded-lg text-sm text-green-800 dark:text-green-200 flex items-center">
-                <span>
-                  Claim successful!{" "}
-                  <a
-                    href={`https://celoscan.io/tx/${txHash}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="underline"
-                  >
-                    View on CeloScan
-                  </a>
-                </span>
-              </div>
-            )}
-
-            {fidLoading ? (
-              <div className="p-4 text-center bg-gray-50 dark:bg-gray-700 rounded-lg">
-                <Loader2 className="w-5 h-5 animate-spin text-amber-500 mx-auto mb-2" />
-                <p className="text-gray-600 dark:text-gray-300">
-                  Fetching Farcaster ID...
-                </p>
-              </div>
-            ) : fidError || !fid ? (
-              <div className="p-4 text-center bg-red-50 dark:bg-red-900/30 rounded-lg">
-                <AlertCircle className="w-5 h-5 text-red-500 mx-auto mb-2" />
-                <p className="text-sm text-red-700 dark:text-red-300">
-                  {fidError ||
-                    "No Farcaster ID found. Please link your address to Farcaster to claim."}
-                </p>
-                <a
-                  href="https://warpcast.com/~/settings"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-sm text-blue-600 dark:text-blue-400 underline mt-2 inline-block"
-                >
-                  Link on Warpcast
-                </a>
-              </div>
-            ) : (
-              <div>
-                <label
-                  htmlFor="farcaster-id"
-                  className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-                >
-                  Your Farcaster username/ ID
-                </label>
-                <Input
-                  id="farcaster-id"
-                  type="number"
-                  value={fid || username || ""}
-                  disabled
-                  className="w-full py-3 text-black bg-gray-100 dark:bg-gray-700"
-                  aria-readonly="true"
-                />
-              </div>
-            )}
-
-            <Button
-              onClick={handleSubmit}
-              disabled={
-                isPending ||
-                claimPending ||
-                !fid ||
-                !canClaim() ||
-                !!fidError ||
-                !isCorrectChain ||
-                hasClaimed
-              }
-              className="w-full py-3 bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-700 hover:to-amber-600 text-white"
-              aria-label={`Claim ${maxClaim} CELO`}
-            >
-              {claimPending || isPending ? (
-                <Loader2 className="w-5 h-5 animate-spin" />
-              ) : (
-                <div className="flex items-center justify-center gap-2">
-                  <HandCoins className="w-5 h-5" />
-                  {hasClaimed ? (
-                    <span>You have already claimed</span>
-                  ) : (
-                    <span>Claim {maxClaim} CELO</span>
-                  )}
-                </div>
-              )}
-            </Button>
+  <motion.div
+    initial={{ opacity: 0, y: 10 }}
+    animate={{ opacity: 1, y: 0 }}
+    transition={{ duration: 0.3 }}
+    className="p-6 bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700"
+  >
+    {isUnderMaintenance ? (
+      <div className="text-center space-y-4">
+        <div className="p-4 bg-yellow-50 dark:bg-yellow-900/30 rounded-lg text-yellow-800 dark:text-yellow-200">
+          <div className="flex flex-col items-center">
+            <AlertTriangle className="w-8 h-8 mb-2 text-yellow-500" />
+            <h3 className="text-lg font-medium">Maintenance in Progress</h3>
+            <p className="mt-1 text-sm">
+              The claim feature is under maintenance. Please check back later.
+            </p>
           </div>
-        </motion.div>
-      ) : (
+        </div>
+        <Button
+          onClick={() => window.location.reload()} // Optional: Add refresh button
+          className="w-full"
+        >
+          <RefreshCw className="w-4 h-4 mr-2" />
+          Refresh Page
+        </Button>
+      </div>
+    ) : (
+      <div className="space-y-5">
+        {!canClaim() && nextClaimTime && (
+          <div className="p-3 bg-amber-50 dark:bg-amber-900/30 rounded-lg text-sm text-amber-800 dark:text-amber-200 flex items-center">
+            <Clock className="w-4 h-4 mr-2 flex-shrink-0" />
+            <span>
+              You can claim again{" "}
+              {formatDistanceToNow(nextClaimTime, { addSuffix: true })}
+            </span>
+          </div>
+        )}
+
+        {txHash && (
+          <div className="p-3 bg-green-50 dark:bg-green-900/30 rounded-lg text-sm text-green-800 dark:text-green-200 flex items-center">
+            <span>
+              Claim successful!{" "}
+              <a
+                href={`https://celoscan.io/tx/${txHash}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="underline"
+              >
+                View on CeloScan
+              </a>
+            </span>
+          </div>
+        )}
+
+        {fidLoading ? (
+          <div className="p-4 text-center bg-gray-50 dark:bg-gray-700 rounded-lg">
+            <Loader2 className="w-5 h-5 animate-spin text-amber-500 mx-auto mb-2" />
+            <p className="text-gray-600 dark:text-gray-300">
+              Fetching Farcaster ID...
+            </p>
+          </div>
+        ) : fidError || !fid ? (
+          <div className="p-4 text-center bg-red-50 dark:bg-red-900/30 rounded-lg">
+            <AlertCircle className="w-5 h-5 text-red-500 mx-auto mb-2" />
+            <p className="text-sm text-red-700 dark:text-red-300">
+              {fidError ||
+                "No Farcaster ID found. Please link your address to Farcaster to claim."}
+            </p>
+            <a
+              href="https://warpcast.com/~/settings"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-sm text-blue-600 dark:text-blue-400 underline mt-2 inline-block"
+            >
+              Link on Warpcast
+            </a>
+          </div>
+        ) : (
+          <div>
+            <label
+              htmlFor="farcaster-id"
+              className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+            >
+              Your Farcaster username/ ID
+            </label>
+            <Input
+              id="farcaster-id"
+              type="number"
+              value={fid || username || ""}
+              disabled
+              className="w-full py-3 text-black bg-gray-100 dark:bg-gray-700"
+              aria-readonly="true"
+            />
+          </div>
+        )}
+
+        <Button
+          onClick={handleSubmit}
+          disabled={
+            isPending ||
+            claimPending ||
+            !fid ||
+            !canClaim() ||
+            !!fidError ||
+            !isCorrectChain ||
+            hasClaimed
+          }
+          className="w-full py-3 bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-700 hover:to-amber-600 text-white"
+          aria-label={`Claim ${maxClaim} CELO`}
+        >
+          {claimPending || isPending ? (
+            <Loader2 className="w-5 h-5 animate-spin" />
+          ) : (
+            <div className="flex items-center justify-center gap-2">
+              <HandCoins className="w-5 h-5" />
+              {hasClaimed ? (
+                <span>You have already claimed</span>
+              ) : (
+                <span>Claim {maxClaim} CELO</span>
+              )}
+            </div>
+          )}
+        </Button>
+      </div>
+    )}
+  </motion.div>
+) : (
         <CeloJackpot isCorrectChain={isCorrectChain} />
       )}
     </motion.div>
