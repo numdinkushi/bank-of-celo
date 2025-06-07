@@ -1,6 +1,7 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { motion } from "framer-motion";
 import { Loader2, Ticket, Clock, Wallet, Trophy, ChevronRight } from "lucide-react";
 import { Button } from "~/components/ui/Button";
@@ -49,11 +50,18 @@ export default function CeloJackpot({ isCorrectChain }: CeloJackpotProps) {
   const [unclaimedRounds, setUnclaimedRounds] = useState<number[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [showPastTickets, setShowPastTickets] = useState(false);
+const [countdown, setCountdown] = useState<string>("00:00:00");
+const [isDataLoading, setIsDataLoading] = useState(false); // Renamed for clarity
+const countdownRef = useRef<NodeJS.Timeout>();
+  
 
   // Fetch dashboard data and user-specific data
   const fetchDashboardData = useCallback(async () => {
     if (!address || !publicClient || !isCorrectChain) return;
-    setIsLoading(true);
+     // Only set loading if we're not already loading
+  if (!isDataLoading) {
+    setIsDataLoading(true);
+  }
     try {
       const data: any = await publicClient.readContract({
         address: CELO_JACKPOT_CONTRACT_ADDRESS,
@@ -61,7 +69,6 @@ export default function CeloJackpot({ isCorrectChain }: CeloJackpotProps) {
         functionName: "getDashboardData",
         args: [address],
       });
-
       setDashboardData({
         currentRound: Number(data[0]),
         timeUntilDraw: Number(data[1]),
@@ -71,7 +78,6 @@ export default function CeloJackpot({ isCorrectChain }: CeloJackpotProps) {
         totalWinnings: formatEther(data[5]),
         totalParticipants: Number(data[6]),
       });
-
       // Fetch past tickets
       const userRounds: any = await publicClient.readContract({
         address: CELO_JACKPOT_CONTRACT_ADDRESS,
@@ -126,6 +132,8 @@ export default function CeloJackpot({ isCorrectChain }: CeloJackpotProps) {
 
   useEffect(() => {
     fetchDashboardData();
+    const syncInterval = setInterval(fetchDashboardData, 3000); // Sync every 30 seconds
+    return () => clearInterval(syncInterval);
   }, [fetchDashboardData]);
 
   const handleTriggerDraw = async () => {
@@ -158,6 +166,16 @@ export default function CeloJackpot({ isCorrectChain }: CeloJackpotProps) {
   } finally {
     setLotteryPending(false);
   }
+};
+// Helper function to format seconds into HH:mm:ss
+const formatCountdown = (seconds: number): string => {
+  if (seconds <= 0) return "00:00:00";
+  const hours = Math.floor(seconds / 3600);
+  const minutes = Math.floor((seconds % 3600) / 60);
+  const secs = seconds % 60;
+  return `${hours.toString().padStart(2, "0")}:${minutes
+    .toString()
+    .padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
 };
 
   const handleBuyTickets = async () => {
@@ -309,6 +327,42 @@ export default function CeloJackpot({ isCorrectChain }: CeloJackpotProps) {
       setLotteryPending(false);
     }
   };
+// Live countdown timer
+// Start/update countdown when timeUntilDraw changes
+useEffect(() => {
+  // Clear any existing interval
+  if (countdownRef.current) {
+    clearInterval(countdownRef.current);
+  }
+
+  // Only start if we have positive time
+  if (dashboardData.timeUntilDraw > 0) {
+    setCountdown(formatCountdown(dashboardData.timeUntilDraw));
+
+    // Start new interval
+    countdownRef.current = setInterval(() => {
+      setCountdown(prev => {
+        // Parse current time from previous countdown
+        const [hours, minutes, seconds] = prev.split(':').map(Number);
+        const totalSeconds = hours * 3600 + minutes * 60 + seconds - 1;
+        
+        if (totalSeconds <= 0) {
+          clearInterval(countdownRef.current);
+          return "00:00:00";
+        }
+        return formatCountdown(totalSeconds);
+      });
+    }, 1000);
+  } else {
+    setCountdown("00:00:00");
+  }
+
+  return () => {
+    if (countdownRef.current) {
+      clearInterval(countdownRef.current);
+    }
+  };
+}, [dashboardData.timeUntilDraw]);
 
   return (
     <motion.div
@@ -343,11 +397,8 @@ export default function CeloJackpot({ isCorrectChain }: CeloJackpotProps) {
                 <div className="flex items-center gap-2 text-purple-100">
                     <Clock className="w-4 h-4" />
                     {dashboardData.timeUntilDraw > 0 ? (
-                        <span className="text-sm">
-                        Drawing {formatDistanceToNow(
-                            new Date(Date.now() + dashboardData.timeUntilDraw * 1000),
-                            { addSuffix: true }
-                        )}
+                        <span className="text-sm font-mono">
+                         Draw in {countdown}
                         </span>
                     ) : (
                         <Button
