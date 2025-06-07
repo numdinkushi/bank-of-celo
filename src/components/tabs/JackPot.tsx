@@ -6,7 +6,7 @@ import { motion } from "framer-motion";
 import { Loader2, Ticket, Clock, Wallet, Trophy, ChevronRight } from "lucide-react";
 import { Button } from "~/components/ui/Button";
 import { toast } from "sonner";
-import { formatDistanceToNow } from "date-fns";
+import { formatDistanceToNow, format } from "date-fns";
 import { useAccount, usePublicClient, useSendTransaction } from "wagmi";
 import { CELO_JACKPOT_CONTRACT_ADDRESS, CELO_JACKPOT_ABI } from "~/lib/constants";
 import { encodeFunctionData, parseEther, formatEther, parseUnits } from "viem";
@@ -53,6 +53,7 @@ export default function CeloJackpot({ isCorrectChain }: CeloJackpotProps) {
 const [countdown, setCountdown] = useState<string>("00:00:00");
 const [isDataLoading, setIsDataLoading] = useState(false); // Renamed for clarity
 const countdownRef = useRef<NodeJS.Timeout>();
+const [drawDate, setDrawDate] = useState<string>("TBD");
   
 
   // Fetch dashboard data and user-specific data
@@ -69,6 +70,7 @@ const countdownRef = useRef<NodeJS.Timeout>();
         functionName: "getDashboardData",
         args: [address],
       });
+
       setDashboardData({
         currentRound: Number(data[0]),
         timeUntilDraw: Number(data[1]),
@@ -101,8 +103,20 @@ const countdownRef = useRef<NodeJS.Timeout>();
         functionName: "rounds",
         args: [roundId],
       });
+
         const winnerAddress = roundData[6] as `0x${string}`;
         const hasWon = winnerAddress === address
+
+        const getCurrentRound: any = await publicClient.readContract({
+        address: CELO_JACKPOT_CONTRACT_ADDRESS,
+        abi: CELO_JACKPOT_ABI,
+        functionName: "getCurrentRound",
+        args: [],
+      });
+          const timestampSeconds = Number(getCurrentRound.startTime);
+          const date = new Date(timestampSeconds * 1000);  // convert seconds to ms
+          const formattedDate = format(date, "MMMM d");
+              setDrawDate(formattedDate);
         
         return { 
           roundId: Number(roundId), 
@@ -390,7 +404,7 @@ useEffect(() => {
           >
             <div className="flex flex-col md:flex-row justify-between items-center gap-4">
               <div>
-                <p className="text-sm text-purple-100 mb-5">BOC Jackpot</p>
+                <p className="text-sm text-purple-100 mb-5">BOC Jackpot - {drawDate}</p>
                 <h3 className="text-3xl font-bold text-white mb-5">
                   {dashboardData.currentPot} CELO
                 </h3>
