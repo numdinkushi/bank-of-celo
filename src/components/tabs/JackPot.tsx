@@ -11,6 +11,7 @@ import { CELO_JACKPOT_CONTRACT_ADDRESS, CELO_JACKPOT_ABI } from "~/lib/constants
 import { encodeFunctionData, parseEther, formatEther, parseUnits } from "viem";
 import { getDataSuffix, submitReferral } from "@divvi/referral-sdk";
 import { Input } from "../ui/input";
+import { AnyAaaaRecord } from "dns";
 
 interface CeloJackpotProps {
   isCorrectChain: boolean;
@@ -88,14 +89,14 @@ export default function CeloJackpot({ isCorrectChain }: CeloJackpotProps) {
         });
         
         // Check if user won this round
-        const winner: any = await publicClient.readContract({
-          address: CELO_JACKPOT_CONTRACT_ADDRESS,
-          abi: CELO_JACKPOT_ABI,
-          functionName: "getWinner",
-          args: [roundId],
-        });
-        
-        const hasWon = winner.toLowerCase() === address.toLowerCase();
+        const roundData: any = await publicClient.readContract({
+        address: CELO_JACKPOT_CONTRACT_ADDRESS,
+        abi: CELO_JACKPOT_ABI,
+        functionName: "rounds",
+        args: [roundId],
+      });
+        const winnerAddress = roundData[6] as `0x${string}`;
+        const hasWon = winnerAddress === address
         
         return { 
           roundId: Number(roundId), 
