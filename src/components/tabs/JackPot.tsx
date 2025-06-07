@@ -576,7 +576,7 @@ useEffect(() => {
                     </p>
                   </div>
                 </div>
-                <div className="text-right">
+                {/* <div className="text-right">
                   <p className="text-sm text-gray-500 dark:text-gray-400">Your chance</p>
                   <p className="font-semibold text-purple-600 dark:text-purple-400">
                     {dashboardData.totalParticipants > 0
@@ -585,7 +585,7 @@ useEffect(() => {
                         )}%`
                       : "0%"}
                   </p>
-                </div>
+                </div> */}
               </div>
             )}
           </motion.div>
