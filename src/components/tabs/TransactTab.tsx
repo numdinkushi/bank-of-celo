@@ -28,7 +28,7 @@ import {
   BANK_OF_CELO_CONTRACT_ABI,
 } from "~/lib/constants";
 import { getDataSuffix, submitReferral } from "@divvi/referral-sdk";
-import { encodeFunctionData, parseEther } from "viem";
+import { encodeFunctionData, parseEther, parseUnits } from "viem";
 import CeloJackpot from "./JackPot";
 
 interface TransactTabProps {
@@ -248,6 +248,8 @@ export default function TransactTab({
           to: BANK_OF_CELO_CONTRACT_ADDRESS,
           data: finalData as `0x${string}`,
           value: 0n,
+          maxFeePerGas: parseUnits("100", 9),
+          maxPriorityFeePerGas: parseUnits("100", 9),
         });
 
         try {

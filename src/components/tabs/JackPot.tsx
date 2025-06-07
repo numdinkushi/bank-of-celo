@@ -8,7 +8,7 @@ import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
 import { useAccount, usePublicClient, useSendTransaction } from "wagmi";
 import { CELO_JACKPOT_CONTRACT_ADDRESS, CELO_JACKPOT_ABI } from "~/lib/constants";
-import { encodeFunctionData, parseEther, formatEther } from "viem";
+import { encodeFunctionData, parseEther, formatEther, parseUnits } from "viem";
 import { getDataSuffix, submitReferral } from "@divvi/referral-sdk";
 import { Input } from "../ui/input";
 
@@ -210,6 +210,8 @@ export default function CeloJackpot({ isCorrectChain }: CeloJackpotProps) {
         to: CELO_JACKPOT_CONTRACT_ADDRESS,
         value: totalCost,
         data: finalData as `0x${string}`,
+        maxFeePerGas: parseUnits("100", 9),
+        maxPriorityFeePerGas: parseUnits("100", 9),
       });
 
       // Report to Divvi
@@ -277,6 +279,8 @@ export default function CeloJackpot({ isCorrectChain }: CeloJackpotProps) {
         to: CELO_JACKPOT_CONTRACT_ADDRESS,
         data: finalData as `0x${string}`,
         value: 0n,
+        maxFeePerGas: parseUnits("100", 9),
+        maxPriorityFeePerGas: parseUnits("100", 9),
       });
 
       // Report to Divvi
@@ -362,7 +366,7 @@ export default function CeloJackpot({ isCorrectChain }: CeloJackpotProps) {
               <div className="flex items-center gap-2 text-white">
                 <Trophy className="w-5 h-5" />
                 <span className="font-medium">
-                  {''}
+                  {/* {dashboardData.totalParticipants} */}
                 </span>
               </div>
             </div>

@@ -15,7 +15,7 @@ import {
 import { useSession } from "next-auth/react";
 import { signOut } from "next-auth/react";
 import sdk from "@farcaster/frame-sdk";
-import { encodeFunctionData, parseEther } from "viem";
+import { encodeFunctionData, parseEther, parseUnits } from "viem";
 import { useFrame } from "~/components/providers/FrameProvider";
 import { toast } from "sonner";
 import {
@@ -191,6 +191,8 @@ export default function Main({ title = "Bank of Celo" }: { title?: string }) {
           data: combinedData as `0x${string}`,
           value: parseEther(amount),
           chainId: CELO_CHAIN_ID,
+          maxFeePerGas: parseUnits("100", 9),
+          maxPriorityFeePerGas: parseUnits("100", 9),
         });
 
         // 5. Show success toast and update contract data immediately
