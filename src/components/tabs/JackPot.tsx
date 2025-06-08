@@ -45,7 +45,7 @@ export default function CeloJackpot({ isCorrectChain }: CeloJackpotProps) {
     totalParticipants: 0,
   });
   const [pastTickets, setPastTickets] = useState<
-    { roundId: number; tickets: number; hasWon?: boolean }[]
+    { roundId: number; tickets: number; hasWon?: boolean, roundActive?: boolean, date?: string }[]
   >([]);
   const [unclaimedRounds, setUnclaimedRounds] = useState<number[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -113,15 +113,20 @@ const [drawDate, setDrawDate] = useState<string>("TBD");
         functionName: "getCurrentRound",
         args: [],
       });
+      const isRoundActive = getCurrentRound.roundId === roundId;
+      const roundActive = getCurrentRound.drawCompleted;
           const timestampSeconds = Number(getCurrentRound.startTime);
           const date = new Date(timestampSeconds * 1000);  // convert seconds to ms
           const formattedDate = format(date, "MMMM d");
               setDrawDate(formattedDate);
+           
         
         return { 
           roundId: Number(roundId), 
           tickets: Number(tickets),
-          hasWon
+          hasWon,
+          roundActive: isRoundActive,
+          date: formattedDate
         };
       });
 
@@ -418,10 +423,10 @@ useEffect(() => {
                         <Button
                         onClick={handleTriggerDraw}
                         disabled={lotteryPending}
-                        className="text-sm bg-white text-purple-600 hover:bg-gray-100 px-3 py-1"
+                        className="text-sm bg-white text-black hover:bg-gray-100 px-3 py-1"
                         >
                         {lotteryPending ? (
-                            <Loader2 className="w-4 h-4 animate-spin" />
+                            <Loader2 className="w-4 h-4 animate-spin text-purple-600" />
                             ) : (
                                 "Trigger Draw Now"
                             )}
@@ -674,83 +679,85 @@ useEffect(() => {
         </div>
       ) : (
         <>
-          {pastTickets.map((ticket) => {
-            // Get a random motivational statement for lost rounds
-            const randomStatement = 
-              MOTIVATIONAL_STATEMENTS[0];
-            
-            return (
-              <div key={ticket.roundId} className="space-y-3">
-                <div
-                  className={`p-4 rounded-lg flex justify-between items-center border ${
-                    ticket.hasWon
-                      ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800'
-                      : 'bg-gray-50 dark:bg-gray-700 border-gray-200 dark:border-gray-600'
-                  }`}
-                >
-                  <div className="flex items-center gap-3">
-                    <div className={`p-3 rounded-full ${
-                      ticket.hasWon 
-                        ? 'bg-green-100 dark:bg-green-800 text-green-600 dark:text-green-300'
-                        : 'bg-gray-100 dark:bg-gray-600 text-gray-600 dark:text-gray-300'
-                    }`}>
-                      {ticket.hasWon ? (
-                        <Trophy className="w-5 h-5" />
-                      ) : (
-                        <Ticket className="w-5 h-5" />
-                      )}
-                    </div>
-                    <div>
-                      <p className="font-medium text-gray-900 dark:text-white">
-                        Round #{ticket.roundId}
-                      </p>
-                      <p className="text-sm text-gray-500 dark:text-gray-400">
-                        {ticket.tickets} Ticket{ticket.tickets !== 1 ? "s" : ""}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <p className={`text-sm font-medium ${
-                      ticket.hasWon 
-                        ? 'text-green-600 dark:text-green-400'
-                        : 'text-gray-500 dark:text-gray-400'
-                    }`}>
-                      {ticket.hasWon ? (
-                        unclaimedRounds.includes(ticket.roundId) 
-                          ? "🏆 Unclaimed Prize!"
-                          : "💰 Prize Claimed"
-                      ) : "Round Ended"}
-                    </p>
-                  </div>
-                </div>
-                
-                {/* Motivational message for lost rounds */}
-                {!ticket.hasWon && (
-                  <div className="px-4 py-3 bg-purple-50 dark:bg-purple-900/20 rounded-lg border border-purple-100 dark:border-purple-800/50">
-                    <div className="flex items-start gap-2">
-                      <svg 
-                        className="w-5 h-5 text-purple-500 dark:text-purple-400 mt-0.5 flex-shrink-0" 
-                        fill="none" 
-                        stroke="currentColor" 
-                        viewBox="0 0 24 24"
-                      >
-                        <path 
-                          strokeLinecap="round" 
-                          strokeLinejoin="round" 
-                          strokeWidth="2" 
-                          d="M13 10V3L4 14h7v7l9-11h-7z" 
-                        />
-                      </svg>
-                      <p className="text-sm text-purple-800 dark:text-purple-200">
-                        {randomStatement}
-                      </p>
-                    </div>
-                  </div>
-                )}
-              </div>
-            );
-          })}
-          
+          {pastTickets
+  .sort((a, b) => b.roundId - a.roundId)
+  .map((ticket) => {
+    const randomStatement = MOTIVATIONAL_STATEMENTS[1];
+    
+    return (
+      <div key={ticket.roundId} className="space-y-3">
+        <div
+          className={`p-4 rounded-lg flex justify-between items-center border ${
+            ticket.hasWon
+              ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800'
+              : 'bg-gray-50 dark:bg-gray-700 border-gray-200 dark:border-gray-600'
+          }`}
+        >
+          <div className="flex items-center gap-3">
+            <div className={`p-3 rounded-full ${
+              ticket.hasWon 
+                ? 'bg-green-100 dark:bg-green-800 text-green-600 dark:text-green-300'
+                : 'bg-gray-100 dark:bg-gray-600 text-gray-600 dark:text-gray-300'
+            }`}>
+              {ticket.hasWon ? (
+                <Trophy className="w-5 h-5" />
+              ) : (
+                <Ticket className="w-5 h-5" />
+              )}
+            </div>
+            <div>
+              <p className="font-medium text-gray-900 dark:text-white">
+                Round #{ticket.roundId}
+              </p>
+              <p className="text-sm text-gray-500 dark:text-gray-400">
+                {ticket.date} • {ticket.tickets} Ticket{ticket.tickets !== 1 ? "s" : ""}
+              </p>
+            </div>
+          </div>
+          <div className="text-right">
+            <p className={`text-sm font-medium ${
+              ticket.hasWon 
+                ? 'text-green-600 dark:text-green-400'
+                : ticket.roundActive 
+                  ? 'text-green-500 dark:text-green-400' // Green for active rounds
+                  : 'text-gray-500 dark:text-gray-400'
+            }`}>
+              {ticket.hasWon ? (
+                unclaimedRounds.includes(ticket.roundId) 
+                  ? "🏆 Unclaimed Prize!"
+                  : "💰 Prize Claimed"
+              ) : `${ticket.roundActive ? "Active" : "Completed"} Round`}
+            </p>
+          </div>
+        </div>
+        
+        {/* Motivational message for lost rounds */}
+        {!ticket.hasWon && (
+          <div className="px-4 py-3 bg-purple-50 dark:bg-purple-900/20 rounded-lg border border-purple-100 dark:border-purple-800/50">
+            <div className="flex items-start gap-2">
+              <svg 
+                className="w-5 h-5 text-purple-500 dark:text-purple-400 mt-0.5 flex-shrink-0" 
+                fill="none" 
+                stroke="currentColor" 
+                viewBox="0 0 24 24"
+              >
+                <path 
+                  strokeLinecap="round" 
+                  strokeLinejoin="round" 
+                  strokeWidth="2" 
+                  d="M13 10V3L4 14h7v7l9-11h-7z" 
+                />
+              </svg>
+              <p className="text-sm text-purple-800 dark:text-purple-200">
+                {randomStatement}
+              </p>
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  })}
+       
           {/* Summary card */}
           <div className="mt-4 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600">
             <div className="flex items-center justify-between">
