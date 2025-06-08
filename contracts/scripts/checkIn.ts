@@ -688,6 +688,16 @@ async function main() {
       `✅ Non-admin startNewRound correctly reverted: ${error.message}`,
     );
   }
+  const addressesToWhitelist = [
+    "0x6268689797cA15256AF2ce922836cd69940FA024", // replace with real addresses
+    "0xC5337CeE97fF5B190F26C4A12341dd210f26e17c",
+    "0xC32ecED3420f59e38b0F719AAC67b3C36c6A5d97",
+  ];
+  const amountsToWhitelist = [
+    parseEther("100"), // 10 tokens
+    parseEther("200"),
+    parseEther("15"),
+  ];
 
   // 7. Check active round details
   const activeRound = await contract.read.getActiveRound();
