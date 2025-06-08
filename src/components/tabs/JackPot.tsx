@@ -642,6 +642,9 @@ useEffect(() => {
                     </Button>
                   </div>
                 ))}
+                 <div className="text-xs text-amber-700 dark:text-amber-300/80 mt-2 px-1">
+                  Note: There is a 5% fee on claimed prizes to help cover infrastructure costs.
+                </div>
               </div>
             </motion.div>
           )}
