@@ -34,11 +34,9 @@ async function main() {
   // === Prepare your list ===
   // Replace these entries with the real addresses and amounts you need
  const claimList: { address: string; amount: string }[] = [
-    { address: "0xd66c3603aaeae3d03bc521434aff992a8af6af17", amount: "36000" }, // @trh 
-    { address: "0x5e3cd56eaab5f45a8f09337555ce03d36bb08ebe", amount: "6037" }, // @aaizu.eth
-    { address: "0xf6cc71878e23c05406b35946cd9d378e0f2f4f2f", amount: "6022" }, // @baeshy.eth
-    { address: "0xa499ccf474840fbeab6eb58a23b487fe99de6d9e", amount: "42048" }, // @lorenzo-007
-    { address: "0x9ca210c5aa54f942461a1ed0629b84dec4186bf4", amount: "4000" }, // @just-austin
+    { address: "0x8d5044d9ee7ceC41EEeBeF12B749E62E2Ab9F131", amount: "10000" }, // @deodad 
+    { address: "0x41758c1834A6ddEb55e48E0dF8C45CfE13e9e13D", amount: "10000" }, // @borodutch
+    
 ];
 
   const addresses = claimList.map((c) => c.address);
