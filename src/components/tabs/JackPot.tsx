@@ -17,6 +17,17 @@ import { AnyAaaaRecord } from "dns";
 interface CeloJackpotProps {
   isCorrectChain: boolean;
 }
+interface RoundData {
+  roundId: number;
+  startTime: number;
+  endTime: number;
+  pot: string;
+  participantCount: number;
+  winner: string;
+  winningAmount: string;
+  claimed: boolean;
+  drawCompleted: boolean;
+}
 
 const TICKET_PRESETS = [1, 5, 10, 25];
 
@@ -54,6 +65,7 @@ const [countdown, setCountdown] = useState<string>("00:00:00");
 const [isDataLoading, setIsDataLoading] = useState(false); // Renamed for clarity
 const countdownRef = useRef<NodeJS.Timeout>();
 const [drawDate, setDrawDate] = useState<string>("TBD");
+const [pastRounds, setPastRounds] = useState<RoundData[]>([]);
   
 
   // Fetch dashboard data and user-specific data
@@ -106,6 +118,11 @@ const [drawDate, setDrawDate] = useState<string>("TBD");
 
         const winnerAddress = roundData[6] as `0x${string}`;
         const hasWon = winnerAddress === address
+        const startTime = Number(roundData[1]);
+        const timeInSeconds = Number(startTime)
+        const startTimeDate = new Date(timeInSeconds * 1000); // convert seconds to ms
+        const formattedDate_1 = format(startTimeDate, "MMMM d");
+
 
         const getCurrentRound: any = await publicClient.readContract({
         address: CELO_JACKPOT_CONTRACT_ADDRESS,
@@ -126,7 +143,7 @@ const [drawDate, setDrawDate] = useState<string>("TBD");
           tickets: Number(tickets),
           hasWon,
           roundActive: isRoundActive,
-          date: formattedDate
+          date: formattedDate_1
         };
       });
 
@@ -148,12 +165,59 @@ const [drawDate, setDrawDate] = useState<string>("TBD");
       setIsLoading(false);
     }
   }, [address, publicClient, isCorrectChain]);
+// Add this function to fetch past rounds data
+const fetchPastRounds = useCallback(async () => {
+  if (!publicClient) return;
+
+  try {
+    // Get current round to know how many past rounds to fetch
+    const currentRound: any = await publicClient.readContract({
+      address: CELO_JACKPOT_CONTRACT_ADDRESS,
+      abi: CELO_JACKPOT_ABI,
+      functionName: "getCurrentRound",
+    });
+    const currentRoundId = Number(currentRound.roundId);
+
+    // Fetch data for previous rounds (let's show last 5 rounds)
+    const roundsToFetch = Math.min(5, currentRoundId - 1);
+    const roundPromises = [];
+
+    for (let i = currentRoundId - 1; i > currentRoundId - 1 - roundsToFetch; i--) {
+      roundPromises.push(
+        publicClient.readContract({
+          address: CELO_JACKPOT_CONTRACT_ADDRESS,
+          abi: CELO_JACKPOT_ABI,
+          functionName: "rounds",
+          args: [BigInt(i)],
+        })
+      );
+    }
+    const roundsData = await Promise.all(roundPromises);
+    console.log(roundsData)
+    const formattedRounds = roundsData.map((round: any, index) => ({
+      roundId: currentRoundId - 1 - index,
+      startTime: Number(round[1]),
+      endTime: Number(round[2]),
+      pot: formatEther(round[3]),
+      participantCount: Number(round[4]),
+      winner: round[5],
+      winningAmount: formatEther(round[6]),
+      claimed: round[7],
+      drawCompleted: round[8],
+    }));
+
+    setPastRounds(formattedRounds);
+  } catch (error) {
+    console.error("Error fetching past rounds:", error);
+  }
+}, [publicClient]);
 
   useEffect(() => {
     fetchDashboardData();
+    fetchPastRounds();
     const syncInterval = setInterval(fetchDashboardData, 3000); // Sync every 30 seconds
     return () => clearInterval(syncInterval);
-  }, [fetchDashboardData]);
+  }, [fetchDashboardData,fetchPastRounds]);
 
   const handleTriggerDraw = async () => {
   if (!address || !publicClient || !isCorrectChain) {
@@ -777,6 +841,74 @@ useEffect(() => {
           </div>
         </>
       )}
+    </div>
+  )}
+</motion.div>
+{/* Past Rounds Section */}
+<motion.div
+  initial={{ opacity: 0, y: 10 }}
+  animate={{ opacity: 1, y: 0 }}
+  transition={{ duration: 0.3, delay: 0.4 }}
+  className="p-6 bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700"
+>
+  <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">
+    Past Rounds
+  </h3>
+  
+  {pastRounds.length === 0 ? (
+    <div className="text-center py-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+      <p className="text-gray-500 dark:text-gray-400">
+        No past rounds data available
+      </p>
+    </div>
+  ) : (
+    <div className="space-y-3">
+      {pastRounds.map((round) => (
+        <div 
+          key={round.roundId} 
+          className={`p-4 rounded-lg border ${
+            round.winner !== "0x0000000000000000000000000000000000000000"
+              ? "bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800"
+              : "bg-gray-50 dark:bg-gray-700 border-gray-200 dark:border-gray-600"
+          }`}
+        >
+          <div className="flex justify-between items-start">
+            <div>
+              <p className="font-medium text-gray-900 dark:text-white">
+                Round #{round.roundId}
+              </p>
+              <p className="text-sm text-gray-500 dark:text-gray-400">
+                {format(new Date(round.startTime * 1000), "MMMM d, yyyy")}
+              </p>
+            </div>
+            <div className="text-right">
+              <p className="text-sm text-black font-medium">
+                {round.pot} CELO
+              </p>
+              <p className="text-xs text-gray-500 dark:text-gray-400">
+                {round.participantCount} participants
+              </p>
+            </div>
+          </div>
+          
+          {round.winner !== "0x0000000000000000000000000000000000000000" ? (
+            <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-600">
+              <p className="text-sm font-medium text-green-600 dark:text-green-400">
+                Winner: {round.winner.slice(0, 6)}...{round.winner.slice(-4)}
+              </p>
+              <p className="text-sm text-gray-500 dark:text-gray-400">
+                Won {round.winningAmount} CELO
+              </p>
+            </div>
+          ) : (
+            <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-600">
+              <p className="text-sm text-gray-500 dark:text-gray-400">
+                No winner - Pot carried over
+              </p>
+            </div>
+          )}
+        </div>
+      ))}
     </div>
   )}
 </motion.div>
