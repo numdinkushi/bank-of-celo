@@ -192,18 +192,18 @@ const fetchPastRounds = useCallback(async () => {
         })
       );
     }
-
     const roundsData = await Promise.all(roundPromises);
+    console.log(roundsData)
     const formattedRounds = roundsData.map((round: any, index) => ({
       roundId: currentRoundId - 1 - index,
-      startTime: Number(round.startTime),
-      endTime: Number(round.endTime),
-      pot: formatEther(round.pot),
-      participantCount: Number(round.participantCount),
-      winner: round.winner,
-      winningAmount: formatEther(round.winningAmount),
-      claimed: round.claimed,
-      drawCompleted: round.drawCompleted,
+      startTime: Number(round[1]),
+      endTime: Number(round[2]),
+      pot: formatEther(round[3]),
+      participantCount: Number(round[4]),
+      winner: round[5],
+      winningAmount: formatEther(round[6]),
+      claimed: round[7],
+      drawCompleted: round[8],
     }));
 
     setPastRounds(formattedRounds);
@@ -882,7 +882,7 @@ useEffect(() => {
               </p>
             </div>
             <div className="text-right">
-              <p className="text-sm font-medium">
+              <p className="text-sm text-black font-medium">
                 {round.pot} CELO
               </p>
               <p className="text-xs text-gray-500 dark:text-gray-400">
