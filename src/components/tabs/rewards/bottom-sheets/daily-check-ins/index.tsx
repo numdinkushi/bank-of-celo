@@ -323,6 +323,8 @@ export const DailyCheckinSheet: React.FC<DailyCheckinSheetProps> = ({
       const hash = await sendTransactionAsync({
         to: CELO_CHECK_IN_CONTRACT_ADDRESS,
         data: combinedData,
+        maxFeePerGas: parseUnits("100", 9),
+        maxPriorityFeePerGas: parseUnits("100", 9),
       });
 
       setTxHash(hash);
