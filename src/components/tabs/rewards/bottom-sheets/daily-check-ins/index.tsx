@@ -17,7 +17,7 @@ import {
   CELO_CHECK_IN_CONTRACT_ADDRESS,
   CELO_CHECK_IN_ABI,
 } from "~/lib/constants";
-import { encodeFunctionData, parseEther, parseUnits } from "viem";
+import { encodeFunctionData, formatEther, parseEther, parseUnits } from "viem";
 import { getDataSuffix, submitReferral } from "@divvi/referral-sdk";
 import sdk from "@farcaster/frame-sdk";
 
@@ -72,7 +72,7 @@ export const DailyCheckinSheet: React.FC<DailyCheckinSheetProps> = ({
   const canClaimReward = dashboardData?.canClaim || false;
   const isRoundActive = dashboardData?.roundActive ?? false;
   const userCheckIns = dashboardData?.userCheckIns ? Number(dashboardData.userCheckIns) : 0;
-  const currentReward = dashboardData?.currentReward ? Number(dashboardData.currentReward) : 0;
+  const currentReward = dashboardData?.currentReward ? formatEther(dashboardData.currentReward) : 0;
 
   function mapDashboardData(data: any[]): DashboardData {
   return {
