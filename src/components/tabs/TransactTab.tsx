@@ -72,7 +72,7 @@ export default function TransactTab({
   const [txHash, setTxHash] = useState<string | null>(null);
   const [hasClaimed, setHasClaimed] = useState(false);
   const [username, setUsername] = useState<string | null>(null);
-  const [isUnderMaintenance, setIsUnderMaintenance] = useState(false);
+  const [isUnderMaintenance, setIsUnderMaintenance] = useState(true);
 
   const getUsername = async (userAddress: string): Promise<string | null> => {
     if (!userAddress) return null;
