@@ -4,10 +4,10 @@ import { useEffect, useState, useCallback } from "react";
 import sdk, {
   type Context,
   type FrameNotificationDetails,
-  AddFrame,
 } from "@farcaster/frame-sdk";
 import { createStore } from "mipd";
 import React from "react";
+import { AddFrame } from "@farcaster/frame-core";
 
 interface FrameContextType {
   isSDKLoaded: boolean;

@@ -19,6 +19,7 @@ import {
 } from "~/lib/constants";
 import { encodeFunctionData, parseEther, parseUnits } from "viem";
 import { getDataSuffix, submitReferral } from "@divvi/referral-sdk";
+import sdk from "@farcaster/frame-sdk";
 
 interface DailyCheckinSheetProps {
   isOpen: boolean;
@@ -120,7 +121,7 @@ export const DailyCheckinSheet: React.FC<DailyCheckinSheetProps> = ({
       if (data.canClaim && !fid) {
         const response = await fetch(`/api/farcaster?address=${address}`);
         const fidData = await response.json();
-        if (fidData.fid) setFid(fidData.fid);
+        // if (fidData.fid) setFid(fidData.fid);
       }
     } catch (err) {
       console.error("Error fetching user status:", err);
@@ -131,7 +132,30 @@ export const DailyCheckinSheet: React.FC<DailyCheckinSheetProps> = ({
     }
   }, [address, publicClient, isCorrectChain, fid]);
 
+    // Initialize SDK and fetch user context
+
   useEffect(() => {
+    
+    const initSdkContext = async () => {
+
+      await sdk.isInMiniApp();
+      await sdk.actions.ready();
+      const context = await sdk.context;
+              console.log('SDK context:', context.user.fid);
+
+      if (!context.user) {
+        setError('Please link your Farcaster account to view your profile.');
+        return;
+      }
+      if (context.user) {
+        setFid(context.user.fid);
+      }
+    };
+    initSdkContext();
+  }, []);
+
+  useEffect(() => {
+   
       fetchUserStatus();
     
   }, [fetchUserStatus]);
@@ -249,7 +273,7 @@ export const DailyCheckinSheet: React.FC<DailyCheckinSheetProps> = ({
 
   const handleClaimReward = async () => {
     if (!address || !publicClient || !dashboardData || !fid) {
-      toast.error(`Connect wallet to cehck in farc: ${address}, ${publicClient}, ${dashboardData}, ${fid}`);
+      toast.error(`Connect wallet to cehck in farc:, ${fid}`);
       return;
     }
 
