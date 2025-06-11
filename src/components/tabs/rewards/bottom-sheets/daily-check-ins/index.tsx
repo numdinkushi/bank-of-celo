@@ -159,7 +159,7 @@ export const DailyCheckinSheet: React.FC<DailyCheckinSheetProps> = ({
 
   const handleCheckin = async () => {
     if (!address || !publicClient || !dashboardData) {
-      toast.error(`Connect wallet to cehck in farc: ${address}, ${publicClient}, ${dashboardData}, ${fid}`);
+      toast.error("Please connect wallet and switch to Celo Network");
       return;
     }
 
@@ -249,7 +249,7 @@ export const DailyCheckinSheet: React.FC<DailyCheckinSheetProps> = ({
 
   const handleClaimReward = async () => {
     if (!address || !publicClient || !dashboardData || !fid) {
-      toast.error("Please connect wallet and ensure you have a Farcaster ID");
+      toast.error(`Connect wallet to cehck in farc: ${address}, ${publicClient}, ${dashboardData}, ${fid}`);
       return;
     }
 
