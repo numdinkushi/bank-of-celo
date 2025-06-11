@@ -19,6 +19,7 @@ import {
 } from "~/lib/constants";
 import { encodeFunctionData, parseEther, parseUnits } from "viem";
 import { getDataSuffix, submitReferral } from "@divvi/referral-sdk";
+import sdk from "@farcaster/frame-sdk";
 
 interface DailyCheckinSheetProps {
   isOpen: boolean;
@@ -132,6 +133,7 @@ export const DailyCheckinSheet: React.FC<DailyCheckinSheetProps> = ({
   }, [address, publicClient, isCorrectChain, fid]);
 
   useEffect(() => {
+    if(sdk.context?.user)
       fetchUserStatus();
     
   }, [fetchUserStatus]);
