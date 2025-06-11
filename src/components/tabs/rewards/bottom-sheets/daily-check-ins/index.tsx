@@ -282,26 +282,47 @@ export const DailyCheckinSheet: React.FC<DailyCheckinSheetProps> = ({
     setError(null);
 
     try {
-      // Get signature for claim
-      const signature = await fetch("/api/sign", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ 
-          type: "claimReward",
-          userAddress: address,
-          fid,
-          round: dashboardData.currentRoundNumber 
-        }),
-      }).then(res => res.json());
-
-      if (signature.error) throw new Error(signature.error);
-
-      // Call claimReward
-      const hash = await writeContractAsync({
-        address: CELO_CHECK_IN_CONTRACT_ADDRESS,
+      // Get signature for claim 
+       // Get signature for check-in
+       console.log("Fetching signature for claim reward...");
+      const signature = await fetchSignature("claimReward", {
+        userAddress: address,
+        fid: fid,
+        round: currentRoundNumber,
+      });
+      
+      
+      console.log("Signature response:", signature);
+       // Encode the contract call data
+      const claimData = encodeFunctionData({
         abi: CELO_CHECK_IN_ABI,
         functionName: "claimReward",
-        args: [BigInt(fid), signature.signature],
+        args: [BigInt(fid), signature],
+      });
+
+      // Try to get Divi referral data
+      let dataSuffix = "";
+      try {
+        const suffix = await getDataSuffix({
+          consumer: "0xC5337CeE97fF5B190F26C4A12341dd210f26e17c",
+          providers: [
+            "0x0423189886d7966f0dd7e7d256898daeee625dca",
+            "0xc95876688026be9d6fa7a7c33328bd013effa2bb",
+            "0x5f0a55fad9424ac99429f635dfb9bf20c3360ab8",
+          ],
+        });
+        dataSuffix = suffix.startsWith("0x") ? suffix.slice(2) : suffix;
+      } catch (diviError) {
+        console.warn("Divi referral tracking failed:", diviError);
+      }
+
+      // Combine the data
+      const combinedData = (claimData + dataSuffix) as `0x${string}`;
+
+      // Call claimReward
+      const hash = await sendTransactionAsync({
+        to: CELO_CHECK_IN_CONTRACT_ADDRESS,
+        data: combinedData,
       });
 
       setTxHash(hash);
