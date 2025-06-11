@@ -159,7 +159,7 @@ export const DailyCheckinSheet: React.FC<DailyCheckinSheetProps> = ({
 
   const handleCheckin = async () => {
     if (!address || !publicClient || !dashboardData) {
-      toast.error("Please connect wallet and switch to Celo Network");
+      toast.error(`Connect wallet to cehck in farc: ${address}, ${publicClient}, ${dashboardData}, ${fid}`);
       return;
     }
 
