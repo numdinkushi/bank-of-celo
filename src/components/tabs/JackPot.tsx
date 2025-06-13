@@ -749,7 +749,7 @@ useEffect(() => {
           {pastTickets
   .sort((a, b) => b.roundId - a.roundId)
   .map((ticket) => {
-    const randomStatement = MOTIVATIONAL_STATEMENTS[1];
+    const randomStatement = MOTIVATIONAL_STATEMENTS[4];
     
     return (
       <div key={ticket.roundId} className="space-y-3">
