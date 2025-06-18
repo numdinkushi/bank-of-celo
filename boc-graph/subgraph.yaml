@@ -45,3 +45,32 @@ dataSources:
         - event: OwnershipTransferred(indexed address,indexed address)
           handler: handleOwnershipTransferred
       file: ./src/bank-of-celo.ts
+  - kind: ethereum
+    name: CeloJackpot
+    network: celo
+    source:
+      address: "0x9602d02Bd17d9f1c1EB09028fCea26dD29383611"
+      abi: CeloJackpot
+      startBlock: 37310958
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.9
+      language: wasm/assemblyscript
+      entities:
+        - RoundAdvanced
+        - TicketPurchased
+        - WinnerSelected
+        - WinningsClaimed
+      abis:
+        - name: CeloJackpot
+          file: ./abis/CeloJackpot.json
+      eventHandlers:
+        - event: RoundAdvanced(uint256,uint256)
+          handler: handleRoundAdvanced
+        - event: TicketPurchased(address,uint256,uint256)
+          handler: handleTicketPurchased
+        - event: WinnerSelected(uint256,address,uint256)
+          handler: handleWinnerSelected
+        - event: WinningsClaimed(uint256,address,uint256)
+          handler: handleWinningsClaimed
+      file: ./src/celo-jackpot.ts

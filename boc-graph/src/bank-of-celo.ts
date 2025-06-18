@@ -1,3 +1,4 @@
+/* eslint-disable prefer-const */
 import {
   BlacklistUpdated as BlacklistUpdatedEvent,
   Claimed as ClaimedEvent,
