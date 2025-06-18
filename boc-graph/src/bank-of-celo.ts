@@ -17,7 +17,8 @@ import {
   EIP712DomainChanged,
   GaslessClaimExecuted,
   LeaderboardUpdated,
-  OwnershipTransferred
+  OwnershipTransferred,
+  GasStat
 } from "../generated/schema"
 
 export function handleBlacklistUpdated(event: BlacklistUpdatedEvent): void {
@@ -38,6 +39,25 @@ export function handleClaimed(event: ClaimedEvent): void {
   let entity = new Claimed(
     event.transaction.hash.concatI32(event.logIndex.toI32())
   )
+  let tx = event.transaction;
+  let receipt = event.receipt;
+
+  if (tx && receipt) {
+    let id = event.transaction.hash.toHex();
+    let gasUsed = receipt.gasUsed;
+    let gasPrice = tx.gasPrice;
+    let gasFee = gasUsed.times(gasPrice);
+
+    let stat = new GasStat(id);
+    stat.user = tx.from;
+    stat.blockNumber = event.block.number;
+    stat.timestamp = event.block.timestamp;
+    stat.txHash = event.transaction.hash;
+    stat.gasUsed = gasUsed;
+    stat.gasPrice = gasPrice;
+    stat.gasFee = gasFee;
+    stat.save();
+  }
   entity.recipient = event.params.recipient
   entity.fid = event.params.fid
   entity.amount = event.params.amount
@@ -53,6 +73,25 @@ export function handleDonated(event: DonatedEvent): void {
   let entity = new Donated(
     event.transaction.hash.concatI32(event.logIndex.toI32())
   )
+  let tx = event.transaction;
+  let receipt = event.receipt;
+
+  if (tx && receipt) {
+    let id = event.transaction.hash.toHex();
+    let gasUsed = receipt.gasUsed;
+    let gasPrice = tx.gasPrice;
+    let gasFee = gasUsed.times(gasPrice);
+
+    let stat = new GasStat(id);
+    stat.user = tx.from;
+    stat.blockNumber = event.block.number;
+    stat.timestamp = event.block.timestamp;
+    stat.txHash = event.transaction.hash;
+    stat.gasUsed = gasUsed;
+    stat.gasPrice = gasPrice;
+    stat.gasFee = gasFee;
+    stat.save();
+  }
   entity.donor = event.params.donor
   entity.amount = event.params.amount
   entity.devFee = event.params.devFee
@@ -98,6 +137,25 @@ export function handleGaslessClaimExecuted(
   let entity = new GaslessClaimExecuted(
     event.transaction.hash.concatI32(event.logIndex.toI32())
   )
+  let tx = event.transaction;
+  let receipt = event.receipt;
+
+  if (tx && receipt) {
+    let id = event.transaction.hash.toHex();
+    let gasUsed = receipt.gasUsed;
+    let gasPrice = tx.gasPrice;
+    let gasFee = gasUsed.times(gasPrice);
+
+    let stat = new GasStat(id);
+    stat.user = tx.from;
+    stat.blockNumber = event.block.number;
+    stat.timestamp = event.block.timestamp;
+    stat.txHash = event.transaction.hash;
+    stat.gasUsed = gasUsed;
+    stat.gasPrice = gasPrice;
+    stat.gasFee = gasFee;
+    stat.save();
+  }
   entity.operator = event.params.operator
   entity.claimer = event.params.claimer
   entity.fid = event.params.fid

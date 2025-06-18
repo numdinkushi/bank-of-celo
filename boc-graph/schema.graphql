@@ -110,4 +110,13 @@ type WinningsClaimed @entity(immutable: true) {
   blockTimestamp: BigInt!
   transactionHash: Bytes!
 }
-
+type GasStat @entity(immutable: true) {
+  id: ID!
+  user: Bytes!
+  blockNumber: BigInt!
+  timestamp: BigInt!
+  txHash: Bytes!
+  gasUsed: BigInt!
+  gasPrice: BigInt!
+  gasFee: BigInt!
+}

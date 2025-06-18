@@ -1,3 +1,4 @@
+/* eslint-disable prefer-const */
 import {
   RoundAdvanced as RoundAdvancedEvent,
   TicketPurchased as TicketPurchasedEvent,
@@ -9,6 +10,7 @@ import {
   TicketPurchased,
   WinnerSelected,
   WinningsClaimed,
+  GasStat,
 } from "../generated/schema"
 
 export function handleRoundAdvanced(event: RoundAdvancedEvent): void {
@@ -29,6 +31,25 @@ export function handleTicketPurchased(event: TicketPurchasedEvent): void {
   let entity = new TicketPurchased(
     event.transaction.hash.concatI32(event.logIndex.toI32()),
   )
+  let tx = event.transaction;
+  let receipt = event.receipt;
+
+  if (tx && receipt) {
+    let id = event.transaction.hash.toHex();
+    let gasUsed = receipt.gasUsed;
+    let gasPrice = tx.gasPrice;
+    let gasFee = gasUsed.times(gasPrice);
+
+    let stat = new GasStat(id);
+    stat.user = tx.from;
+    stat.blockNumber = event.block.number;
+    stat.timestamp = event.block.timestamp;
+    stat.txHash = event.transaction.hash;
+    stat.gasUsed = gasUsed;
+    stat.gasPrice = gasPrice;
+    stat.gasFee = gasFee;
+    stat.save();
+  }
   entity.buyer = event.params.buyer
   entity.roundId = event.params.roundId
   entity.amount = event.params.amount
