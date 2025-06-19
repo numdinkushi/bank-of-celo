@@ -30,6 +30,8 @@ import {
 import { getDataSuffix, submitReferral } from "@divvi/referral-sdk";
 import { encodeFunctionData, parseEther, parseUnits } from "viem";
 import CeloJackpot from "./JackPot";
+import CeloJackpotV2 from "./JackPotV2";
+
 
 interface TransactTabProps {
   onDonate: (amount: string) => void;
@@ -65,7 +67,7 @@ export default function TransactTab({
   const [fid, setFid] = useState<number | null>(null);
   const [fidLoading, setFidLoading] = useState(false);
   const [fidError, setFidError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<"donate" | "claim" | "lottery">(
+  const [activeTab, setActiveTab] = useState<"donate" | "claim" | "lottery" | "lottery2" >(
     "donate",
   );
   const [claimPending, setClaimPending] = useState(false);
@@ -372,7 +374,7 @@ export default function TransactTab({
           </button>
           <button
             onClick={() => setActiveTab("lottery")}
-            className={`flex-1 py-3 rounded-lg font-medium transition-colors flex items-center justify-center gap-2 ${
+            className={`flex-1 py-3 rounded-lg font-medium transition-colors flex items-center justify-center gap-3 px-1 mr-1 ${
               activeTab === "lottery"
                 ? "bg-white dark:bg-gray-700 shadow-sm text-purple-600 dark:text-purple-400"
                 : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
@@ -383,6 +385,20 @@ export default function TransactTab({
           >
             <Ticket className="w-4 h-4" />
              Jackpot
+          </button>
+           <button
+            onClick={() => setActiveTab("lottery2")}
+            className={`flex-1 py-3 rounded-lg font-medium transition-colors flex items-center justify-center gap-2 ${
+              activeTab === "lottery2"
+                ? "bg-white dark:bg-gray-700 shadow-sm text-green-800 dark:text-green-800"
+                : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
+            }`}
+            aria-label="jackpot tab"
+            role="tab"
+            aria-selected={activeTab === "lottery2"}
+          >
+            <Ticket className="w-4 h-4" />
+             JackpotV2
           </button>
         </div>
       </div>
@@ -556,9 +572,12 @@ export default function TransactTab({
       </div>
     )}
   </motion.div>
-) : (
+) : activeTab === "lottery" ? (
         <CeloJackpot isCorrectChain={isCorrectChain} />
-      )}
+      )
+    : activeTab === "lottery2" ?  (
+        <CeloJackpotV2 isCorrectChain={isCorrectChain} />
+      ) : null}
     </motion.div>
   );
 }
