@@ -336,248 +336,246 @@ export default function TransactTab({
 
   return (
     <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.5 }}
-      className="space-y-6"
+  initial={{ opacity: 0 }}
+  animate={{ opacity: 1 }}
+  transition={{ duration: 0.5 }}
+  className="space-y-6 w-full"
+>
+  <div className="flex flex-col gap-4 w-full">
+    <div className="flex flex-wrap bg-gray-100 dark:bg-gray-800 rounded-xl p-1 gap-1 w-full">
+      <button
+        onClick={() => setActiveTab("donate")}
+        className={`flex-1 min-w-[120px] py-3 rounded-lg font-medium transition-colors flex items-center justify-center gap-2 ${
+          activeTab === "donate"
+            ? "bg-white dark:bg-gray-700 shadow-sm text-emerald-600 dark:text-emerald-400"
+            : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
+        }`}
+        aria-label="Donate tab"
+        role="tab"
+        aria-selected={activeTab === "donate"}
+      >
+        <Gift className="w-4 h-4" />
+        <span className="whitespace-nowrap">Donate</span>
+      </button>
+      <button
+        onClick={() => setActiveTab("claim")}
+        className={`flex-1 min-w-[120px] py-3 rounded-lg font-medium transition-colors flex items-center justify-center gap-2 ${
+          activeTab === "claim"
+            ? "bg-white dark:bg-gray-700 shadow-sm text-amber-600 dark:text-amber-400"
+            : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
+        }`}
+        aria-label="Claim tab"
+        role="tab"
+        aria-selected={activeTab === "claim"}
+      >
+        <HandCoins className="w-4 h-4" />
+        <span className="whitespace-nowrap">Claim</span>
+      </button>
+      <button
+        onClick={() => setActiveTab("lottery")}
+        className={`flex-1 min-w-[120px] py-3 rounded-lg font-medium transition-colors flex items-center justify-center gap-2 ${
+          activeTab === "lottery"
+            ? "bg-white dark:bg-gray-700 shadow-sm text-purple-600 dark:text-purple-400"
+            : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
+        }`}
+        aria-label="jackpot tab"
+        role="tab"
+        aria-selected={activeTab === "lottery"}
+      >
+        <Ticket className="w-4 h-4" />
+        <span className="whitespace-nowrap">Jackpot</span>
+      </button>
+      <button
+        onClick={() => setActiveTab("lottery2")}
+        className={`flex-1 min-w-[120px] py-3 rounded-lg font-medium transition-colors flex items-center justify-center gap-2 ${
+          activeTab === "lottery2"
+            ? "bg-white dark:bg-gray-700 shadow-sm text-green-800 dark:text-green-800"
+            : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
+        }`}
+        aria-label="jackpot tab"
+        role="tab"
+        aria-selected={activeTab === "lottery2"}
+      >
+        <Ticket className="w-4 h-4" />
+        <span className="whitespace-nowrap">JackpotV2</span>
+      </button>
+    </div>
+  </div>
+
+  {activeTab === "donate" ? (
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3 }}
+      className="p-4 sm:p-6 bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 w-full"
     >
-      <div className="flex flex-col gap-4">
-       
-        <div className="flex bg-gray-100 dark:bg-gray-800 rounded-xl p-1">
-          <button
-            onClick={() => setActiveTab("donate")}
-            className={`flex-1 py-3 rounded-lg font-medium transition-colors flex items-center justify-center gap-2 ${
-              activeTab === "donate"
-                ? "bg-white dark:bg-gray-700 shadow-sm text-emerald-600 dark:text-emerald-400"
-                : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
-            }`}
-            aria-label="Donate tab"
-            role="tab"
-            aria-selected={activeTab === "donate"}
+      <div className="space-y-4">
+        <div>
+          <label
+            htmlFor="donate-amount"
+            className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
           >
-            <Gift className="w-4 h-4" />
-            Donate
-          </button>
-          <button
-            onClick={() => setActiveTab("claim")}
-            className={`flex-1 py-3 rounded-lg font-medium transition-colors flex items-center justify-center gap-2 ${
-              activeTab === "claim"
-                ? "bg-white dark:bg-gray-700 shadow-sm text-amber-600 dark:text-amber-400"
-                : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
-            }`}
-            aria-label="Claim tab"
-            role="tab"
-            aria-selected={activeTab === "claim"}
-          >
-            <HandCoins className="w-4 h-4" />
-            Claim
-          </button>
-          <button
-            onClick={() => setActiveTab("lottery")}
-            className={`flex-1 py-3 rounded-lg font-medium transition-colors flex items-center justify-center gap-3 px-1 mr-1 ${
-              activeTab === "lottery"
-                ? "bg-white dark:bg-gray-700 shadow-sm text-purple-600 dark:text-purple-400"
-                : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
-            }`}
-            aria-label="jackpot tab"
-            role="tab"
-            aria-selected={activeTab === "lottery"}
-          >
-            <Ticket className="w-4 h-4" />
-             Jackpot
-          </button>
-           <button
-            onClick={() => setActiveTab("lottery2")}
-            className={`flex-1 py-3 rounded-lg font-medium transition-colors flex items-center justify-center gap-2 ${
-              activeTab === "lottery2"
-                ? "bg-white dark:bg-gray-700 shadow-sm text-green-800 dark:text-green-800"
-                : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
-            }`}
-            aria-label="jackpot tab"
-            role="tab"
-            aria-selected={activeTab === "lottery2"}
-          >
-            <Ticket className="w-4 h-4" />
-             JackpotV2
-          </button>
+            Amount to Donate (CELO)
+          </label>
+          <Input
+            id="donate-amount"
+            type="number"
+            value={amount}
+            onChange={(e) => setAmount(e.target.value)}
+            placeholder="0.0"
+            className="w-full py-3 text-black"
+            min="0"
+            step="0.01"
+          />
         </div>
-      </div>
-
-      {activeTab === "donate" ? (
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3 }}
-          className="p-6 bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700"
-        >
-          <div className="space-y-5">
-            <div>
-              <label
-                htmlFor="donate-amount"
-                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-              >
-                Amount to Donate (CELO)
-              </label>
-              <Input
-                id="donate-amount"
-                type="number"
-                value={amount}
-                onChange={(e) => setAmount(e.target.value)}
-                placeholder="0.0"
-                className="w-full py-3 text-black"
-                min="0"
-                step="0.01"
-              />
-            </div>
-            <Button
-              onClick={handleSubmit}
-              disabled={isPending || !amount}
-              className="w-full py-3 bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-700 hover:to-emerald-600 text-white"
-              aria-label="Donate CELO"
-            >
-              {isPending ? (
-                <Loader2 className="w-5 h-5 animate-spin" />
-              ) : (
-                <div className="flex items-center justify-center gap-2">
-                  <Send className="w-5 h-5" />
-                  <span>Donate CELO</span>
-                </div>
-              )}
-            </Button>
-          </div>
-        </motion.div>
-      ) : activeTab === "claim" ? (
-  <motion.div
-    initial={{ opacity: 0, y: 10 }}
-    animate={{ opacity: 1, y: 0 }}
-    transition={{ duration: 0.3 }}
-    className="p-6 bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700"
-  >
-    {isUnderMaintenance ? (
-      <div className="text-center space-y-4">
-        <div className="p-4 bg-yellow-50 dark:bg-yellow-900/30 rounded-lg text-yellow-800 dark:text-yellow-200">
-          <div className="flex flex-col items-center">
-            <AlertTriangle className="w-8 h-8 mb-2 text-yellow-500" />
-            <h3 className="text-lg font-medium">Maintenance in Progress</h3>
-            <p className="mt-1 text-sm">
-              The claim feature is under maintenance. Please check back later.
-            </p>
-          </div>
-        </div>
-        <Button
-          onClick={() => window.location.reload()} // Optional: Add refresh button
-          className="w-full"
-        >
-          <RefreshCw className="w-4 h-4 mr-2" />
-          Refresh Page
-        </Button>
-      </div>
-    ) : (
-      <div className="space-y-5">
-        {!canClaim() && nextClaimTime && (
-          <div className="p-3 bg-amber-50 dark:bg-amber-900/30 rounded-lg text-sm text-amber-800 dark:text-amber-200 flex items-center">
-            <Clock className="w-4 h-4 mr-2 flex-shrink-0" />
-            <span>
-              You can claim again{" "}
-              {formatDistanceToNow(nextClaimTime, { addSuffix: true })}
-            </span>
-          </div>
-        )}
-
-        {txHash && (
-          <div className="p-3 bg-green-50 dark:bg-green-900/30 rounded-lg text-sm text-green-800 dark:text-green-200 flex items-center">
-            <span>
-              Claim successful!{" "}
-              <a
-                href={`https://celoscan.io/tx/${txHash}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="underline"
-              >
-                View on CeloScan
-              </a>
-            </span>
-          </div>
-        )}
-
-        {fidLoading ? (
-          <div className="p-4 text-center bg-gray-50 dark:bg-gray-700 rounded-lg">
-            <Loader2 className="w-5 h-5 animate-spin text-amber-500 mx-auto mb-2" />
-            <p className="text-gray-600 dark:text-gray-300">
-              Fetching Farcaster ID...
-            </p>
-          </div>
-        ) : fidError || !fid ? (
-          <div className="p-4 text-center bg-red-50 dark:bg-red-900/30 rounded-lg">
-            <AlertCircle className="w-5 h-5 text-red-500 mx-auto mb-2" />
-            <p className="text-sm text-red-700 dark:text-red-300">
-              {fidError ||
-                "No Farcaster ID found. Please link your address to Farcaster to claim."}
-            </p>
-            <a
-              href="https://warpcast.com/~/settings"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-sm text-blue-600 dark:text-blue-400 underline mt-2 inline-block"
-            >
-              Link on Warpcast
-            </a>
-          </div>
-        ) : (
-          <div>
-            <label
-              htmlFor="farcaster-id"
-              className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-            >
-              Your Farcaster username/ ID
-            </label>
-            <Input
-              id="farcaster-id"
-              type="number"
-              value={fid || username || ""}
-              disabled
-              className="w-full py-3 text-black bg-gray-100 dark:bg-gray-700"
-              aria-readonly="true"
-            />
-          </div>
-        )}
-
         <Button
           onClick={handleSubmit}
-          disabled={
-            isPending ||
-            claimPending ||
-            !fid ||
-            !canClaim() ||
-            !!fidError ||
-            !isCorrectChain ||
-            hasClaimed
-          }
-          className="w-full py-3 bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-700 hover:to-amber-600 text-white"
-          aria-label={`Claim ${maxClaim} CELO`}
+          disabled={isPending || !amount}
+          className="w-full py-3 bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-700 hover:to-emerald-600 text-white"
+          aria-label="Donate CELO"
         >
-          {claimPending || isPending ? (
+          {isPending ? (
             <Loader2 className="w-5 h-5 animate-spin" />
           ) : (
             <div className="flex items-center justify-center gap-2">
-              <HandCoins className="w-5 h-5" />
-              {hasClaimed ? (
-                <span>You have already claimed</span>
-              ) : (
-                <span>Claim {maxClaim} CELO</span>
-              )}
+              <Send className="w-5 h-5" />
+              <span>Donate CELO</span>
             </div>
           )}
         </Button>
       </div>
-    )}
-  </motion.div>
-) : activeTab === "lottery" ? (
-        <CeloJackpot isCorrectChain={isCorrectChain} />
-      )
-    : activeTab === "lottery2" ?  (
-        <CeloJackpotV2 isCorrectChain={isCorrectChain} />
-      ) : null}
     </motion.div>
+  ) : activeTab === "claim" ? (
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3 }}
+      className="p-4 sm:p-6 bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 w-full"
+    >
+      {isUnderMaintenance ? (
+        <div className="text-center space-y-4">
+          <div className="p-4 bg-yellow-50 dark:bg-yellow-900/30 rounded-lg text-yellow-800 dark:text-yellow-200">
+            <div className="flex flex-col items-center">
+              <AlertTriangle className="w-8 h-8 mb-2 text-yellow-500" />
+              <h3 className="text-lg font-medium">Maintenance in Progress</h3>
+              <p className="mt-1 text-sm">
+                The claim feature is under maintenance. Please check back later.
+              </p>
+            </div>
+          </div>
+          <Button
+            onClick={() => window.location.reload()}
+            className="w-full"
+          >
+            <RefreshCw className="w-4 h-4 mr-2" />
+            Refresh Page
+          </Button>
+        </div>
+      ) : (
+        <div className="space-y-4">
+          {!canClaim() && nextClaimTime && (
+            <div className="p-3 bg-amber-50 dark:bg-amber-900/30 rounded-lg text-sm text-amber-800 dark:text-amber-200 flex items-center">
+              <Clock className="w-4 h-4 mr-2 flex-shrink-0" />
+              <span>
+                You can claim again{" "}
+                {formatDistanceToNow(nextClaimTime, { addSuffix: true })}
+              </span>
+            </div>
+          )}
+
+          {txHash && (
+            <div className="p-3 bg-green-50 dark:bg-green-900/30 rounded-lg text-sm text-green-800 dark:text-green-200 flex items-center">
+              <span>
+                Claim successful!{" "}
+                <a
+                  href={`https://celoscan.io/tx/${txHash}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="underline"
+                >
+                  View on CeloScan
+                </a>
+              </span>
+            </div>
+          )}
+
+          {fidLoading ? (
+            <div className="p-4 text-center bg-gray-50 dark:bg-gray-700 rounded-lg">
+              <Loader2 className="w-5 h-5 animate-spin text-amber-500 mx-auto mb-2" />
+              <p className="text-gray-600 dark:text-gray-300">
+                Fetching Farcaster ID...
+              </p>
+            </div>
+          ) : fidError || !fid ? (
+            <div className="p-4 text-center bg-red-50 dark:bg-red-900/30 rounded-lg">
+              <AlertCircle className="w-5 h-5 text-red-500 mx-auto mb-2" />
+              <p className="text-sm text-red-700 dark:text-red-300">
+                {fidError ||
+                  "No Farcaster ID found. Please link your address to Farcaster to claim."}
+              </p>
+              <a
+                href="https://warpcast.com/~/settings"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-sm text-blue-600 dark:text-blue-400 underline mt-2 inline-block"
+              >
+                Link on Warpcast
+              </a>
+            </div>
+          ) : (
+            <div>
+              <label
+                htmlFor="farcaster-id"
+                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+              >
+                Your Farcaster username/ ID
+              </label>
+              <Input
+                id="farcaster-id"
+                type="number"
+                value={fid || username || ""}
+                disabled
+                className="w-full py-3 text-black bg-gray-100 dark:bg-gray-700"
+                aria-readonly="true"
+              />
+            </div>
+          )}
+
+          <Button
+            onClick={handleSubmit}
+            disabled={
+              isPending ||
+              claimPending ||
+              !fid ||
+              !canClaim() ||
+              !!fidError ||
+              !isCorrectChain ||
+              hasClaimed
+            }
+            className="w-full py-3 bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-700 hover:to-amber-600 text-white"
+            aria-label={`Claim ${maxClaim} CELO`}
+          >
+            {claimPending || isPending ? (
+              <Loader2 className="w-5 h-5 animate-spin" />
+            ) : (
+              <div className="flex items-center justify-center gap-2">
+                <HandCoins className="w-5 h-5" />
+                {hasClaimed ? (
+                  <span>You have already claimed</span>
+                ) : (
+                  <span>Claim {maxClaim} CELO</span>
+                )}
+              </div>
+            )}
+          </Button>
+        </div>
+      )}
+    </motion.div>
+  ) : activeTab === "lottery" ? (
+    <CeloJackpot isCorrectChain={isCorrectChain} />
+  ) : activeTab === "lottery2" ? (
+    <CeloJackpotV2 isCorrectChain={isCorrectChain} />
+  ) : null}
+</motion.div>
   );
 }
