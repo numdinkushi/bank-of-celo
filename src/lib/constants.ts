@@ -2788,6 +2788,7 @@ export const CELO_JACKPOT_ABI=[
   ]
 
 export const CELO_JACKPOTV2_ADDRESS ="0xB6cF643d413D055a467cDd4a4224047831dD92b2"
+export const CELO_JACKPOTV2_MAINTENANCE = true
 export const CELO_JACKPOTV2_ABI = [
     {
       "inputs": [
