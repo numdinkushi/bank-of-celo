@@ -468,6 +468,18 @@ export const DailyCheckinSheet: React.FC<DailyCheckinSheetProps> = ({
           </Button>
         )}
 
+        {/* Final Day Messages */}
+        {currentDay === 7 && userCheckIns < 7 && (
+          <div className="p-3 bg-yellow-500/10 rounded-lg border border-yellow-500/20 text-center text-yellow-400">
+            You missed some check-ins so this round has ended for you.
+          </div>
+        )}
+        {currentDay === 7 && userCheckIns === 7 && canClaimReward && (
+          <div className="p-3 bg-emerald-500/10 rounded-lg border border-emerald-500/20 text-center text-emerald-400">
+            Claim time! You have 24 hours to claim your reward.
+          </div>
+        )}
+
         {/* Round Info */}
         <div className="bg-gray-900/50 rounded-xl p-4 border border-gray-800">
           <div className="flex items-center justify-between mb-2">
