@@ -475,6 +475,10 @@ useEffect(() => {
             Please switch to Celo Network to proceed
           </p>
         </div>
+      ) : maintenanceMode ? (
+        <div className="p-4 bg-yellow-50 dark:bg-yellow-900/30 rounded-lg text-yellow-800 dark:text-yellow-200 text-center">
+          Jackpot is currently under maintenance. Please check back later.
+        </div>
       ) : (
         <>
           {maintenanceMode && (
