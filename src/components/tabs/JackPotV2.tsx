@@ -8,7 +8,7 @@ import { Button } from "~/components/ui/Button";
 import { toast } from "sonner";
 import { formatDistanceToNow, format } from "date-fns";
 import { useAccount, usePublicClient, useSendTransaction } from "wagmi";
-import { CELO_JACKPOTV2_ADDRESS, CELO_JACKPOTV2_ABI, MOTIVATIONAL_STATEMENTS } from "~/lib/constants";
+import { CELO_JACKPOTV2_ADDRESS, CELO_JACKPOTV2_ABI, CELO_JACKPOTV2_MAINTENANCE, MOTIVATIONAL_STATEMENTS } from "~/lib/constants";
 import { encodeFunctionData, parseEther, formatEther, parseUnits } from "viem";
 import { getDataSuffix, submitReferral } from "@divvi/referral-sdk";
 import { Input } from "../ui/input";
@@ -66,6 +66,7 @@ const [isDataLoading, setIsDataLoading] = useState(false); // Renamed for clarit
 const countdownRef = useRef<NodeJS.Timeout>();
 const [drawDate, setDrawDate] = useState<string>("TBD");
 const [pastRounds, setPastRounds] = useState<RoundData[]>([]);
+const maintenanceMode = CELO_JACKPOTV2_MAINTENANCE;
   
 
   // Fetch dashboard data and user-specific data
@@ -220,6 +221,10 @@ const fetchPastRounds = useCallback(async () => {
   }, [fetchDashboardData,fetchPastRounds]);
 
   const handleTriggerDraw = async () => {
+  if (maintenanceMode) {
+    toast.warning("Jackpot is currently under maintenance.");
+    return;
+  }
   if (!address || !publicClient || !isCorrectChain) {
     toast.error("Wallet not connected or wrong network");
     return;
@@ -262,6 +267,10 @@ const formatCountdown = (seconds: number): string => {
 };
 
   const handleBuyTickets = async () => {
+    if (maintenanceMode) {
+      toast.warning("Jackpot is currently under maintenance.");
+      return;
+    }
     if (!address || !publicClient || !isCorrectChain) {
       toast.error("Wallet not connected or wrong network");
       return;
@@ -344,6 +353,10 @@ const formatCountdown = (seconds: number): string => {
   };
 
   const handleClaimWinnings = async (roundId: number) => {
+    if (maintenanceMode) {
+      toast.warning("Jackpot is currently under maintenance.");
+      return;
+    }
     if (!address || !publicClient || !isCorrectChain) {
       toast.error("Wallet not connected or wrong network");
       return;
@@ -464,8 +477,13 @@ useEffect(() => {
         </div>
       ) : (
         <>
+          {maintenanceMode && (
+            <div className="p-4 bg-yellow-50 dark:bg-yellow-900/30 rounded-lg text-yellow-800 dark:text-yellow-200 text-center">
+              Jackpot is currently under maintenance. Please check back later.
+            </div>
+          )}
           {/* Jackpot Banner */}
-          <motion.div 
+          <motion.div
             initial={{ scale: 0.95 }}
             animate={{ scale: 1 }}
             transition={{ duration: 0.3 }}
