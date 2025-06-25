@@ -167,7 +167,7 @@ export default function Rewards(): JSX.Element {
     <div className="min-h-screen bg-white text-gray-900 rounded-md relative overflow-hidden">
       {/* Background gradient */}
       <div className="absolute inset-0 bg-gradient-to-br from-gray-50 via-white to-gray-50" />
-      <div className="absolute top-0 left-0 w-full h-64 bg-gradient-to-b from-indigo-500/10 to-transparent" />
+      <div className="absolute top-0 left-0 w-full h-64 bg-gradient-to-b from-emerald-500/10 to-transparent" />
       <div className="relative z-1 p-6 pb-32">
         {/* Score Card */}
         <ScoreCard />
@@ -177,10 +177,10 @@ export default function Rewards(): JSX.Element {
           <button
             disabled={!isReady}
             onClick={() => openSheet("claims")}
-            className="flex-1 bg-gradient-to-r from-indigo-500/20 to-fuchsia-600/20 border border-indigo-500/30 rounded-xl sm:rounded-2xl p-3 sm:p-4 flex items-center justify-center gap-2 sm:gap-3 hover:scale-[1.02] transition-all duration-300 hover:shadow-lg hover:shadow-indigo-500/20 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex-1 bg-gradient-to-r from-emerald-500/20 to-emerald-600/20 border border-emerald-500/30 rounded-xl sm:rounded-2xl p-3 sm:p-4 flex items-center justify-center gap-2 sm:gap-3 hover:scale-[1.02] transition-all duration-300 hover:shadow-lg hover:shadow-emerald-500/20 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            <Gift className="w-4 h-4 sm:w-5 sm:h-5 text-fuchsia-600" />
-            <span className="font-semibold text-sm sm:text-base text-indigo-700">
+            <Gift className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-600" />
+            <span className="font-semibold text-sm sm:text-base text-emerald-700">
               Claim
             </span>
           </button>

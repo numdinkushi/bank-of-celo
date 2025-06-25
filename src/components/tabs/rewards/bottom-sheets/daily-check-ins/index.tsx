@@ -461,7 +461,7 @@ export const DailyCheckinSheet: React.FC<DailyCheckinSheetProps> = ({
         {canClaimReward && (
           <Button
             onClick={handleClaimReward}
-            className="w-full bg-gradient-to-r from-indigo-500 to-fuchsia-600 hover:from-indigo-600 hover:to-fuchsia-700 text-white py-3 rounded-lg font-medium flex items-center justify-center gap-2 animate-pulse"
+            className="w-full bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 text-white py-3 rounded-lg font-medium flex items-center justify-center gap-2 animate-pulse"
           >
             <Gift className="w-5 h-5" />
             Claim {currentReward} CELO Reward

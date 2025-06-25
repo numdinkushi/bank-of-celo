@@ -431,7 +431,7 @@ export default function TransactTab({
         <Button
           onClick={handleSubmit}
           disabled={isPending || !amount}
-          className="w-full py-3 bg-gradient-to-r from-indigo-500 to-fuchsia-500 hover:from-indigo-600 hover:to-fuchsia-600 text-white"
+          className="w-full py-3 bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-700 hover:to-emerald-600 text-white"
           aria-label="Donate CELO"
         >
           {isPending ? (

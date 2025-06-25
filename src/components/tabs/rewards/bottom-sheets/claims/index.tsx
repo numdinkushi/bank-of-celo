@@ -20,13 +20,13 @@ export const ClaimsSheet: React.FC<{
     >
       <div className="space-y-4">
         {/* Stats Header */}
-        <div className="bg-gradient-to-r from-indigo-500/20 to-fuchsia-600/20 rounded-xl p-4 mb-6 border border-indigo-500/30">
+        <div className="bg-gradient-to-r from-emerald-500/20 to-emerald-600/20 rounded-xl p-4 mb-6 border border-emerald-500/30">
           <div className="flex items-center justify-between text-center">
             <div>
-              <div className="text-2xl font-bold text-fuchsia-400">
+              <div className="text-2xl font-bold text-emerald-400">
                 {rewardItems.filter((r) => r.status === "available").length}
               </div>
-              <div className="text-xs text-fuchsia-300">Available</div>
+              <div className="text-xs text-emerald-300">Available</div>
             </div>
             <div>
               <div className="text-2xl font-bold text-gray-300">

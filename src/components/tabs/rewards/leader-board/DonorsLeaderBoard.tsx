@@ -176,7 +176,7 @@ export default function DonorsLeaderBoard({
             <button
               onClick={fetchLeaderboard}
               disabled={isLoading || !isCorrectChain}
-              className="text-xs text-center flex items-center justify-center w-10 h-10 font-medium bg-gradient-to-br from-indigo-400 to-fuchsia-600 dark:bg-gray-700 dark:hover:bg-gray-600 rounded-full py-1.5"
+              className="text-xs text-center flex items-center justify-center w-10 h-10 font-medium bg-gradient-to-br from-emerald-400 to-emerald-600 dark:bg-gray-700 dark:hover:bg-gray-600 rounded-full py-1.5"
             >
               {isLoading ? (
                 <Loader2 className="w-3 h-3 animate-spin" />
