@@ -87,11 +87,11 @@ export default function HomeTab({
         initial="hidden"
         animate="visible"
         whileHover={{ scale: 1.01 }}
-        className="relative overflow-hidden p-6 bg-gradient-to-br from-emerald-50 to-cyan-50 dark:from-gray-800 dark:to-gray-900 rounded-3xl shadow-lg border border-emerald-100/50 dark:border-emerald-800/30"
+        className="relative overflow-hidden p-6 bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-gray-800 dark:to-gray-900 rounded-3xl shadow-lg border border-indigo-100/50 dark:border-indigo-800/30"
       >
         {/* Background decoration elements */}
         <motion.div
-          className="absolute top-0 right-0 w-32 h-32 rounded-full bg-emerald-300/10 dark:bg-emerald-700/10"
+          className="absolute top-0 right-0 w-32 h-32 rounded-full bg-indigo-300/10 dark:bg-fuchsia-700/10"
           animate={{
             scale: [1, 1.2, 1],
             x: [0, 10, 0],
@@ -111,17 +111,17 @@ export default function HomeTab({
 
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
-            <Droplet className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+            <Droplet className="w-5 h-5 text-indigo-600 dark:text-fuchsia-400" />
             <p className="text-sm font-medium text-gray-600 dark:text-gray-300">
               Vault Balance
             </p>
           </div>
           <motion.div
-            className="flex items-center bg-emerald-100 dark:bg-emerald-800/60 px-2 py-1 rounded-full"
+            className="flex items-center bg-indigo-100 dark:bg-indigo-800/60 px-2 py-1 rounded-full"
             whileHover={{ scale: 1.05 }}
           >
-            <ShieldCheck className="w-3 h-3 text-emerald-600 dark:text-emerald-400 mr-1" />
-            <span className="text-xs font-medium text-emerald-700 dark:text-emerald-300">
+            <ShieldCheck className="w-3 h-3 text-indigo-600 dark:text-fuchsia-400 mr-1" />
+            <span className="text-xs font-medium text-indigo-700 dark:text-fuchsia-300">
               Secured
             </span>
           </motion.div>
@@ -129,7 +129,7 @@ export default function HomeTab({
 
         {isLoading ? (
           <div className="h-14 flex items-center justify-center">
-            <div className="w-8 h-8 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin" />
+            <div className="w-8 h-8 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" />
           </div>
         ) : (
           <motion.div
@@ -144,7 +144,7 @@ export default function HomeTab({
               animate="pulse"
               className="relative flex items-baseline"
             >
-              <span className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-emerald-600 to-teal-500 dark:from-emerald-400 dark:to-teal-300">
+              <span className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-fuchsia-500 dark:from-indigo-400 dark:to-fuchsia-300">
                 {parseFloat(vaultBalance).toFixed(2)}
               </span>
               <span className="ml-2 text-lg font-semibold text-gray-600 dark:text-gray-300">
@@ -160,7 +160,7 @@ export default function HomeTab({
               Available for Claims
             </p>
             <motion.p
-              className="text-sm font-medium text-emerald-700 dark:text-emerald-300"
+              className="text-sm font-medium text-indigo-700 dark:text-fuchsia-300"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.3 }}
@@ -172,8 +172,8 @@ export default function HomeTab({
             whileHover={{ rotate: 15 }}
             className="flex items-center gap-1"
           >
-            <TrendingUp className="w-4 h-4 text-emerald-500 dark:text-emerald-400" />
-            <span className="text-xs font-medium text-emerald-600 dark:text-emerald-400">
+            <TrendingUp className="w-4 h-4 text-indigo-500 dark:text-fuchsia-400" />
+            <span className="text-xs font-medium text-indigo-600 dark:text-fuchsia-400">
               +2.5%
             </span>
           </motion.div>
@@ -192,7 +192,7 @@ export default function HomeTab({
         >
           <Button
             onClick={() => onNavigate?.("transact")}
-            className="flex flex-col items-center justify-center p-5 h-full w-full bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-emerald-900/30 dark:to-emerald-800/50 rounded-2xl border border-emerald-100 dark:border-emerald-800/50 shadow-md shadow-emerald-100/20 dark:shadow-emerald-900/20"
+            className="flex flex-col items-center justify-center p-5 h-full w-full bg-gradient-to-br from-indigo-50 to-purple-100 dark:from-indigo-900/30 dark:to-purple-800/50 rounded-2xl border border-indigo-100 dark:border-indigo-800/50 shadow-md shadow-indigo-100/20 dark:shadow-indigo-900/20"
             disabled={!isCorrectChain}
             aria-label="Donate to the vault"
           >
@@ -203,12 +203,12 @@ export default function HomeTab({
               }}
               className="mb-3 p-3 bg-white dark:bg-gray-800 rounded-full shadow-md"
             >
-              <Gift className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
+              <Gift className="w-6 h-6 text-indigo-600 dark:text-fuchsia-400" />
             </motion.div>
-            <span className="font-medium text-emerald-800 dark:text-emerald-200">
+            <span className="font-medium text-indigo-800 dark:text-fuchsia-200">
               Donate
             </span>
-            <span className="text-xs text-emerald-600/70 dark:text-emerald-400/70 mt-1">
+            <span className="text-xs text-indigo-600/70 dark:text-fuchsia-400/70 mt-1">
               Support Ecosystem
             </span>
           </Button>
@@ -290,7 +290,7 @@ export default function HomeTab({
       >
         {/* Background decoration */}
         <motion.div
-          className="absolute -bottom-6 -right-6 w-32 h-32 rounded-full bg-emerald-100/30 dark:bg-emerald-900/20"
+          className="absolute -bottom-6 -right-6 w-32 h-32 rounded-full bg-indigo-100/30 dark:bg-indigo-900/20"
           animate={{
             scale: [1, 1.1, 1],
             rotate: [0, 10, 0],
@@ -302,11 +302,11 @@ export default function HomeTab({
           <motion.div
             whileHover={{ rotate: 360 }}
             transition={{ duration: 0.5 }}
-            className="bg-gradient-to-br from-emerald-400 to-teal-500 dark:from-emerald-500 dark:to-teal-600 p-2.5 rounded-xl shadow-md"
+            className="bg-gradient-to-br from-indigo-400 to-fuchsia-500 dark:from-indigo-500 dark:to-fuchsia-600 p-2.5 rounded-xl shadow-md"
           >
             <Info className="w-5 h-5 text-white" />
           </motion.div>
-          <h2 className="text-lg font-semibold text-transparent bg-clip-text bg-gradient-to-r from-emerald-700 to-teal-600 dark:from-emerald-300 dark:to-teal-200">
+          <h2 className="text-lg font-semibold text-transparent bg-clip-text bg-gradient-to-r from-indigo-700 to-fuchsia-600 dark:from-indigo-300 dark:to-fuchsia-200">
             About Bank of Celo
           </h2>
         </div>

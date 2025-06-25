@@ -235,7 +235,7 @@ export default function Main({ title = "Bank of Celo" }: { title?: string }) {
 
   return (
     <div
-      className="min-h-screen bg-gradient-to-br from-emerald-100 via-amber-50 to-emerald-100 dark:from-emerald-950 dark:via-gray-900 dark:to-emerald-950 flex flex-col"
+      className="min-h-screen bg-gradient-to-br from-indigo-100 via-fuchsia-50 to-indigo-100 dark:from-indigo-950 dark:via-gray-900 dark:to-indigo-950 flex flex-col"
       style={{
         paddingTop: context?.client.safeAreaInsets?.top ?? 0,
         paddingBottom: context?.client.safeAreaInsets?.bottom ?? 60,
@@ -249,7 +249,7 @@ export default function Main({ title = "Bank of Celo" }: { title?: string }) {
         minHeight: "100vh",
       }}
     >
-      <div className="min-h-[100vh] fixed inset-0 bg-emerald-800 opacity-50"></div>
+      <div className="min-h-[100vh] fixed inset-0 bg-indigo-800 opacity-50"></div>
 
       {/* Welcome Modal */}
       <WelcomeModal

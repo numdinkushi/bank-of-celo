@@ -16,7 +16,7 @@ const ScoredLastWeek: React.FC<ScoredLastWeekProps> = ({
   return (
     <BottomSheet isOpen={isOpen} onClose={onClose} title={title}>
       <div className="text-center mb-8">
-        <div className="w-20 h-20 bg-gradient-to-br from-emerald-400 to-emerald-600 rounded-full mx-auto mb-6 flex items-center justify-center">
+        <div className="w-20 h-20 bg-gradient-to-br from-indigo-400 to-fuchsia-600 rounded-full mx-auto mb-6 flex items-center justify-center">
           <Image
             src="/api/placeholder/60/60"
             alt="Profile"

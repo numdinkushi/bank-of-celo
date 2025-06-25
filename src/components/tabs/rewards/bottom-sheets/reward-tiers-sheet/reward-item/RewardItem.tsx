@@ -59,10 +59,10 @@ export const RewardItem: React.FC<
         };
       default:
         return {
-          bg: "from-emerald-500/20 to-emerald-600/20",
-          border: "border-emerald-500/30",
-          glow: "shadow-emerald-500/20",
-          text: "text-emerald-400",
+          bg: "from-indigo-500/20 to-fuchsia-600/20",
+          border: "border-indigo-500/30",
+          glow: "shadow-indigo-500/20",
+          text: "text-fuchsia-400",
         };
     }
   };
