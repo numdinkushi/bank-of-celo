@@ -15,6 +15,6 @@ const DegenJackpotModule = buildModule("DegenJackpot", (m) => {
 });
 
 export default DegenJackpotModule;
-//deployed addy - 0xB6cF643d413D055a467cDd4a4224047831dD92b2
+//deployed addy - 0xD8407eE0b2B1008FAb9e2bD8Ab9005F2dA8BEE67
 
 
