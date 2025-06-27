@@ -34,9 +34,7 @@
             "evm.methodIdentifiers",
             "metadata"
           ],
-          "": [
-            "ast"
-          ]
+          "": ["ast"]
         }
       }
     }
@@ -47,12 +45,8 @@
         "ast": {
           "absolutePath": "@openzeppelin/contracts/access/Ownable.sol",
           "exportedSymbols": {
-            "Context": [
-              255
-            ],
-            "Ownable": [
-              147
-            ]
+            "Context": [255],
+            "Ownable": [147]
           },
           "id": 148,
           "license": "MIT",
@@ -60,12 +54,7 @@
           "nodes": [
             {
               "id": 1,
-              "literals": [
-                "solidity",
-                "^",
-                "0.8",
-                ".20"
-              ],
+              "literals": ["solidity", "^", "0.8", ".20"],
               "nodeType": "PragmaDirective",
               "src": "102:24:0"
             },
@@ -101,9 +90,7 @@
                   "baseName": {
                     "id": 5,
                     "name": "Context",
-                    "nameLocations": [
-                      "692:7:0"
-                    ],
+                    "nameLocations": ["692:7:0"],
                     "nodeType": "IdentifierPath",
                     "referencedDeclaration": 255,
                     "src": "692:7:0"
@@ -124,10 +111,7 @@
               },
               "fullyImplemented": true,
               "id": 147,
-              "linearizedBaseContracts": [
-                147,
-                255
-              ],
+              "linearizedBaseContracts": [147, 255],
               "name": "Ownable",
               "nameLocation": "681:7:0",
               "nodeType": "ContractDefinition",
@@ -1148,9 +1132,7 @@
                       "modifierName": {
                         "id": 87,
                         "name": "onlyOwner",
-                        "nameLocations": [
-                          "2337:9:0"
-                        ],
+                        "nameLocations": ["2337:9:0"],
                         "nodeType": "IdentifierPath",
                         "referencedDeclaration": 58,
                         "src": "2337:9:0"
@@ -1465,9 +1447,7 @@
                       "modifierName": {
                         "id": 103,
                         "name": "onlyOwner",
-                        "nameLocations": [
-                          "2603:9:0"
-                        ],
+                        "nameLocations": ["2603:9:0"],
                         "nodeType": "IdentifierPath",
                         "referencedDeclaration": 58,
                         "src": "2603:9:0"
@@ -1533,9 +1513,7 @@
                     "src": "2975:124:0",
                     "statements": [
                       {
-                        "assignments": [
-                          133
-                        ],
+                        "assignments": [133],
                         "declarations": [
                           {
                             "constant": false,
@@ -1760,13 +1738,8 @@
               ],
               "scope": 148,
               "src": "663:2438:0",
-              "usedErrors": [
-                13,
-                18
-              ],
-              "usedEvents": [
-                24
-              ]
+              "usedErrors": [13, 18],
+              "usedEvents": [24]
             }
           ],
           "src": "102:3000:0"
@@ -1777,9 +1750,7 @@
         "ast": {
           "absolutePath": "@openzeppelin/contracts/token/ERC20/IERC20.sol",
           "exportedSymbols": {
-            "IERC20": [
-              225
-            ]
+            "IERC20": [225]
           },
           "id": 226,
           "license": "MIT",
@@ -1787,12 +1758,7 @@
           "nodes": [
             {
               "id": 149,
-              "literals": [
-                "solidity",
-                "^",
-                "0.8",
-                ".20"
-              ],
+              "literals": ["solidity", "^", "0.8", ".20"],
               "nodeType": "PragmaDirective",
               "src": "106:24:1"
             },
@@ -1810,9 +1776,7 @@
               },
               "fullyImplemented": false,
               "id": 225,
-              "linearizedBaseContracts": [
-                225
-              ],
+              "linearizedBaseContracts": [225],
               "name": "IERC20",
               "nameLocation": "214:6:1",
               "nodeType": "ContractDefinition",
@@ -2685,10 +2649,7 @@
               "scope": 226,
               "src": "204:2575:1",
               "usedErrors": [],
-              "usedEvents": [
-                159,
-                168
-              ]
+              "usedEvents": [159, 168]
             }
           ],
           "src": "106:2674:1"
@@ -2699,9 +2660,7 @@
         "ast": {
           "absolutePath": "@openzeppelin/contracts/utils/Context.sol",
           "exportedSymbols": {
-            "Context": [
-              255
-            ]
+            "Context": [255]
           },
           "id": 256,
           "license": "MIT",
@@ -2709,12 +2668,7 @@
           "nodes": [
             {
               "id": 227,
-              "literals": [
-                "solidity",
-                "^",
-                "0.8",
-                ".20"
-              ],
+              "literals": ["solidity", "^", "0.8", ".20"],
               "nodeType": "PragmaDirective",
               "src": "101:24:2"
             },
@@ -2732,9 +2686,7 @@
               },
               "fullyImplemented": true,
               "id": 255,
-              "linearizedBaseContracts": [
-                255
-              ],
+              "linearizedBaseContracts": [255],
               "name": "Context",
               "nameLocation": "642:7:2",
               "nodeType": "ContractDefinition",
@@ -3026,18 +2978,10 @@
         "ast": {
           "absolutePath": "contracts/FootyClaim.sol",
           "exportedSymbols": {
-            "Context": [
-              255
-            ],
-            "FootyScoresClaim": [
-              493
-            ],
-            "IERC20": [
-              225
-            ],
-            "Ownable": [
-              147
-            ]
+            "Context": [255],
+            "FootyScoresClaim": [493],
+            "IERC20": [225],
+            "Ownable": [147]
           },
           "id": 494,
           "license": "MIT",
@@ -3045,12 +2989,7 @@
           "nodes": [
             {
               "id": 257,
-              "literals": [
-                "solidity",
-                "^",
-                "0.8",
-                ".0"
-              ],
+              "literals": ["solidity", "^", "0.8", ".0"],
               "nodeType": "PragmaDirective",
               "src": "32:23:3"
             },
@@ -3085,9 +3024,7 @@
                   "baseName": {
                     "id": 260,
                     "name": "Ownable",
-                    "nameLocations": [
-                      "197:7:3"
-                    ],
+                    "nameLocations": ["197:7:3"],
                     "nodeType": "IdentifierPath",
                     "referencedDeclaration": 147,
                     "src": "197:7:3"
@@ -3102,11 +3039,7 @@
               "contractKind": "contract",
               "fullyImplemented": true,
               "id": 493,
-              "linearizedBaseContracts": [
-                493,
-                147,
-                255
-              ],
+              "linearizedBaseContracts": [493, 147, 255],
               "name": "FootyScoresClaim",
               "nameLocation": "177:16:3",
               "nodeType": "ContractDefinition",
@@ -3133,9 +3066,7 @@
                     "pathNode": {
                       "id": 262,
                       "name": "IERC20",
-                      "nameLocations": [
-                        "211:6:3"
-                      ],
+                      "nameLocations": ["211:6:3"],
                       "nodeType": "IdentifierPath",
                       "referencedDeclaration": 225,
                       "src": "211:6:3"
@@ -3533,9 +3464,7 @@
                       "modifierName": {
                         "id": 293,
                         "name": "Ownable",
-                        "nameLocations": [
-                          "883:7:3"
-                        ],
+                        "nameLocations": ["883:7:3"],
                         "nodeType": "IdentifierPath",
                         "referencedDeclaration": 147,
                         "src": "883:7:3"
@@ -3734,10 +3663,7 @@
                             "id": 316,
                             "name": "require",
                             "nodeType": "Identifier",
-                            "overloadedDeclarations": [
-                              -18,
-                              -18
-                            ],
+                            "overloadedDeclarations": [-18, -18],
                             "referencedDeclaration": -18,
                             "src": "1305:7:3",
                             "typeDescriptions": {
@@ -3921,10 +3847,7 @@
                                   "id": 336,
                                   "name": "require",
                                   "nodeType": "Identifier",
-                                  "overloadedDeclarations": [
-                                    -18,
-                                    -18
-                                  ],
+                                  "overloadedDeclarations": [-18, -18],
                                   "referencedDeclaration": -18,
                                   "src": "1457:7:3",
                                   "typeDescriptions": {
@@ -4228,9 +4151,7 @@
                         },
                         "id": 367,
                         "initializationExpression": {
-                          "assignments": [
-                            326
-                          ],
+                          "assignments": [326],
                           "declarations": [
                             {
                               "constant": false,
@@ -4405,9 +4326,7 @@
                       "modifierName": {
                         "id": 313,
                         "name": "onlyOwner",
-                        "nameLocations": [
-                          "1285:9:3"
-                        ],
+                        "nameLocations": ["1285:9:3"],
                         "nodeType": "IdentifierPath",
                         "referencedDeclaration": 58,
                         "src": "1285:9:3"
@@ -4615,10 +4534,7 @@
                             "id": 378,
                             "name": "require",
                             "nodeType": "Identifier",
-                            "overloadedDeclarations": [
-                              -18,
-                              -18
-                            ],
+                            "overloadedDeclarations": [-18, -18],
                             "referencedDeclaration": -18,
                             "src": "1823:7:3",
                             "typeDescriptions": {
@@ -4647,9 +4563,7 @@
                         "src": "1823:67:3"
                       },
                       {
-                        "assignments": [
-                          387
-                        ],
+                        "assignments": [387],
                         "declarations": [
                           {
                             "constant": false,
@@ -4952,10 +4866,7 @@
                             "id": 400,
                             "name": "require",
                             "nodeType": "Identifier",
-                            "overloadedDeclarations": [
-                              -18,
-                              -18
-                            ],
+                            "overloadedDeclarations": [-18, -18],
                             "referencedDeclaration": -18,
                             "src": "2117:7:3",
                             "typeDescriptions": {
@@ -5591,9 +5502,7 @@
                     "src": "3126:202:3",
                     "statements": [
                       {
-                        "assignments": [
-                          465
-                        ],
+                        "assignments": [465],
                         "declarations": [
                           {
                             "constant": false,
@@ -5817,10 +5726,7 @@
                             "id": 474,
                             "name": "require",
                             "nodeType": "Identifier",
-                            "overloadedDeclarations": [
-                              -18,
-                              -18
-                            ],
+                            "overloadedDeclarations": [-18, -18],
                             "referencedDeclaration": -18,
                             "src": "3200:7:3",
                             "typeDescriptions": {
@@ -5982,10 +5888,7 @@
                             "id": 481,
                             "name": "require",
                             "nodeType": "Identifier",
-                            "overloadedDeclarations": [
-                              -18,
-                              -18
-                            ],
+                            "overloadedDeclarations": [-18, -18],
                             "referencedDeclaration": -18,
                             "src": "3255:7:3",
                             "typeDescriptions": {
@@ -6032,9 +5935,7 @@
                       "modifierName": {
                         "id": 461,
                         "name": "onlyOwner",
-                        "nameLocations": [
-                          "3116:9:3"
-                        ],
+                        "nameLocations": ["3116:9:3"],
                         "nodeType": "IdentifierPath",
                         "referencedDeclaration": 58,
                         "src": "3116:9:3"
@@ -6067,15 +5968,8 @@
               ],
               "scope": 494,
               "src": "168:3162:3",
-              "usedErrors": [
-                13,
-                18
-              ],
-              "usedEvents": [
-                24,
-                278,
-                286
-              ]
+              "usedErrors": [13, 18],
+              "usedEvents": [24, 278, 286]
             }
           ],
           "src": "32:3298:3"

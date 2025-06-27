@@ -19,7 +19,7 @@ import { useAccount } from "wagmi";
 import { APP_ICON_URL } from "~/lib/constants";
 import { useQuery } from "convex/react";
 import { api } from "../../../../convex/_generated/api";
-import {toast} from "sonner";
+import { toast } from "sonner";
 
 interface SelfProtocolComponentProps {
   onSuccess?: () => void;
@@ -178,28 +178,35 @@ const SelfProtocolComponent: React.FC<SelfProtocolComponentProps> = ({
         </div>
 
         {/* QR Code Container */}
-        <div className="bg-white rounded-2xl p-4 mb-20 mt-10 mx-auto w-48"> {/* Reduced container width and padding */}
-  <div className="w-32 h-32 mx-auto flex items-center justify-center rounded-xl"> {/* Reduced QR code container size */}
-    {selfApp ? (
-      <div className="">
-        <SelfQRcodeWrapper
-          selfApp={selfApp}
-          onSuccess={handleSuccessfulVerification}
-          size={128} // If the component accepts a size prop, you can set it here
-        />
-      </div>
-    ) : (
-      <div className="w-full h-full bg-gray-100 flex items-center justify-center rounded-xl border-2 border-gray-200">
-        <div className="text-center">
-          <div className="w-8 h-8 bg-emerald-500 rounded-lg mx-auto mb-1 flex items-center justify-center animate-pulse"> {/* Reduced icon size */}
-            <Shield className="w-4 h-4 text-white" /> {/* Reduced icon size */}
+        <div className="bg-white rounded-2xl p-4 mb-20 mt-10 mx-auto w-48">
+          {" "}
+          {/* Reduced container width and padding */}
+          <div className="w-32 h-32 mx-auto flex items-center justify-center rounded-xl">
+            {" "}
+            {/* Reduced QR code container size */}
+            {selfApp ? (
+              <div className="">
+                <SelfQRcodeWrapper
+                  selfApp={selfApp}
+                  onSuccess={handleSuccessfulVerification}
+                  size={128} // If the component accepts a size prop, you can set it here
+                />
+              </div>
+            ) : (
+              <div className="w-full h-full bg-gray-100 flex items-center justify-center rounded-xl border-2 border-gray-200">
+                <div className="text-center">
+                  <div className="w-8 h-8 bg-emerald-500 rounded-lg mx-auto mb-1 flex items-center justify-center animate-pulse">
+                    {" "}
+                    {/* Reduced icon size */}
+                    <Shield className="w-4 h-4 text-white" />{" "}
+                    {/* Reduced icon size */}
+                  </div>
+                  <p className="text-gray-600 text-xs">QR Code Loading...</p>
+                </div>
+              </div>
+            )}
           </div>
-          <p className="text-gray-600 text-xs">QR Code Loading...</p>
         </div>
-      </div>
-    )}
-  </div>
-</div>
 
         {/* Action Buttons */}
         <div className="flex flex-col gap-3 mb-6 mt-8">

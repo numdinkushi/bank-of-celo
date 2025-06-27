@@ -135,8 +135,8 @@ export default function SavingsModal({
                     </h3>
                     <p className="text-yellow-700">
                       We are working hard to bring you this feature. Our savings
-                      contracts are currently in development and will be available
-                      soon.
+                      contracts are currently in development and will be
+                      available soon.
                     </p>
                   </div>
                   <button
@@ -256,9 +256,12 @@ export default function SavingsModal({
                           Important Information
                         </p>
                         <ul className="text-xs text-blue-700 space-y-1">
-                          <li>• Interest is compounded daily and paid monthly</li>
                           <li>
-                            • Early withdrawal may incur penalties for locked terms
+                            • Interest is compounded daily and paid monthly
+                          </li>
+                          <li>
+                            • Early withdrawal may incur penalties for locked
+                            terms
                           </li>
                           <li>• All deposits are secured by smart contracts</li>
                           <li>• Minimum deposit requirements apply</li>

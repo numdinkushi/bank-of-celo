@@ -44,9 +44,10 @@ export default function Main({ title = "Bank of Celo" }: { title?: string }) {
   const { writeContract, isPending } = useWriteContract();
   const { isSDKLoaded, context } = useFrame();
   const searchParams = useSearchParams();
- 
-   const [customSearchParams, setCustomSearchParams] = useState<URLSearchParams | null>(null);
-    const effectiveSearchParams = searchParams || customSearchParams;
+
+  const [customSearchParams, setCustomSearchParams] =
+    useState<URLSearchParams | null>(null);
+  const effectiveSearchParams = searchParams || customSearchParams;
 
   const [activeTab, setActiveTab] = useState("home");
 
@@ -72,23 +73,23 @@ export default function Main({ title = "Bank of Celo" }: { title?: string }) {
   console.log("Current chain ID:", chainId);
   console.log("Is correct chain:", isCorrectChain);
 
-      // Handle URL redirect logic
-    useEffect(() => {
-      if (!effectiveSearchParams) return;
-  
-      const shouldRedirect = effectiveSearchParams.get("redirect") === "true";
-      const url = effectiveSearchParams.get("url");
-  
-      if (shouldRedirect && url) {
-        // Validate URL first
-        try {
-          new URL(url);
-          sdk.actions.openUrl(url);
-        } catch (error: unknown) {
-          console.error("Invalid URL provided:", url, error);
-        }
+  // Handle URL redirect logic
+  useEffect(() => {
+    if (!effectiveSearchParams) return;
+
+    const shouldRedirect = effectiveSearchParams.get("redirect") === "true";
+    const url = effectiveSearchParams.get("url");
+
+    if (shouldRedirect && url) {
+      // Validate URL first
+      try {
+        new URL(url);
+        sdk.actions.openUrl(url);
+      } catch (error: unknown) {
+        console.error("Invalid URL provided:", url, error);
       }
-    }, [effectiveSearchParams]);
+    }
+  }, [effectiveSearchParams]);
 
   // URL parameter handling for rewards tab
   useEffect(() => {

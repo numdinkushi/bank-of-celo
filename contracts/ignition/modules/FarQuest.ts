@@ -13,10 +13,8 @@ console.log("Secret Hash:", secretHash);
 
 const FarQuestModule = buildModule("FarQuestModule", (m) => {
   const _secret = m.getParameter("_secretHash", secretHash);
-  
-  const BOC = m.contract("FarQuest", [
-    _secret,  
-  ]);
+
+  const BOC = m.contract("FarQuest", [_secret]);
 
   return { BOC };
 });

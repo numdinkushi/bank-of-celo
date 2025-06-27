@@ -30,7 +30,7 @@ export async function POST(req: NextRequest) {
       `bank-of-celo`, // scope
       `https://bank-of-celo.vercel.app/api/self-protocol`, // endpoint
       "hex", // user_identifier_type
-       // mockPassport
+      // mockPassport
     );
     console.log("passed");
 
