@@ -157,8 +157,8 @@ export default function LoansModal({
                       Coming Soon!
                     </h3>
                     <p className="text-yellow-700">
-                      Our crypto loan service is currently under development.
-                      We are working to bring you secure, decentralized lending
+                      Our crypto loan service is currently under development. We
+                      are working to bring you secure, decentralized lending
                       options soon.
                     </p>
                   </div>

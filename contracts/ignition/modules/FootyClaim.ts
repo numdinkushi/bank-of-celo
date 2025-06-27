@@ -8,11 +8,11 @@ const FootyClaimModule = buildModule("FootyClaim", (m) => {
     "_scoresToken",
     "0xba1afff81a239c926446a67d73f73ec51c37c777",
   );
-const trustee1 = m.getParameter(
+  const trustee1 = m.getParameter(
     "initialOwner",
     "0x6268689797cA15256AF2ce922836cd69940FA024",
   );
-  const BOC = m.contract("FootyScoresClaim", [trustee,trustee1]);
+  const BOC = m.contract("FootyScoresClaim", [trustee, trustee1]);
 
   return { BOC };
 });

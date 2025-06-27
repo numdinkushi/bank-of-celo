@@ -1,107 +1,116 @@
-import { newMockEvent } from "matchstick-as"
-import { ethereum, BigInt, Address } from "@graphprotocol/graph-ts"
+import { newMockEvent } from "matchstick-as";
+import { ethereum, BigInt, Address } from "@graphprotocol/graph-ts";
 import {
   RoundAdvanced,
   TicketPurchased,
   WinnerSelected,
-  WinningsClaimed
-} from "../generated/CeloJackpot/CeloJackpot"
+  WinningsClaimed,
+} from "../generated/CeloJackpot/CeloJackpot";
 
 export function createRoundAdvancedEvent(
   newRoundId: BigInt,
-  carryOverPot: BigInt
+  carryOverPot: BigInt,
 ): RoundAdvanced {
-  let roundAdvancedEvent = changetype<RoundAdvanced>(newMockEvent())
+  let roundAdvancedEvent = changetype<RoundAdvanced>(newMockEvent());
 
-  roundAdvancedEvent.parameters = new Array()
+  roundAdvancedEvent.parameters = new Array();
 
   roundAdvancedEvent.parameters.push(
     new ethereum.EventParam(
       "newRoundId",
-      ethereum.Value.fromUnsignedBigInt(newRoundId)
-    )
-  )
+      ethereum.Value.fromUnsignedBigInt(newRoundId),
+    ),
+  );
   roundAdvancedEvent.parameters.push(
     new ethereum.EventParam(
       "carryOverPot",
-      ethereum.Value.fromUnsignedBigInt(carryOverPot)
-    )
-  )
+      ethereum.Value.fromUnsignedBigInt(carryOverPot),
+    ),
+  );
 
-  return roundAdvancedEvent
+  return roundAdvancedEvent;
 }
 
 export function createTicketPurchasedEvent(
   buyer: Address,
   roundId: BigInt,
-  amount: BigInt
+  amount: BigInt,
 ): TicketPurchased {
-  let ticketPurchasedEvent = changetype<TicketPurchased>(newMockEvent())
+  let ticketPurchasedEvent = changetype<TicketPurchased>(newMockEvent());
 
-  ticketPurchasedEvent.parameters = new Array()
+  ticketPurchasedEvent.parameters = new Array();
 
   ticketPurchasedEvent.parameters.push(
-    new ethereum.EventParam("buyer", ethereum.Value.fromAddress(buyer))
-  )
+    new ethereum.EventParam("buyer", ethereum.Value.fromAddress(buyer)),
+  );
   ticketPurchasedEvent.parameters.push(
     new ethereum.EventParam(
       "roundId",
-      ethereum.Value.fromUnsignedBigInt(roundId)
-    )
-  )
+      ethereum.Value.fromUnsignedBigInt(roundId),
+    ),
+  );
   ticketPurchasedEvent.parameters.push(
-    new ethereum.EventParam("amount", ethereum.Value.fromUnsignedBigInt(amount))
-  )
+    new ethereum.EventParam(
+      "amount",
+      ethereum.Value.fromUnsignedBigInt(amount),
+    ),
+  );
 
-  return ticketPurchasedEvent
+  return ticketPurchasedEvent;
 }
 
 export function createWinnerSelectedEvent(
   roundId: BigInt,
   winner: Address,
-  amount: BigInt
+  amount: BigInt,
 ): WinnerSelected {
-  let winnerSelectedEvent = changetype<WinnerSelected>(newMockEvent())
+  let winnerSelectedEvent = changetype<WinnerSelected>(newMockEvent());
 
-  winnerSelectedEvent.parameters = new Array()
+  winnerSelectedEvent.parameters = new Array();
 
   winnerSelectedEvent.parameters.push(
     new ethereum.EventParam(
       "roundId",
-      ethereum.Value.fromUnsignedBigInt(roundId)
-    )
-  )
+      ethereum.Value.fromUnsignedBigInt(roundId),
+    ),
+  );
   winnerSelectedEvent.parameters.push(
-    new ethereum.EventParam("winner", ethereum.Value.fromAddress(winner))
-  )
+    new ethereum.EventParam("winner", ethereum.Value.fromAddress(winner)),
+  );
   winnerSelectedEvent.parameters.push(
-    new ethereum.EventParam("amount", ethereum.Value.fromUnsignedBigInt(amount))
-  )
+    new ethereum.EventParam(
+      "amount",
+      ethereum.Value.fromUnsignedBigInt(amount),
+    ),
+  );
 
-  return winnerSelectedEvent
+  return winnerSelectedEvent;
 }
 
 export function createWinningsClaimedEvent(
   roundId: BigInt,
   winner: Address,
-  amount: BigInt
+  amount: BigInt,
 ): WinningsClaimed {
-  let winningsClaimedEvent = changetype<WinningsClaimed>(newMockEvent())
+  let winningsClaimedEvent = changetype<WinningsClaimed>(newMockEvent());
 
-  winningsClaimedEvent.parameters = new Array()
+  winningsClaimedEvent.parameters = new Array();
 
   winningsClaimedEvent.parameters.push(
     new ethereum.EventParam(
       "roundId",
-      ethereum.Value.fromUnsignedBigInt(roundId)
-    )
-  )
+      ethereum.Value.fromUnsignedBigInt(roundId),
+    ),
+  );
   winningsClaimedEvent.parameters.push(
-    new ethereum.EventParam("winner", ethereum.Value.fromAddress(winner))
-  )
+    new ethereum.EventParam("winner", ethereum.Value.fromAddress(winner)),
+  );
   winningsClaimedEvent.parameters.push(
-    new ethereum.EventParam("amount", ethereum.Value.fromUnsignedBigInt(amount))
-  )
+    new ethereum.EventParam(
+      "amount",
+      ethereum.Value.fromUnsignedBigInt(amount),
+    ),
+  );
 
-  return winningsClaimedEvent
+  return winningsClaimedEvent;
 }

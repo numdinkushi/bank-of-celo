@@ -318,8 +318,8 @@ export default function HomeTab({
           className="relative z-10 text-sm leading-relaxed text-gray-600 dark:text-gray-300"
         >
           Support the Celo ecosystem by donating CELO or claim {maxClaim} CELO
-          to explore the blockchain. Swap tokens to Celo using
-          our bridge and track top contributors on the leaderboard!
+          to explore the blockchain. Swap tokens to Celo using our bridge and
+          track top contributors on the leaderboard!
         </motion.p>
       </motion.div>
     </motion.div>

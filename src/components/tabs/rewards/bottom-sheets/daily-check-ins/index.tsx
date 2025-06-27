@@ -2,7 +2,14 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
-import { CheckCircle2, Flame, Gift, Loader2, AlertCircle, ChevronRight } from "lucide-react";
+import {
+  CheckCircle2,
+  Flame,
+  Gift,
+  Loader2,
+  AlertCircle,
+  ChevronRight,
+} from "lucide-react";
 import { BottomSheet } from "../../components/bottomSheet";
 import { Button } from "~/components/ui/Button";
 import { toast } from "sonner";
@@ -30,7 +37,6 @@ interface SignatureResponse {
   error?: string;
 }
 
-
 interface DashboardData {
   currentRoundNumber: bigint;
   userCheckIns: bigint;
@@ -56,39 +62,48 @@ export const DailyCheckinSheet: React.FC<DailyCheckinSheetProps> = ({
   const { writeContractAsync, isPending: isTxPending } = useWriteContract();
   const { switchChainAsync } = useSwitchChain();
   const { sendTransactionAsync } = useSendTransaction();
-  
-  const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
+
+  const [dashboardData, setDashboardData] = useState<DashboardData | null>(
+    null,
+  );
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [txHash, setTxHash] = useState<string | null>(null);
   const [checkInStatus, setCheckInStatus] = useState<boolean[]>([]);
   const [fid, setFid] = useState<number | null>(null);
 
-
   const isCorrectChain = chainId === CELO_CHAIN_ID;
   const CHECK_IN_FEE = dashboardData?.currentFee || parseEther("0.001");
-  const currentDay = dashboardData?.currentDay ? Number(dashboardData.currentDay) : 1;
-  const currentRoundNumber = dashboardData?.currentRoundNumber ? Number(dashboardData.currentRoundNumber) : 0;
+  const currentDay = dashboardData?.currentDay
+    ? Number(dashboardData.currentDay)
+    : 1;
+  const currentRoundNumber = dashboardData?.currentRoundNumber
+    ? Number(dashboardData.currentRoundNumber)
+    : 0;
   const canClaimReward = dashboardData?.canClaim || false;
   const isRoundActive = dashboardData?.roundActive ?? false;
-  const userCheckIns = dashboardData?.userCheckIns ? Number(dashboardData.userCheckIns) : 0;
-  const currentReward = dashboardData?.currentReward ? formatEther(dashboardData.currentReward) : 0;
+  const userCheckIns = dashboardData?.userCheckIns
+    ? Number(dashboardData.userCheckIns)
+    : 0;
+  const currentReward = dashboardData?.currentReward
+    ? formatEther(dashboardData.currentReward)
+    : 0;
 
   function mapDashboardData(data: any[]): DashboardData {
-  return {
-    currentRoundNumber: data[0],
-    userCheckIns: data[1],
-    canClaim: data[2],
-    checkedInToday: data[3],
-    contractBalance: data[4],
-    currentReward: data[5],
-    currentFee: data[6],
-    roundActive: data[7],
-    roundStart: data[8],
-    roundEnd: data[9],
-    currentDay: data[10]
-  };
-}
+    return {
+      currentRoundNumber: data[0],
+      userCheckIns: data[1],
+      canClaim: data[2],
+      checkedInToday: data[3],
+      contractBalance: data[4],
+      currentReward: data[5],
+      currentFee: data[6],
+      roundActive: data[7],
+      roundStart: data[8],
+      roundEnd: data[9],
+      currentDay: data[10],
+    };
+  }
 
   // Fetch all user data in one call using the new dashboard function
   const fetchUserStatus = useCallback(async () => {
@@ -97,23 +112,23 @@ export const DailyCheckinSheet: React.FC<DailyCheckinSheetProps> = ({
     setError(null);
 
     try {
-      const data: any = await publicClient.readContract({
+      const data: any = (await publicClient.readContract({
         address: CELO_CHECK_IN_CONTRACT_ADDRESS,
         abi: CELO_CHECK_IN_ABI,
         functionName: "getUserDashboard",
         args: [address],
-      }) as DashboardData;
+      })) as DashboardData;
       const _dashboardData = mapDashboardData(data);
 
       setDashboardData(_dashboardData);
-      
+
       // Get check-in status for all days
-      const status = await publicClient.readContract({
+      const status = (await publicClient.readContract({
         address: CELO_CHECK_IN_CONTRACT_ADDRESS,
         abi: CELO_CHECK_IN_ABI,
         functionName: "getUserCheckInStatus",
         args: [address],
-      }) as boolean[];
+      })) as boolean[];
 
       setCheckInStatus(status);
 
@@ -132,19 +147,17 @@ export const DailyCheckinSheet: React.FC<DailyCheckinSheetProps> = ({
     }
   }, [address, publicClient, isCorrectChain, fid]);
 
-    // Initialize SDK and fetch user context
+  // Initialize SDK and fetch user context
 
   useEffect(() => {
-    
     const initSdkContext = async () => {
-
       await sdk.isInMiniApp();
       await sdk.actions.ready();
       const context = await sdk.context;
-              console.log('SDK context:', context.user.fid);
+      console.log("SDK context:", context.user.fid);
 
       if (!context.user) {
-        setError('Please link your Farcaster account to view your profile.');
+        setError("Please link your Farcaster account to view your profile.");
         return;
       }
       if (context.user) {
@@ -155,11 +168,9 @@ export const DailyCheckinSheet: React.FC<DailyCheckinSheetProps> = ({
   }, []);
 
   useEffect(() => {
-   
-      fetchUserStatus();
-    
+    fetchUserStatus();
   }, [fetchUserStatus]);
-   const fetchSignature = async (
+  const fetchSignature = async (
     type: "checkIn" | "claimReward",
     params: any,
   ): Promise<string> => {
@@ -202,20 +213,19 @@ export const DailyCheckinSheet: React.FC<DailyCheckinSheetProps> = ({
         await switchChainAsync({ chainId: CELO_CHAIN_ID });
       }
 
-        // Get signature for check-in
+      // Get signature for check-in
       const signature = await fetchSignature("checkIn", {
         userAddress: address,
         day: currentDay,
         round: currentRoundNumber,
       });
 
-
       // Check user's balance for check-in fee
       const balance = await publicClient.getBalance({ address });
       if (balance < CHECK_IN_FEE) {
         throw new Error(`Insufficient CELO for check-in fee (0.001 CELO)`);
       }
-       // Encode the contract call data
+      // Encode the contract call data
       const checkInData = encodeFunctionData({
         abi: CELO_CHECK_IN_ABI,
         functionName: "checkIn",
@@ -282,18 +292,17 @@ export const DailyCheckinSheet: React.FC<DailyCheckinSheetProps> = ({
     setError(null);
 
     try {
-      // Get signature for claim 
-       // Get signature for check-in
-       console.log("Fetching signature for claim reward...");
+      // Get signature for claim
+      // Get signature for check-in
+      console.log("Fetching signature for claim reward...");
       const signature = await fetchSignature("claimReward", {
         userAddress: address,
         fid: fid,
         round: currentRoundNumber,
       });
-      
-      
+
       console.log("Signature response:", signature);
-       // Encode the contract call data
+      // Encode the contract call data
       const claimData = encodeFunctionData({
         abi: CELO_CHECK_IN_ABI,
         functionName: "claimReward",
@@ -362,7 +371,7 @@ export const DailyCheckinSheet: React.FC<DailyCheckinSheetProps> = ({
             <span>{error}</span>
           </div>
         )}
-        
+
         {txHash && (
           <div className="p-3 bg-green-500/10 rounded-lg flex items-center gap-2 text-green-500">
             <CheckCircle2 className="w-5 h-5" />
@@ -384,18 +393,16 @@ export const DailyCheckinSheet: React.FC<DailyCheckinSheetProps> = ({
         <div className="bg-gray-900/50 rounded-xl p-4 border border-gray-800">
           <div className="flex justify-between items-center mb-3">
             <h3 className="font-medium text-gray-300">Round Progress</h3>
-            <span className="text-sm text-gray-400">
-              Day {currentDay} of 7
-            </span>
+            <span className="text-sm text-gray-400">Day {currentDay} of 7</span>
           </div>
-          
+
           <div className="w-full bg-gray-800 rounded-full h-2.5 mb-2">
             <div
               className="bg-gradient-to-r from-blue-500 to-blue-600 h-2.5 rounded-full"
               style={{ width: `${progressPercentage}%` }}
             />
           </div>
-          
+
           <div className="flex justify-between text-sm text-gray-400">
             <span>{userCheckIns}/7 days checked in</span>
             <span>{currentReward} CELO reward</span>
@@ -407,11 +414,11 @@ export const DailyCheckinSheet: React.FC<DailyCheckinSheetProps> = ({
           <h3 className="font-medium text-gray-300 mb-3">Your Check-ins</h3>
           <div className="grid grid-cols-7 gap-2">
             {Array.from({ length: 7 }).map((_, index) => (
-              <div 
-                key={index} 
+              <div
+                key={index}
                 className={`flex flex-col items-center p-2 rounded-lg ${
-                  checkInStatus[index] 
-                    ? "bg-blue-500/20 border border-blue-500/30" 
+                  checkInStatus[index]
+                    ? "bg-blue-500/20 border border-blue-500/30"
                     : "bg-gray-800/50 border border-gray-700"
                 }`}
               >
@@ -484,18 +491,16 @@ export const DailyCheckinSheet: React.FC<DailyCheckinSheetProps> = ({
         <div className="bg-gray-900/50 rounded-xl p-4 border border-gray-800">
           <div className="flex items-center justify-between mb-2">
             <h3 className="font-medium text-gray-300">Current Round</h3>
-            <span className="text-sm text-blue-400">
-              #{currentRoundNumber}
-            </span>
+            <span className="text-sm text-blue-400">#{currentRoundNumber}</span>
           </div>
-          
+
           <div className="flex items-center justify-between text-sm text-gray-400 mb-1">
             <span>Status</span>
             <span className={isRoundActive ? "text-green-400" : "text-red-400"}>
               {isRoundActive ? "Active" : "Ended"}
             </span>
           </div>
-          
+
           <div className="flex items-center justify-between text-sm text-gray-400">
             <span>Fee</span>
             <span>0.001 CELO/day</span>

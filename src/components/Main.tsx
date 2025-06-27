@@ -53,7 +53,6 @@ import { cubesImage } from "~/constants/images";
 import { cn } from "~/lib/utils";
 import Rewards from "./tabs/rewards";
 
-
 export default function Main({ title = "Bank of Celo" }: { title?: string }) {
   const { address, isConnected, chain } = useAccount();
   const { disconnect } = useDisconnect();
@@ -64,7 +63,6 @@ export default function Main({ title = "Bank of Celo" }: { title?: string }) {
   const publicClient = usePublicClient();
   const { writeContract, isPending } = useWriteContract();
   const { isSDKLoaded, context } = useFrame();
-  
 
   const [activeTab, setActiveTab] = useState("home");
   const [vaultBalance, setVaultBalance] = useState<string>("0");

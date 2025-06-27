@@ -33,11 +33,10 @@ async function main() {
 
   // === Prepare your list ===
   // Replace these entries with the real addresses and amounts you need
- const claimList: { address: string; amount: string }[] = [
-    { address: "0x8d5044d9ee7ceC41EEeBeF12B749E62E2Ab9F131", amount: "10000" }, // @deodad 
+  const claimList: { address: string; amount: string }[] = [
+    { address: "0x8d5044d9ee7ceC41EEeBeF12B749E62E2Ab9F131", amount: "10000" }, // @deodad
     { address: "0x41758c1834A6ddEb55e48E0dF8C45CfE13e9e13D", amount: "10000" }, // @borodutch
-    
-];
+  ];
 
   const addresses = claimList.map((c) => c.address);
   const amounts = claimList.map((c) => parseEther(c.amount));
@@ -55,7 +54,9 @@ async function main() {
   console.log("📤 Tx submitted:", txHash);
 
   // === Wait for confirmation ===
-  const receipt = await publicClient.waitForTransactionReceipt({ hash: txHash });
+  const receipt = await publicClient.waitForTransactionReceipt({
+    hash: txHash,
+  });
   if (receipt.status === "success") {
     console.log("✅ Whitelist successful!");
   } else {
