@@ -15,4 +15,4 @@ const DegenCheckInModule = buildModule("DegenCheckInModule", (m) => {
 });
 
 export default DegenCheckInModule;
-//deployed addy - 0xd9771bAE9A9647Fd83C9066f981ef91373A56B36
+//deployed addy - 0xb2e22CdfaB5274186498CedD66b5801e80e98299
